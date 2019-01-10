@@ -495,8 +495,6 @@ void BootELF(int lapp)
 			strcpy(exec_args[1], "http://update.ps2.host/ELF/PowerOff.elf");
 		}
 	}
-	//strcpy(exec_args[0], "http://140.82.15.250/ULE7WIP.ELF");
-	//strcpy(exec_args[1], "http://140.82.15.250/ULE7WIP.ELF");
 	scr_printf("Launching Application from \n %s", arg0);
 	sleep(2);
 	/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
@@ -531,15 +529,7 @@ void BootELF(int lapp)
 
 int main(int argc, char *argv[])
 {
-	//char arg0[256], arg1[256];
-	//char *exec_args[2] = { arg0, arg1 };
-	//char *wLEurl;
-	// u8 *pdata, *dest;
-	// elf_header_t *eh;
-	// elf_pheader_t *eph;
-	// int i, j;
-	// char arg0[256], arg1[256];
-	// char *exec_args[2] = { arg0, arg1 };
+
 
 	// Initialize
 	SifInitRpc(0);
