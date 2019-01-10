@@ -12,7 +12,9 @@ Tested and Working on Real Hardware
 
 ## Notice
 This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
+
 This Program Utilizes the HTTP Client File System from the PS2DEV sdk
+
 The ELF Loading Portion of the Code is From the w/uLE project https://github.com/AKuHAK/uLaunchELF/tree/master/loader
 
 
