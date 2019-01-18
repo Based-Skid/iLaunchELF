@@ -1,5 +1,5 @@
-EE_BIN = httpBrew.elf
-EE_BIN_PACKED = http-elf-ldr-packed.elf
+EE_BIN = iLE.elf
+EE_BIN_PACKED = iLE_Packed.elf
 ####
 # C File Objects
 EE_OBJS = main.o loader_elf.o asm.o ps2ipc.o
