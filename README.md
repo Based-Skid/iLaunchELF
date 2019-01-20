@@ -1,4 +1,4 @@
-# iLaunchELF
+# iLaunchELF [![Build Status](https://travis-ci.org/Based-Skid/iLaunchELF.svg?branch=master)](https://travis-ci.org/Based-Skid/iLaunchELF)
 Created by krHACKen & Based_Skid
 
 Http Based ELF loader Demo For the PS2
