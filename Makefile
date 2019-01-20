@@ -2,7 +2,7 @@ EE_BIN = iLE.elf
 EE_BIN_PACKED = iLE_Packed.elf
 ####
 # C File Objects
-EE_OBJS = main.o loader_elf.o asm.o ps2ipc.o
+EE_OBJS = main.o loader_elf.o ps2ipc.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
 # Network Module
