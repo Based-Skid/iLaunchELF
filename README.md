@@ -11,6 +11,9 @@ Tested and Working on Real Hardware
 
 
 ## Notice
+
+##This App Does Compile! The PS2DEV Docker Container Wont Compile This Project at this time causing travis CI to fail. working on fixing this!
+
 This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
 
 This Program Utilizes the HTTP Client File System from the PS2DEV sdk
