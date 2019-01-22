@@ -527,8 +527,7 @@ int main(int argc, char *argv[])
 	// initialize
 	initialize();
 	scr_clear();
-	menu_header();	
-	menu_Text();
+	menu_header();
 	sleep(1);
 	scr_printf("Modules Loaded Up. Starting up DHCP \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
