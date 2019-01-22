@@ -11,30 +11,23 @@
 #include <debug.h>
 #include <libpwroff.h>
 #include <iopcontrol.h>
-#include "libmtap.h"
 #include <stdlib.h>
 #include "malloc.h"
 #include <libcdvd.h>
 #include <iopheap.h>
 #include <io_common.h>
 #include <syscallnr.h>
-
+#include <unistd.h>
 
 //#include "strings.h"
 
 // IP Shit.
 #include <netman.h>
-#include <ps2ip.h>
+#include <ps2ips.h>
 
 // SBV
 #include <sbv_patches.h>
 
-//Red Color
-#define KRED  "\x1B[31m"
-
-// ASM.C
-void PasteASM();
-//
 
 //ps2ip.c
 int dhcpmain();
