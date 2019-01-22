@@ -559,7 +559,7 @@ int main(int argc, char *argv[])
 		{
 		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
 		 sleep(5);
-		 bootELF(5);
+		 BootELF(5);
 		}
 		
 		if (new_pad & PAD_R2)
