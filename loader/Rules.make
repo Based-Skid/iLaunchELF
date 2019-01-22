@@ -26,7 +26,8 @@ EE_ASFLAGS := -G0 $(EE_ASFLAGS)
 # Link with following libraries.  This is a special case, and instead of
 # allowing the user to override the library order, we always make sure
 # libkernel is the last library to be linked.
-EE_LIBS += -lc -lkernel-nopatch
+# EE_LIBS += -lc -lkernel-nopatch
+EE_LIBS += -lc -lkernel
 
 # Externally defined variables: EE_BIN, EE_OBJS, EE_LIB
 
@@ -35,17 +36,17 @@ EE_C_COMPILE = $(EE_CC) $(EE_CFLAGS) $(EE_INCS)
 EE_CXX_COMPILE = $(EE_CXX) $(EE_CXXFLAGS) $(EE_INCS)
 
 # Extra macro for disabling the automatic inclusion of the built-in CRT object(s)
-ifeq ($(EE_CC_VERSION),3.2.2)
+# ifeq ($(EE_CC_VERSION),3.2.2)
+# 	EE_NO_CRT = -mno-crt0
+# else ifeq ($(EE_CC_VERSION),3.2.3)
 	EE_NO_CRT = -mno-crt0
-else ifeq ($(EE_CC_VERSION),3.2.3)
-	EE_NO_CRT = -mno-crt0
-else
-	EE_NO_CRT = -nostartfiles
-	CRTBEGIN_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtbegin.o)
-	CRTEND_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtend.o)
-	CRTI_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crti.o)
-	CRTN_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtn.o)
-endif
+# else
+# 	EE_NO_CRT = -nostartfiles
+# 	CRTBEGIN_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtbegin.o)
+# 	CRTEND_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtend.o)
+# 	CRTI_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crti.o)
+# 	CRTN_OBJ := $(shell $(EE_CC) $(CFLAGS) -print-file-name=crtn.o)
+# endif
 
 %.o: %.c
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@

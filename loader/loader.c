@@ -35,6 +35,7 @@
 #include "iopheap.h"
 #include "errno.h"
 //--------------------------------------------------------------
+#define GS_BGCOLOR *((volatile unsigned long int*)0x120000E0)
 
 //--------------------------------------------------------------
 //End of data declarations
@@ -62,54 +63,35 @@ static void wipeUserMem(void)
 //--------------------------------------------------------------
 // *** MAIN ***
 //--------------------------------------------------------------
-int main(int argc, char *argv[])
+void main(int argc, char *argv[])
 {
     static t_ExecData elfdata;
-    char *target, *path;
-    char *args[1];
-    int ret;
-
+    int ret = 0;
+    int args;
     // Initialize
     SifInitRpc(0);
     wipeUserMem();
-
-    if (argc != 2)
-    {               // arg1=path to ELF, arg2=partition to mount
-        SifExitRpc();
-        return -EINVAL;
-    }
-
-    target = argv[0];
-    path = argv[1];
-
-    //Writeback data cache before loading ELF.
-    FlushCache(0);
-    ret = SifLoadElf(target, &elfdata);
+    if(argc == 0) { // Fatal, dunno wtf to load
+		GS_BGCOLOR = 0xFF0000;
+		asm volatile("break\n");
+	} else if(argc == 1) { // Missing binary type arg, loading target as ELF. Launch arg will be ELF URI.
+		ret = SifLoadElf(argv[0], &elfdata);
+	} else {
+		ret = SifLoadElf(argv[0], &elfdata);
+		argc -= 1;
+		for(args = 0; args < argc; args++) argv[args] = argv[args+1];
+	}
     if (ret == 0) {
-        args[0] = path;
-
-        if(strncmp(path, "hdd", 3)==0 && (path[3]>='0' && path[3]<=':'))
-        {   /* Final IOP reset, to fill the IOP with the default modules.
-               It appears that it was once a thing for the booting software to leave the IOP with the required IOP modules.
-               This can be seen in OSDSYS v1.0x (no IOP reboot) and the mechanism to boot DVD player updates (OSDSYS will get LoadExecPS2 to load SIO2 modules).
-               However, it changed with the introduction of the HDD unit, as the software booted may be built with a different SDK revision.
-
-               Reboot the IOP, to leave it in a clean & consistent state.
-               But do not do that for boot targets on other devices, for backward-compatibility with older (homebrew) software. */
-            while(!SifIopReset("", 0)){};
-            while(!SifIopSync()){};
-        }
-
         SifExitRpc();
 
         FlushCache(0);
         FlushCache(2);
 
-        ExecPS2((void *)elfdata.epc, (void *)elfdata.gp, 1, args);
-        return 0;
+        ExecPS2((void *)elfdata.epc, (void *)elfdata.gp, argc, argv);
+        asm volatile("break\n");
     } else {
-        SifExitRpc();
-        return -ENOENT;
+		GS_BGCOLOR = 0xFFFF00;
+		asm volatile("break\n");
     }
 }
 //--------------------------------------------------------------
