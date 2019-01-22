@@ -1,30 +1,11 @@
-/*==================================================================
-==               Boot ELF Over HTTP
-==
-==
-== ELF loading Portions of this Code are From loader.c
-== https://github.com/AKuHAK/uLaunchELF/blob/master/loader/loader.c
-==
-==
-==											==
-==	Copyright(c)2004  Adam Metcalf(gamblore_@hotmail.com)		==
-==	Copyright(c)2004  Thomas Hawcroft(t0mb0la@yahoo.com)		==
-==	This file is subject to terms and conditions shown in the	==
-==	file LICENSE which should be kept in the top folder of	==
-==	this distribution.							==
-==											==
-==	Portions of this code taken from PS2Link:				==
-==				pkoLoadElf						==
-==				wipeUserMemory					==
-==				(C) 2003 Tord Lindstrom (pukko@home.se)	==
-==				(C) 2003 adresd (adresd_ps2dev@yahoo.com)	==
-==	Portions of this code taken from Independence MC exploit	==
-==				tLoadElf						==
-==				LoadAndRunHDDElf					==
-==				(C) 2003 Marcus Brown <mrbrown@0xd6.org>	==
-==											==
-==================================================================*/
+/*
+                 ILaunchELF
+	Created by krHACKen & Based_Skid
 
+   ELF loading Portions of this Code are From loader.c
+   https://github.com/AKuHAK/uLaunchELF/blob/master/loader/loader.c
+
+ */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
 #include "main.h"
 // App Strings
@@ -62,13 +43,18 @@ typedef struct {
 	u32	align;
 } elf_pheader_t;
 
-void menu_Text(void)
+void menu_header(void)
 {
-	scr_clear();
 	scr_printf(appName);
 	scr_printf(appVer);
 	scr_printf(appAuthor);
-	scr_printf(appNotice);
+	//scr_printf(appNotice);
+}
+
+void menu_Text(void)
+{
+	scr_clear();
+	menu_header();
 	scr_printf(txtcrossBtn);
 	scr_printf(txtsqrBtn);
 	scr_printf(txtcirBtn);
@@ -78,88 +64,88 @@ void menu_Text(void)
 	scr_printf(txtselBtn);
 	scr_printf(txtstrtBtn);
 	scr_printf(txtR2Btn);
+	scr_printf(txtL3Btn);
 	scr_printf(" \n");
 }
-
-
-void initialize(void)
+void ResetIOP()
 {
 
-	int ret;
-	// init debug screen
-	init_scr();
-	scr_printf("Loading... Please Wait. \n");
-	// load all modules
-	LoadModules();
-	// init pad
-	padInit(0);
-	if ((ret = padPortOpen(0, 0, padBuf)) == 0)
-	{
-		#if defined DEBUG
-			scr_printf("padOpenPort failed: %d\n", ret);
-		#endif
-		SleepThread();
-	}
+	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD. Although seemingly unimportant, this will update the addresses on the EE, which can prevent a crash from happening around the IOP reboot.
+	SifIopReset("", 0);      //Reboot IOP with default modules (empty command line)
+	while(!SifIopSync()){}   //Wait for IOP to finish rebooting.
+	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD.
+	SifLoadFileInit();       //Initialize LOADFILE RPC.
+	fioInit();               //Initialize FILEIO RPC.
 
-	if (!initializePad(0, 0))
-	{
-		#if defined DEBUG
-			scr_printf("pad initalization failed!\n");
-		#endif
-		SleepThread();
-
-	}
-
+	// SBV Patches Are Not part of a Normal IOP Reset.
+	sbv_patch_enable_lmb(); //SBV Patches
+	sbv_patch_disable_prefix_check(); //SBV Patch Load Executable IRX And ELF Files From User-Writable Storage
+	//sbv_patch_user_mem_clear(0x00100000); // You Can Specify a Starting Address for the Wipe
+	//sbv_patch_user_mem_clear(0x02000000); // Disable Clear Memory With LoadExecPS2() when 0x02000000 is passed as an arg
 }
 
-int LoadIRX()
+
+void gotoOSDSYS(int sc)
 {
-	int a;
-	printf(" Loading IRX!\n");
-
-	a = SifExecModuleBuffer(&poweroff, size_poweroff, 0, NULL, NULL);
-	if (a < 0 )
+	if (sc != 0)
 	{
-    scr_printf(" Could not load POWEROFF.IRX! %d\n", a);
-	return -1;
+		scr_printf(appFail);
+		if(sc ==1 || sc ==2 || sc ==3 || sc ==4 || sc ==5)
+		{
+			scr_printf(modloadfail);
+		}
+		if (sc == 1)
+		{
+			scr_printf("SIO2MAN\n");
+		}
+		if (sc == 2)
+		{
+			scr_printf("CDVDMAN\n");
+		}
+		if (sc == 3)
+		{
+			scr_printf("PADMAN\n");
+		}
+		if (sc == 4)
+		{
+			scr_printf("MCMAN\n");
+		}
+		if (sc == 5)
+		{
+			scr_printf("MCSERV\n");
+		}
+		if (sc == 6)
+		{
+			scr_printf("ERROR: Unknown\n");
+		}
+		sleep(5);
 	}
-
-	printf(" Loaded POWEROFF.IRX!\n");
-	return 0;
-
-
-
+	ResetIOP();
+	scr_printf(osdmsg);
+	LoadExecPS2("rom0:OSDSYS", 0, NULL);
 }
 
 void LoadModules(void)
 {
 	int ret;
 
-
 	ret = SifExecModuleBuffer(&freesio2, size_freesio2, 0, NULL, NULL);
 	if (ret < 0)
 	{
 		printf("Failed to Load freesio2 sw module");
-		ret = SifLoadModule("rom0:XSIO2MAN", 0, NULL);
-		if (ret < 0)
-		{
-			gotoOSDSYS(1);
-		}
+		gotoOSDSYS(1);
 	}
-
 
 	ret = SifExecModuleBuffer(&iomanX, size_iomanX, 0, NULL, NULL);
 	if (ret < 0)
 	{
 		printf("Failed to Load iomanx sw module");
-
 	}
 
 	ret = SifExecModuleBuffer(&fileXio, size_fileXio, 0, NULL, NULL);
 	if (ret < 0)
 	{
 		printf("Failed to Load freesio2 sw module");
-
 	}
 
 
@@ -167,33 +153,22 @@ void LoadModules(void)
 	if (ret < 0)
 	{
 		printf("Failed to Load freepad sw module");
-		ret = SifLoadModule("rom0:XPADMAN", 0, NULL);
-		if (ret < 0)
-		{
-			gotoOSDSYS(3);
-		}
+		gotoOSDSYS(3);
 	}
 
 	ret = SifExecModuleBuffer(&mcman, size_mcman, 0, NULL, NULL);
 	if (ret < 0)
 	{
 		printf("Failed to Load mcman sw module");
-		ret = SifLoadModule("rom0:XMCMAN", 0, NULL);
-		if (ret < 0)
-		{
-			gotoOSDSYS(4);
-		}
+		gotoOSDSYS(4);
 	}
 
 	ret = SifExecModuleBuffer(&mcserv, size_mcserv, 0, NULL, NULL);
 	if (ret < 0)
 	{
 		printf("Failed to Load mcserv sw module");
-		ret = SifLoadModule("rom0:XMCSERV", 0, NULL);
-		if (ret < 0)
-		{
-			gotoOSDSYS(5);
-		}
+		gotoOSDSYS(5);
+
 	}
 
 	ret = SifExecModuleBuffer(&ps2dev9, size_ps2dev9, 0, NULL, NULL);
@@ -236,11 +211,11 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&ps2http, size_ps2http, 0, NULL, NULL);
 	if (ret < 0)
 	{
-        scr_printf("	Could not load ps2http.IRX! %d\n", ret);
-	return -1;
+        	printf("	Could not load ps2http.IRX! %d\n", ret);
+		gotoOSDSYS(5);
 	}
 
-	}
+}
 
 /////////////////////////////////////////////////////////////////////
 //waitPadReady
@@ -379,122 +354,108 @@ void pad_wait_button(u32 button)
 	}
 }
 
-void ResetIOP()
+
+
+int Access_Test(char *arg)
 {
+	int fd, size;
 
-	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD. Although seemingly unimportant, this will update the addresses on the EE, which can prevent a crash from happening around the IOP reboot.
-	SifIopReset("", 0);      //Reboot IOP with default modules (empty command line)
-	while(!SifIopSync()){}   //Wait for IOP to finish rebooting.
-	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD.
-	SifLoadFileInit();       //Initialize LOADFILE RPC.
-	fioInit();               //Initialize FILEIO RPC.
+	fd = open(arg, O_RDONLY);
 
-	// SBV Patches Are Not part of a Normal IOP Reset.
-	sbv_patch_enable_lmb(); //SBV Patches
-	sbv_patch_disable_prefix_check(); //SBV Patch Load Executable IRX And ELF Files From User-Writable Storage
-	//sbv_patch_user_mem_clear(0x00100000); // You Can Specify a Starting Address for the Wipe
-	//sbv_patch_user_mem_clear(0x02000000); // Disable Clear Memory With LoadExecPS2() when 0x02000000 is passed as an arg
+	if(fd >= 0) {
+		size = lseek(fd, 0, SEEK_END);
+		close(fd);
+	} else return fd;
+
+	return size;
 }
-
-
-void gotoOSDSYS(int sc)
-{
-	if (sc != 0)
-	{
-		scr_printf(appFail);
-		if(sc ==1 || sc ==2 || sc ==3 || sc ==4 || sc ==5)
-		{
-			scr_printf(modloadfail);
-		}
-		if (sc == 1)
-		{
-			scr_printf("SIO2MAN\n");
-		}
-		if (sc == 2)
-		{
-			scr_printf("CDVDMAN\n");
-		}
-		if (sc == 3)
-		{
-			scr_printf("PADMAN\n");
-		}
-		if (sc == 4)
-		{
-			scr_printf("MCMAN\n");
-		}
-		if (sc == 5)
-		{
-			scr_printf("MCSERV\n");
-		}
-		if (sc == 6)
-		{
-			scr_printf("ERROR: Unknown\n");
-		}
-		sleep(5);
-	}
-	ResetIOP();
-	scr_printf(osdmsg);
-	LoadExecPS2("rom0:OSDSYS", 0, NULL);
-}
-
-
-
 
 void BootELF(int lapp)
 {
 	u8 *pdata, *dest;
 	elf_header_t *eh;
 	elf_pheader_t *eph;
-	int i, j;
-	char arg0[256], arg1[256];
-	char *exec_args[2] = { arg0, arg1 };
+	int i, j, ret;
+	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
+	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
+	int argc = 0;
 	sleep(2);
-	
-	/* Set up the loader.elf launch args. It wants two.
-	When not executing a user ELF from the HDD, the 2 params are identical (same full path for both args) */
+
+	/*
+	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
+	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
+	*/
 	if (lapp != 0)
 	{
 		if (lapp == 1)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/wLE.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/wLE.ELF");
+			strcpy(exec_args[1], "mc0:/SYS-CONF/");
+			strcpy(exec_args[2], "This");
+			strcpy(exec_args[3], "Is");
+			strcpy(exec_args[4], "a");
+			strcpy(exec_args[5], "Test");
+			argc = 6;
 		}
-		if (lapp == 2)
+		else if (lapp == 2)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/OPL-0.9.3-VMC-GSM-PS2RD.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/OPL-0.9.3-VMC-GSM-PS2RD.ELF");
+			argc = 1;
 		}
-		if (lapp == 3)
+		else if (lapp == 3)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/GSM.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/GSM.ELF");
+			argc = 1;
 		}
-		if (lapp == 4)
+		else if (lapp == 4)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/COGSWAP.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/COGSWAP.ELF");
+			argc = 1;
 		}
-		if (lapp == 5)
+		else if (lapp == 5)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/mCF.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/mCF.ELF");
+			argc = 1;
 		}
-		if (lapp == 6)
+		else if (lapp == 6)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/iLaunch.ELF");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/iLaunch.ELF");
+			argc = 1;
 		}
-		if (lapp == 7)
+		else if (lapp == 7)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/r0005/r0005-latest.elf");
-			strcpy(exec_args[1], "http://update.ps2.host/r0005/r0005-latest.elf");
+			argc = 1;
 		}
-		if (lapp == 8)
+		else if (lapp == 8)
 		{
 			strcpy(exec_args[0], "http://update.ps2.host/ELF/PowerOff.elf");
-			strcpy(exec_args[1], "http://update.ps2.host/ELF/PowerOff.elf");
+			argc = 1;
 		}
+		else if (lapp == 9)
+		{
+			strcpy(exec_args[0], "http://bbn03.chez.com/packed_BOOT.ELF");
+			argc = 1;
+		}
+	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
+	//Clear Screen To Make This Look tidy!
+	scr_clear();
+	menu_header();
+	//
+	//Access Test (Make sure The Elf can Actually be Loaded)
+	scr_printf("Access Test:\n");
+	ret = Access_Test(exec_args[0]);
+	if(ret < 0) {
+		scr_printf(" could not open the file\n");
+		printf("Returned from Access_Test(), could not open the file\n");
+		gotoOSDSYS(141);//Reboots Ps2 If this Fails
+	} else {
+		scr_printf(" %d bytes\n", ret);
+		printf("Returned from Access_Test(), %d bytes\n", ret);
 	}
+	//
+	
+	// Display URL The ELF Is Being Loaded From
 	scr_printf("Launching Application from \n %s", arg0);
 	sleep(2);
 	/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
@@ -512,20 +473,49 @@ void BootELF(int lapp)
 	}
 	padPortClose(0, 0);
 	padEnd();
-    SifExitRpc();
-    FlushCache(0);
-    FlushCache(2);
+	NetManDeinit();
+	SifExitRpc();
+	FlushCache(0);
+	FlushCache(2);
 
-	ExecPS2((void *)eh->entry, 0, 2, exec_args);
+	ExecPS2((void *)eh->entry, 0, argc, exec_args);
 }
 
 
+void initialize(void)
+{
+
+	int ret;
+	SifInitRpc(0);
+	scr_clear();
+	// init debug screen
+	init_scr();
+	scr_clear();
+	scr_printf("Loading... Please Wait. \n");
+	// load all modules
+	LoadModules();
+	// init pad
+	padInit(0);
+	if ((ret = padPortOpen(0, 0, padBuf)) == 0)
+	{
+		#if defined DEBUG
+			scr_printf("padOpenPort failed: %d\n", ret);
+		#endif
+		SleepThread();
+	}
+
+	if (!initializePad(0, 0))
+	{
+		#if defined DEBUG
+			scr_printf("pad initalization failed!\n");
+		#endif
+		SleepThread();
+
+	}
+
+}
 
 
-
-//--------------------------------------------------------------
-// *** MAIN ***
-//--------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -533,12 +523,12 @@ int main(int argc, char *argv[])
 
 	// Initialize
 	SifInitRpc(0);
-//	wipeUserMem(); // Wipe User memory After Initializing SIFRPC
 	ResetIOP();
 	// initialize
 	initialize();
-	// "Load IRX Modules"
-	LoadIRX();
+	scr_clear();
+	menu_header();	
+	menu_Text();
 	sleep(1);
 	scr_printf("Modules Loaded Up. Starting up DHCP \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
@@ -567,7 +557,9 @@ int main(int argc, char *argv[])
 		
 		if (new_pad & PAD_R1)
 		{
-		 BootELF(5);
+		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
+		 sleep(5);
+		 bootELF(5);
 		}
 		
 		if (new_pad & PAD_R2)
