@@ -1,14 +1,11 @@
-# iLaunchELF [![Build Status](https://travis-ci.org/Based-Skid/iLaunchELF.svg?branch=master)](https://travis-ci.org/Based-Skid/iLaunchELF)
-Created by krHACKen & Based_Skid
+VTSPS2-HBDL v0.1
+HomeBrew DownLoader
 
-Http Based ELF loader Demo For the PS2
+Forked from iLaunchELF by VTSTech
 
-Uses DHCP For Network Config
+Original iLaunchELF Created by krHACKen & Based_Skid
 
-Loads an ELF file into Memory Via HTTP and Boots it!.
-
-Tested and Working on Real Hardware
-
+<b>Very unstable right now. Under heavy development. Does not work. Do not use.</b>
 
 ## Notice
 This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
