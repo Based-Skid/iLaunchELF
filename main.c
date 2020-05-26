@@ -1,6 +1,6 @@
 /*
-                 ILaunchELF
-	Created by krHACKen & Based_Skid
+                 VTSLaunchELF
+	Based on iLaunchELF by krHACKen & Based_Skid
 
    ELF loading Portions of this Code are From loader.c
    https://github.com/AKuHAK/uLaunchELF/blob/master/loader/loader.c
@@ -10,7 +10,6 @@
 #include "main.h"
 // App Strings
 #include "strings.h"
-#include "md5.h"
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
 
@@ -42,6 +41,12 @@ typedef struct {
 	u32	flags;
 	u32	align;
 } elf_pheader_t;
+
+int getFileSize(int fd) {
+	int size = fioLseek(fd, 0, SEEK_END);
+	fioLseek(fd, 0, SEEK_SET);
+	return size;
+}
 
 void menu_header(void)
 {
@@ -118,7 +123,7 @@ void gotoOSDSYS(int sc)
 		{
 			scr_printf("ERROR: Unknown\n");
 		}
-		sleep(5);
+		//sleep(5);
 	}
 	ResetIOP();
 	scr_printf(osdmsg);
@@ -370,115 +375,283 @@ int Access_Test(char *arg)
 	return size;
 }
 
-void BootELF(int lapp)
+int Download(char *url, char *full_path)
+{
+	int fd, size;
+	FILE *target;
+	fd = open(url, O_RDONLY);
+	target = fopen(full_path,"w");
+	if(fd >= 0) {
+		size = lseek(fd, 0, SEEK_END);
+		fwrite(lseek(fd, 0, SEEK_END),1,size,target);
+		close(fd);
+		sleep(2);
+		fclose(target);
+	} else return fd;
+	return size;
+}
+
+void substring(char s[], char sub[], int p, int l) {
+   int c = 0;
+   
+   while (c < l) {
+      sub[c] = s[p+c-1];
+      c++;
+   }
+   sub[c] = '\0';
+}
+char file_crc32(char device[], char path[], char fn[])
+{
+  FILE *fp;
+  size_t len;
+  char tmp[32];
+  char f_crc32[16];
+  char full_path[128];
+	strcpy(full_path,device);
+	strcat(full_path,path);
+	strcat(full_path,fn);  
+  char buf[8000000], *file = full_path;
+  if (NULL == (fp = fopen(file, "rb")))
+  {
+        printf("Error! Unable to open %s for reading\n", file);
+        //return -1;
+  }
+  len = fread(buf, sizeof(char), sizeof(buf), fp);
+  //scr_printf("%d bytes read\n", len);
+  //scr_printf("The checksum of %s is:\n\n", file);
+  fclose(fp);
+  sleep(1);
+  sprintf(tmp,"%lX",crc32(buf, len));
+  substring(tmp,f_crc32,9,8);
+  scr_printf("%s",f_crc32);
+}
+
+void DoTask(int task)
 {
 	u8 *pdata, *dest;
 	elf_header_t *eh;
 	elf_pheader_t *eph;
-	int i, j, ret;
+	int i, j, ret,launching,downloading,checking;
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
-	sleep(2);
-
+	int fd,file_size;
+	char device[128], path[128], fn[128], full_path[256];
+	sleep(1);
+	
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
 	*/
-	if (lapp != 0)
+	launching=0;
+	downloading=0;
+	checking=0;
+	if (task != 0)
 	{
-		if (lapp == 1)
+		if (task == 1)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/wLE.ELF");
-			strcpy(exec_args[1], "mc0:/SYS-CONF/");
-			strcpy(exec_args[2], "This");
-			strcpy(exec_args[3], "Is");
-			strcpy(exec_args[4], "a");
-			strcpy(exec_args[5], "Test");
-			argc = 6;
+			checking=1;
+			//Check OPL
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"OPL.ELF");			
 		}
-		else if (lapp == 2)
+		else if (task == 2)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/OPL-0.9.3-VMC-GSM-PS2RD.ELF");
-			argc = 1;
+			checking=1;
+			//Check WLE
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"WLE.ELF");
 		}
-		else if (lapp == 3)
+		else if (task == 3)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/GSM.ELF");
+			//Download OPL
+			downloading=1;
+			strcpy(exec_args[0], "http://hbdl.vts-tech.org/OPL.ELF");
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"OPL.ELF");			
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  				
 			argc = 1;
+			sleep(10);
 		}
-		else if (lapp == 4)
+		else if (task == 4)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/COGSWAP.ELF");
+			//Download WLE
+			downloading=1;
+			strcpy(exec_args[0], "http://hbdl.vts-tech.org/WLE.ELF");
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"WLE.ELF");
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  				
 			argc = 1;
+			sleep(10);
 		}
-		else if (lapp == 5)
+		else if (task == 5)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/mCF.ELF");
-			argc = 1;
+			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
+			//argc = 1;
+			sleep(2);
 		}
-		else if (lapp == 6)
+		else if (task == 6)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/iLaunch.ELF");
-			argc = 1;
+			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
+			//argc = 1;
+			sleep(2);
 		}
-		else if (lapp == 7)
+		else if (task == 7)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/r0005/r0005-latest.elf");
-			argc = 1;
+			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
+			//argc = 1;
+			sleep(2);
 		}
-		else if (lapp == 8)
+		else if (task == 8)
 		{
-			strcpy(exec_args[0], "http://update.ps2.host/ELF/PowerOff.elf");
-			argc = 1;
+			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
+			//argc = 1;
+			sleep(2);
 		}
-		else if (lapp == 9)
+		else if (task == 9)
 		{
-			strcpy(exec_args[0], "http://bbn03.chez.com/packed_BOOT.ELF");
-			argc = 1;
+			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
+			//argc = 1;
+			sleep(2);
 		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
 	scr_clear();
 	menu_header();
-	//
-	//Access Test (Make sure The Elf can Actually be Loaded)
-	scr_printf("Access Test:\n");
-	ret = Access_Test(exec_args[0]);
-	if(ret < 0) {
-		scr_printf(" could not open the file\n");
-		printf("Returned from Access_Test(), could not open the file\n");
-		gotoOSDSYS(141);//Reboots Ps2 If this Fails
-	} else {
-		scr_printf(" %d bytes\n", ret);
-		printf("Returned from Access_Test(), %d bytes\n", ret);
-	}
-	//
-	
-	// Display URL The ELF Is Being Loaded From
-	scr_printf("Launching Application from \n %s", arg0);
-	sleep(2);
-	/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
-	eh = (elf_header_t *)&loader_elf;
-	eph = (elf_pheader_t *)(&loader_elf + eh->phoff);
-
-	for(i = 0; i < eh->phnum; i++) {
-		dest = (u8*)(eph[i].vaddr);
-		pdata = (u8*)(&loader_elf + eph[i].offset);
-		for(j = 0; j < eph[i].filesz; j++) dest[j] = pdata[j];
-		if(eph[i].memsz > eph[i].filesz) {
-			dest = (u8 *)(eph[i].vaddr + eph[i].filesz);
-			for(j = 0; j < eph[i].memsz - eph[i].filesz; j++) dest[j] = '\0';
+	if (downloading==1){
+	  char buf[8000000], *file = full_path;
+	  char *url;
+	  strcpy(url,exec_args[0]);
+		scr_printf("Downloading...\n");
+		//Access Test (Make sure The Elf can Actually be Loaded)
+		ret = Download(url,full_path);
+		if(ret < 0) {
+			scr_printf("Error! Could not open the file\n");
+		} else {
+			scr_printf("File Size: %d bytes\n", ret);
+			fclose(fd);
+			sleep(1);
+			fd = fopen(full_path, "w");
+			file_size = getFileSize(fd);
+			if (file_size >= 1) {
+				scr_printf("%s Exists!\n", full_path);
+			} else {
+				scr_printf("%s Does Not Exist!\n", full_path);
+			}
 		}
 	}
+	if (checking == 1) {
+		fioClose(fd);
+		strcpy(full_path,device);
+		strcat(full_path,path);
+		strcat(full_path,fn);
+		fd = fioOpen(full_path, O_RDONLY);
+		file_size = getFileSize(fd);
+		if (file_size > 1) {
+			scr_printf("%s Exists!\n", full_path);
+		} else {
+			scr_printf("%s Does Not Exist!\n", full_path);
+		}
+		fioClose(fd);
+		scr_printf("CRC32: ");
+		file_crc32(device,path,fn);
+		scr_printf("\n");
+		sleep(5);		
+	}
+	if (launching == 1) {
+		// Display URL The ELF Is Being Loaded From
+		scr_printf("Launching Application from \n %s", arg0);
+		sleep(2);
+		/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
+		eh = (elf_header_t *)&loader_elf;
+		eph = (elf_pheader_t *)(&loader_elf + eh->phoff);
+
+		for(i = 0; i < eh->phnum; i++) {
+			dest = (u8*)(eph[i].vaddr);
+			pdata = (u8*)(&loader_elf + eph[i].offset);
+			for(j = 0; j < eph[i].filesz; j++) dest[j] = pdata[j];
+			if(eph[i].memsz > eph[i].filesz) {
+				dest = (u8 *)(eph[i].vaddr + eph[i].filesz);
+				for(j = 0; j < eph[i].memsz - eph[i].filesz; j++) dest[j] = '\0';
+			}
+		}
 	padPortClose(0, 0);
 	padEnd();
 	NetManDeinit();
 	SifExitRpc();
 	FlushCache(0);
 	FlushCache(2);
-
 	ExecPS2((void *)eh->entry, 0, argc, exec_args);
+	}
+	scr_printf("Operations complete. Returning to Main Menu...\n");
+	sleep(12);
+	menu_Text();
+		while (1)
+	{
+		//check to see if the pad is still connected
+		checkPadConnected();
+		//read pad 0
+		buttonStatts(0, 0);
+		
+		if (new_pad & PAD_START)
+		{
+		 gotoOSDSYS(0);
+		}
+		
+		if (new_pad & PAD_SELECT)
+		{
+		 DoTask(6);
+		}
+		
+		if (new_pad & PAD_L1)
+		{
+		 DoTask(7);
+		}
+		
+		if (new_pad & PAD_R1)
+		{
+		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
+		 sleep(5);
+		 DoTask(5);
+		}
+		
+		if (new_pad & PAD_R2)
+		{
+		 DoTask(8);
+		}
+		
+		if (new_pad & PAD_TRIANGLE)
+		{
+		 //Download WLE
+		 DoTask(4);
+		}
+
+		if (new_pad & PAD_CIRCLE)
+		{
+		 //Download OPL
+		 DoTask(3);
+		}
+
+		if (new_pad & PAD_SQUARE)
+		{
+		 //Check WLE
+		 DoTask(2);
+		}
+		
+		if(new_pad & PAD_CROSS)
+		{
+		//Check OPL
+		DoTask(1);
+		}
+	}
 }
 
 
@@ -515,12 +688,8 @@ void initialize(void)
 
 }
 
-
-
 int main(int argc, char *argv[])
 {
-
-
 	// Initialize
 	SifInitRpc(0);
 	ResetIOP();
@@ -546,44 +715,48 @@ int main(int argc, char *argv[])
 		
 		if (new_pad & PAD_SELECT)
 		{
-		 BootELF(6);
+		 DoTask(6);
 		}
 		
 		if (new_pad & PAD_L1)
 		{
-		 BootELF(7);
+		 DoTask(7);
 		}
 		
 		if (new_pad & PAD_R1)
 		{
 		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
 		 sleep(5);
-		 BootELF(5);
+		 DoTask(5);
 		}
 		
 		if (new_pad & PAD_R2)
 		{
-		 BootELF(8);
+		 DoTask(8);
 		}
 		
 		if (new_pad & PAD_TRIANGLE)
 		{
-		 BootELF(4);
+		 //Download WLE
+		 DoTask(4);
 		}
 
 		if (new_pad & PAD_CIRCLE)
 		{
-		 BootELF(3);
+		 //Download OPL
+		 DoTask(3);
 		}
 
 		if (new_pad & PAD_SQUARE)
 		{
-		 BootELF(2);
+		 //Check WLE
+		 DoTask(2);
 		}
 		
 		if(new_pad & PAD_CROSS)
 		{
-		BootELF(1);
+		//Check OPL
+		DoTask(1);
 		}
 	}
 

@@ -18,9 +18,10 @@
 #include <io_common.h>
 #include <syscallnr.h>
 #include <unistd.h>
+#include <fileXio.h>
 #include <fileXio_rpc.h>
 //#include "strings.h"
-
+#include "crc32.h"
 // IP Shit.
 #include <netman.h>
 #include <ps2ips.h>

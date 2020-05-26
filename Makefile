@@ -6,7 +6,7 @@ EE_OBJS = main.o loader_elf.o ps2ipc.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
 # Network Module
-EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
+EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o crc32.o
 # Other IRX
 EE_OBJS += poweroff.o
 # SBV Shit
@@ -21,10 +21,10 @@ all: $(EE_BIN)
 
 # Un Comment to Enable Compression of the ELF. you will need ps2packer in the project dir
 
-# all: $(EE_BIN)
-	# ps2_packer/ps2_packer -p zlib $(EE_BIN) $(EE_BIN_PACKED)
-	# cp -f --remove-destination $(EE_BIN_PACKED) $(EE_BIN_DIR)/$(EE_BIN)
-	# rm -rf *.o *.s
+all: $(EE_BIN)
+	~/ps2homebrew/ps2-packer/ps2-packer -p zlib $(EE_BIN) $(EE_BIN_PACKED)
+	#cp -f --remove-destination $(EE_BIN_PACKED) $(EE_BIN_DIR)/$(EE_BIN)
+	rm -rf *.o *.s
 
 
 clean:
@@ -82,6 +82,8 @@ smap.s:
 ps2http.s:
 	bin2s $(PS2SDK)/iop/irx/ps2http.irx ps2http.s ps2http
 
+crc32: crc_32.c crc.h
+	$(CC) $(CFLAGS) -o $@ $<
 	
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
