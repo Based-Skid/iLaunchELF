@@ -379,15 +379,15 @@ int Download(char *url, char *full_path)
 	FILE *target;
 	fioClose(fd);
 	fd = fioOpen(url, O_RDONLY);
-	fioClose(target);
-	target = fioOpen(full_path,O_WRONLY);
+	fclose(target);
+	target = fopen(full_path,"w+");
 	if(fd >= 0) {
 		size = fioLseek(fd, 0, SEEK_END);
 		sleep(2);
-		fioWrite(fd,target,size);
+		fwrite(fd,1,size,target);
 		sleep(2);
 		fioClose(fd);
-		fioClose(target);
+		fclose(target);
 	} else return fd;
 	return size;
 }
