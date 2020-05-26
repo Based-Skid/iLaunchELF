@@ -137,41 +137,41 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&freesio2, size_freesio2, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load freesio2 sw module");
+		scr_printf("Failed to Load freesio2 sw module");
 		gotoOSDSYS(1);
 	}
 
 	ret = SifExecModuleBuffer(&iomanX, size_iomanX, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load iomanx sw module");
+		scr_printf("Failed to Load iomanx sw module");
 	}
 
 	ret = SifExecModuleBuffer(&fileXio, size_fileXio, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load freesio2 sw module");
+		scr_printf("Failed to Load freesio2 sw module");
 	}
 
 
 	ret = SifExecModuleBuffer(&freepad, size_freepad, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load freepad sw module");
+		scr_printf("Failed to Load freepad sw module");
 		gotoOSDSYS(3);
 	}
 
 	ret = SifExecModuleBuffer(&mcman, size_mcman, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load mcman sw module");
+		scr_printf("Failed to Load mcman sw module");
 		gotoOSDSYS(4);
 	}
 
 	ret = SifExecModuleBuffer(&mcserv, size_mcserv, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf("Failed to Load mcserv sw module");
+		scr_printf("Failed to Load mcserv sw module");
 		gotoOSDSYS(5);
 
 	}
@@ -179,7 +179,7 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&ps2dev9, size_ps2dev9, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf(" Could not load ps2dev9.IRX! %d\n", ret);
+		scr_printf(" Could not load ps2dev9.IRX! %d\n", ret);
 		SleepThread();
 	}
 
@@ -187,28 +187,28 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&netman, size_netman, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf(" Could not load netman.IRX! %d\n", ret);
+		scr_printf(" Could not load netman.IRX! %d\n", ret);
 		SleepThread();
 	}
 
 	ret = SifExecModuleBuffer(&smap, size_smap, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf(" Could not load smap.IRX! %d\n", ret);
+		scr_printf(" Could not load smap.IRX! %d\n", ret);
 		SleepThread();
 	}
 
 	ret = SifExecModuleBuffer(&ps2ipnm, size_ps2ipnm, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf(" Could not load ps2ip.IRX! %d\n", ret);
+		scr_printf(" Could not load ps2ip.IRX! %d\n", ret);
 		SleepThread();
 	}
 
 	ret = SifExecModuleBuffer(&ps2ips, size_ps2ips, 0, NULL, NULL);
 	if (ret < 0)
 	{
-		printf(" Could not load ps2ips.IRX! %d\n", ret);
+		scr_printf(" Could not load ps2ips.IRX! %d\n", ret);
 		SleepThread();
 	}
 	ps2ip_init();
@@ -216,7 +216,7 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&ps2http, size_ps2http, 0, NULL, NULL);
 	if (ret < 0)
 	{
-        	printf("	Could not load ps2http.IRX! %d\n", ret);
+        	scr_printf("	Could not load ps2http.IRX! %d\n", ret);
 		gotoOSDSYS(5);
 	}
 
@@ -246,8 +246,6 @@ static int waitPadReady(int port, int slot)
 	}
 	return 0;
 }
-
-
 
 /////////////////////////////////////////////////////////////////////
 //initalizePad
@@ -364,12 +362,12 @@ void pad_wait_button(u32 button)
 int Access_Test(char *arg)
 {
 	int fd, size;
-
-	fd = open(arg, O_RDONLY);
+	fioClose(fd);
+	fd = fioOpen(arg, O_RDONLY);
 
 	if(fd >= 0) {
-		size = lseek(fd, 0, SEEK_END);
-		close(fd);
+		size = fioLseek(fd, 0, SEEK_END);
+		fioClose(fd);
 	} else return fd;
 
 	return size;
@@ -379,14 +377,17 @@ int Download(char *url, char *full_path)
 {
 	int fd, size;
 	FILE *target;
-	fd = open(url, O_RDONLY);
-	target = fopen(full_path,"w");
+	fioClose(fd);
+	fd = fioOpen(url, O_RDONLY);
+	fioClose(target);
+	target = fioOpen(full_path,O_WRONLY);
 	if(fd >= 0) {
-		size = lseek(fd, 0, SEEK_END);
-		fwrite(lseek(fd, 0, SEEK_END),1,size,target);
-		close(fd);
+		size = fioLseek(fd, 0, SEEK_END);
 		sleep(2);
-		fclose(target);
+		fioWrite(fd,target,size);
+		sleep(2);
+		fioClose(fd);
+		fioClose(target);
 	} else return fd;
 	return size;
 }
@@ -411,6 +412,7 @@ char file_crc32(char device[], char path[], char fn[])
 	strcat(full_path,path);
 	strcat(full_path,fn);  
   char buf[8000000], *file = full_path;
+  fclose(fp);
   if (NULL == (fp = fopen(file, "rb")))
   {
         printf("Error! Unable to open %s for reading\n", file);
@@ -538,8 +540,7 @@ void DoTask(int task)
 		} else {
 			scr_printf("File Size: %d bytes\n", ret);
 			fclose(fd);
-			sleep(1);
-			fd = fopen(full_path, "w");
+			fd = fopen(full_path, "rw");
 			file_size = getFileSize(fd);
 			if (file_size >= 1) {
 				scr_printf("%s Exists!\n", full_path);

@@ -1,5 +1,5 @@
-EE_BIN = iLE.elf
-EE_BIN_PACKED = iLE_Packed.elf
+EE_BIN = VTSPS2-HBDL.elf
+EE_BIN_PACKED = VTSPS2-HBDL-packed.elf
 ####
 # C File Objects
 EE_OBJS = main.o loader_elf.o ps2ipc.o
