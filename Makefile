@@ -13,17 +13,18 @@ EE_OBJS += poweroff.o
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
 ####
-EE_LIBS = -lpadx -lmtap -ldebug -lmc -lc -lpatches -ldebug -lkernel -lpoweroff -lnetman -lps2ips
+EE_LIBS = -lpadx -lmtap -ldebug -lmc -lc -lpatches -ldebug -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
 
 
 all: $(EE_BIN)
 	rm -rf *.o *.s
 
-#Un Comment to Enable Compression of the ELF. you will need ps2packer in the project dir
-#all: $(EE_BIN)
-#	~/ps2homebrew/ps2-packer/ps2-packer -p zlib $(EE_BIN) $(EE_BIN_PACKED)
-#	cp -f --remove-destination $(EE_BIN_PACKED) $(EE_BIN_DIR)/$(EE_BIN)
-#	rm -rf *.o *.s
+# Un Comment to Enable Compression of the ELF. you will need ps2packer in the project dir
+
+all: $(EE_BIN)
+	~/ps2homebrew/ps2-packer/ps2-packer -p zlib $(EE_BIN) $(EE_BIN_PACKED)
+	#cp -f --remove-destination $(EE_BIN_PACKED) $(EE_BIN_DIR)/$(EE_BIN)
+	rm -rf *.o *.s
 
 
 clean:

@@ -1,5 +1,5 @@
 /*
-                 VTSLaunchELF
+                 VTSPS2-HBDL by VTSTech
 	Based on iLaunchELF by krHACKen & Based_Skid
 
    ELF loading Portions of this Code are From loader.c
@@ -8,11 +8,9 @@
  */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
 #include "main.h"
-// App Strings
 #include "strings.h"
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
-
 
 typedef struct {
 	u8	ident[16];
@@ -362,12 +360,12 @@ void pad_wait_button(u32 button)
 int Access_Test(char *arg)
 {
 	int fd, size;
-	fioClose(fd);
-	fd = fioOpen(arg, O_RDONLY);
+	fileXioClose(fd);
+	fd = fileXioOpen(arg, O_RDONLY);
 
 	if(fd >= 0) {
-		size = fioLseek(fd, 0, SEEK_END);
-		fioClose(fd);
+		size = fileXioLseek(fd, 0, SEEK_END);
+		fileXioClose(fd);
 	} else return fd;
 
 	return size;
@@ -375,20 +373,23 @@ int Access_Test(char *arg)
 
 int Download(char *url, char *full_path)
 {
-	int fd, size;
+	int urld, size = 0;
 	FILE *target;
-	fioClose(fd);
-	fd = fioOpen(url, O_RDONLY);
+	fileXioClose(urld);
 	fclose(target);
-	target = fopen(full_path,"w+");
-	if(fd >= 0) {
-		size = fioLseek(fd, 0, SEEK_END);
+	urld = fileXioOpen(url, O_RDONLY);
+	target = fopen(full_path, "w+");
+	//fioClose(target);
+	if(urld >= 0) {
+		size = fileXioLseek(urld, 0, SEEK_END);
 		sleep(2);
-		fwrite(fd,1,size,target);
+		fwrite(urld,1,size,target);
 		sleep(2);
-		fioClose(fd);
+		fileXioClose(urld);
 		fclose(target);
-	} else return fd;
+	} else {
+		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
+	}
 	return size;
 }
 
@@ -401,31 +402,48 @@ void substring(char s[], char sub[], int p, int l) {
    }
    sub[c] = '\0';
 }
-char file_crc32(char device[], char path[], char fn[])
+void file_crc32(char device[], char path[], char fn[])
 {
-  FILE *fp;
+  int fp;
   size_t len;
-  char tmp[32];
-  char f_crc32[16];
-  char full_path[128];
-	strcpy(full_path,device);
-	strcat(full_path,path);
-	strcat(full_path,fn);  
+  char tmp[32] = "";
+  char f_crc32[16] = "";
+  char full_path[256] = "";
+  strcpy(full_path,device);
+  strcat(full_path,path);
+  strcat(full_path,fn);  
   char buf[8000000], *file = full_path;
-  fclose(fp);
-  if (NULL == (fp = fopen(file, "rb")))
+  fileXioClose(fp);
+  if ((fp = fileXioOpen(file, O_RDONLY)) <= -1)
   {
         printf("Error! Unable to open %s for reading\n", file);
-        //return -1;
   }
-  len = fread(buf, sizeof(char), sizeof(buf), fp);
-  //scr_printf("%d bytes read\n", len);
+  len = fileXioRead(fp, buf, sizeof(buf));
+  scr_printf("%d bytes read\n", len);
   //scr_printf("The checksum of %s is:\n\n", file);
-  fclose(fp);
+  fileXioClose(fp);
   sleep(1);
   sprintf(tmp,"%lX",crc32(buf, len));
   substring(tmp,f_crc32,9,8);
-  scr_printf("%s",f_crc32);
+  scr_printf("CRC32: %s\n",f_crc32);
+}
+
+void str_crc32(char str[])
+{
+  size_t len;
+  char tmp[32] = "";
+  char f_crc32[16] = "";
+  char full_str[8000000] = "";
+  char buf[8000000] = "";
+  strncpy(full_str,str,strlen(str));
+  strcpy(buf,full_str);
+  len = strlen(full_str);
+  scr_printf("%d bytes read\n", len);
+  //scr_printf("The checksum of %s is:\n\n", file);
+  sleep(1);
+  sprintf(tmp,"%lX",crc32(buf, strlen(full_str)));
+  substring(tmp,f_crc32,9,8);
+  scr_printf("CRC32: %s\n",f_crc32);
 }
 
 void DoTask(int task)
@@ -439,8 +457,6 @@ void DoTask(int task)
 	int argc = 0;
 	int fd,file_size;
 	char device[128], path[128], fn[128], full_path[256];
-	sleep(1);
-	
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
@@ -456,7 +472,10 @@ void DoTask(int task)
 			//Check OPL
 			strcpy(device,"mc0:/");
 			strcpy(path,"APPS/");
-			strcpy(fn,"OPL.ELF");			
+			strcpy(fn,"OPL.ELF");
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  					
 		}
 		else if (task == 2)
 		{
@@ -465,6 +484,9 @@ void DoTask(int task)
 			strcpy(device,"mc0:/");
 			strcpy(path,"APPS/");
 			strcpy(fn,"WLE.ELF");
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  					
 		}
 		else if (task == 3)
 		{
@@ -478,7 +500,7 @@ void DoTask(int task)
 			strcat(full_path,path);
 			strcat(full_path,fn);  				
 			argc = 1;
-			sleep(10);
+			sleep(2);
 		}
 		else if (task == 4)
 		{
@@ -492,7 +514,7 @@ void DoTask(int task)
 			strcat(full_path,path);
 			strcat(full_path,fn);  				
 			argc = 1;
-			sleep(10);
+			sleep(2);
 		}
 		else if (task == 5)
 		{
@@ -534,35 +556,41 @@ void DoTask(int task)
 	  strcpy(url,exec_args[0]);
 		scr_printf("Downloading...\n");
 		//Access Test (Make sure The Elf can Actually be Loaded)
-		ret = Download(url,full_path);
-		if(ret < 0) {
+		scr_printf("URL: %s\n", exec_args[0]);
+		scr_printf("Path: %s\n", full_path);
+		ret = Download(exec_args[0],full_path);
+		sleep(4);
+		if(ret <= 0) {
 			scr_printf("Error! Could not open the file\n");
 		} else {
 			scr_printf("File Size: %d bytes\n", ret);
 			fclose(fd);
-			fd = fopen(full_path, "rw");
+			fd = fopen(full_path, "r");
+			scr_printf("Debug: %d\n", fd);
 			file_size = getFileSize(fd);
+			sleep(4);
 			if (file_size >= 1) {
 				scr_printf("%s Exists!\n", full_path);
 			} else {
 				scr_printf("%s Does Not Exist!\n", full_path);
 			}
+			fclose(fd);
 		}
 	}
 	if (checking == 1) {
-		fioClose(fd);
+		fileXioClose(fd);
 		strcpy(full_path,device);
 		strcat(full_path,path);
 		strcat(full_path,fn);
-		fd = fioOpen(full_path, O_RDONLY);
+		fd = fileXioOpen(full_path, O_RDONLY);
 		file_size = getFileSize(fd);
-		if (file_size > 1) {
+		if (file_size >= 1) {
 			scr_printf("%s Exists!\n", full_path);
 		} else {
 			scr_printf("%s Does Not Exist!\n", full_path);
 		}
-		fioClose(fd);
-		scr_printf("CRC32: ");
+		fileXioClose(fd);
+		//scr_printf("CRC32: ");
 		file_crc32(device,path,fn);
 		scr_printf("\n");
 		sleep(5);		
