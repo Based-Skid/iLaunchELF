@@ -41,13 +41,14 @@ typedef struct {
 } elf_pheader_t;
 
 int getFileSize(int fd) {
-	int size = fioLseek(fd, 0, SEEK_END);
-	fioLseek(fd, 0, SEEK_SET);
+	int size = fileXioLseek(fd, 0, SEEK_END);
+	fileXioLseek(fd, 0, SEEK_SET);
 	return size;
 }
 
 void menu_header(void)
 {
+	scr_printf("\n");
 	scr_printf(appName);
 	scr_printf(appVer);
 	scr_printf(appAuthor);
@@ -355,8 +356,6 @@ void pad_wait_button(u32 button)
 	}
 }
 
-
-
 int Access_Test(char *arg)
 {
 	int fd, size;
@@ -373,20 +372,30 @@ int Access_Test(char *arg)
 
 int Download(char *url, char *full_path)
 {
-	int urld, size = 0;
-	FILE *target;
-	fileXioClose(urld);
-	fclose(target);
-	urld = fileXioOpen(url, O_RDONLY);
-	target = fopen(full_path, "w+");
+	int size, urld, target, ret = 0;
+	char buf[8000000];
+	//FILE *urld;
+	//FILE *target;
+	fioClose(urld);
+	fileXioClose(target);
+	urld = fioOpen(url, O_RDONLY);
+	scr_printf("* URL Opened... %d\n", urld);
+	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
+	scr_printf("* Local File Opened... %d\n", target);
 	//fioClose(target);
 	if(urld >= 0) {
-		size = fileXioLseek(urld, 0, SEEK_END);
-		sleep(2);
-		fwrite(urld,1,size,target);
-		sleep(2);
-		fileXioClose(urld);
-		fclose(target);
+		size = fioLseek(urld, 0, SEEK_END);
+		//fileXioLseek(url, 0, SEEK_SET);
+		fioRead(urld, buf, size);
+		sleep(1);
+		scr_printf("* Downloaded Size... %d\n", size);
+		ret = fileXioWrite(target,buf,size);
+		scr_printf("* Local File Written! %d\n", ret);
+		sleep(1);
+		fioClose(urld);
+		scr_printf("* URL Closed... %d\n", urld);
+		fileXioClose(target);
+		scr_printf("* Local File Closed... %d\n", target);
 	} else {
 		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
 	}
@@ -404,27 +413,38 @@ void substring(char s[], char sub[], int p, int l) {
 }
 void file_crc32(char device[], char path[], char fn[])
 {
-  int fp;
+  FILE *fp;
   size_t len;
   char tmp[32] = "";
   char f_crc32[16] = "";
   char full_path[256] = "";
+  //Build full_path string
   strcpy(full_path,device);
   strcat(full_path,path);
-  strcat(full_path,fn);  
+  strcat(full_path,fn);
+  //8MB file buffer.
   char buf[8000000], *file = full_path;
-  fileXioClose(fp);
-  if ((fp = fileXioOpen(file, O_RDONLY)) <= -1)
+  //Close the file
+  fclose(fp);  
+  if (NULL == (fp = fopen(file, "rb")))
   {
         printf("Error! Unable to open %s for reading\n", file);
+        //return -1;
   }
-  len = fileXioRead(fp, buf, sizeof(buf));
+  //read file, store length in len, file contents in buf
+  len = fread(buf, sizeof(char), sizeof(buf), fp);
   scr_printf("%d bytes read\n", len);
-  //scr_printf("The checksum of %s is:\n\n", file);
-  fileXioClose(fp);
+  //Close the file
+  fclose(fp);
   sleep(1);
-  sprintf(tmp,"%lX",crc32(buf, len));
+  //Use sprintf to store crc_32() return value in tmp
+  //  
+  //If file is larger than buffer, update_crc_32() will
+  //need to be looped to get large file CRC32
+  sprintf(tmp,"%lX",crc_32(buf, len));
+  //We only need the last 8 bytes of crc_32 return value
   substring(tmp,f_crc32,9,8);
+  //Display CRC32
   scr_printf("CRC32: %s\n",f_crc32);
 }
 
@@ -441,7 +461,7 @@ void str_crc32(char str[])
   scr_printf("%d bytes read\n", len);
   //scr_printf("The checksum of %s is:\n\n", file);
   sleep(1);
-  sprintf(tmp,"%lX",crc32(buf, strlen(full_str)));
+  sprintf(tmp,"%lX",crc_32(buf, strlen(full_str)));
   substring(tmp,f_crc32,9,8);
   scr_printf("CRC32: %s\n",f_crc32);
 }
@@ -551,6 +571,7 @@ void DoTask(int task)
 	scr_clear();
 	menu_header();
 	if (downloading==1){
+	  fileXioClose(fd);
 	  char buf[8000000], *file = full_path;
 	  char *url;
 	  strcpy(url,exec_args[0]);
@@ -564,17 +585,16 @@ void DoTask(int task)
 			scr_printf("Error! Could not open the file\n");
 		} else {
 			scr_printf("File Size: %d bytes\n", ret);
-			fclose(fd);
-			fd = fopen(full_path, "r");
-			scr_printf("Debug: %d\n", fd);
-			file_size = getFileSize(fd);
-			sleep(4);
+			sleep(2);
+			fd = fileXioOpen(full_path, O_RDONLY);
+			file_size = getFileSize(fd);			
 			if (file_size >= 1) {
 				scr_printf("%s Exists!\n", full_path);
 			} else {
 				scr_printf("%s Does Not Exist!\n", full_path);
 			}
-			fclose(fd);
+			fileXioClose(fd);
+			file_crc32(device,path,fn);
 		}
 	}
 	if (checking == 1) {

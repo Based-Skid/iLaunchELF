@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <fileXio.h>
 #include <fileXio_rpc.h>
-#include "crc32.h"
+#include "checksum.h"
 
 // IP Shit.
 #include <netman.h>

@@ -3,9 +3,10 @@ HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
+<b>Very unstable right now. Under heavy development. Does not work. Do not use.</b>
+
 Original iLaunchELF Created by krHACKen & Based_Skid
 
-<b>Very unstable right now. Under heavy development. Does not work. Do not use.</b>
 
 ## Notice
 This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
