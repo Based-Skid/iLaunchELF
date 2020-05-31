@@ -5,7 +5,7 @@ HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
-<b>Very unstable right now. Under heavy development. Does not work. Do not use.</b>
+<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Only writes to MC0 for now.</b>
 
 Original iLaunchELF Created by krHACKen & Based_Skid
 

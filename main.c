@@ -65,9 +65,10 @@ void menu_Text(void)
 	scr_printf(txttriBtn);
 	scr_printf(txtR1Btn);
 	scr_printf(txtL1Btn);
+	scr_printf(txtR2Btn);
+	scr_printf(txtL2Btn);
 	scr_printf(txtselBtn);
 	scr_printf(txtstrtBtn);
-	scr_printf(txtR2Btn);
 	scr_printf(txtL3Btn);
 	scr_printf(" \n");
 }
@@ -489,17 +490,6 @@ void DoTask(int task)
 		if (task == 1)
 		{
 			checking=1;
-			//Check OPL
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"OPL.ELF");
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  					
-		}
-		else if (task == 2)
-		{
-			checking=1;
 			//Check WLE
 			strcpy(device,"mc0:/");
 			strcpy(path,"APPS/");
@@ -508,21 +498,40 @@ void DoTask(int task)
 			strcat(full_path,path);
 			strcat(full_path,fn);  					
 		}
-		else if (task == 3)
+		else if (task == 2)
 		{
-			//Download OPL
-			downloading=1;
-			strcpy(exec_args[0], "http://hbdl.vts-tech.org/OPL.ELF");
+			checking=1;
+			//Check HDL
 			strcpy(device,"mc0:/");
 			strcpy(path,"APPS/");
-			strcpy(fn,"OPL.ELF");			
+			strcpy(fn,"HDL.ELF");
 			strcpy(full_path,device);
 			strcat(full_path,path);
-			strcat(full_path,fn);  				
-			argc = 1;
-			sleep(2);
+			strcat(full_path,fn);  					
+		}
+		else if (task == 3)
+		{
+			checking=1;
+			//Check OPL
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"OPL.ELF");
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  	
 		}
 		else if (task == 4)
+		{
+			checking=1;
+			//Check ESR
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"ESR.ELF");
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  	
+		}
+		else if (task == 5)
 		{
 			//Download WLE
 			downloading=1;
@@ -536,36 +545,58 @@ void DoTask(int task)
 			argc = 1;
 			sleep(2);
 		}
-		else if (task == 5)
-		{
-			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
-			//argc = 1;
-			sleep(2);
-		}
 		else if (task == 6)
 		{
 			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
 			//argc = 1;
-			sleep(2);
+			sleep(1);
 		}
 		else if (task == 7)
 		{
-			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
-			//argc = 1;
+			//Download HDL
+			downloading=1;
+			strcpy(exec_args[0], "http://hbdl.vts-tech.org/HDL.ELF");
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"HDL.ELF");			
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  				
+			argc = 1;
 			sleep(2);
 		}
 		else if (task == 8)
 		{
-			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
-			//argc = 1;
+			//Download OPL
+			downloading=1;
+			strcpy(exec_args[0], "http://hbdl.vts-tech.org/OPL.ELF");
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"OPL.ELF");			
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  				
+			argc = 1;
 			sleep(2);
 		}
 		else if (task == 9)
 		{
-			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
-			//argc = 1;
+			//Download ESR
+			downloading=1;
+			strcpy(exec_args[0], "http://hbdl.vts-tech.org/ESR.ELF");
+			strcpy(device,"mc0:/");
+			strcpy(path,"APPS/");
+			strcpy(fn,"ESR.ELF");			
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);  				
+			argc = 1;
 			sleep(2);
 		}
+		else if (task == 9)
+		{
+		//soon
+		}		
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
 	scr_clear();
@@ -662,42 +693,55 @@ void DoTask(int task)
 		
 		if (new_pad & PAD_L1)
 		{
+		 //Download HDL
 		 DoTask(7);
 		}
 		
 		if (new_pad & PAD_R1)
 		{
-		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
-		 sleep(5);
+		 //Download WLE
 		 DoTask(5);
 		}
 		
 		if (new_pad & PAD_R2)
 		{
+		 //Download OPL
 		 DoTask(8);
 		}
-		
+
+		if (new_pad & PAD_L2)
+		{
+		 //Download ESR
+		 DoTask(9);
+		}
+
+		if (new_pad & PAD_L3)
+		{
+		 //Launch WLE
+		 DoTask(10);
+		}
+						
 		if (new_pad & PAD_TRIANGLE)
 		{
-		 //Download WLE
+		 //Check ESR
 		 DoTask(4);
 		}
 
 		if (new_pad & PAD_CIRCLE)
 		{
-		 //Download OPL
+		 //Check OPL
 		 DoTask(3);
 		}
 
 		if (new_pad & PAD_SQUARE)
 		{
-		 //Check WLE
+		 //Check HDL
 		 DoTask(2);
 		}
 		
 		if(new_pad & PAD_CROSS)
 		{
-		//Check OPL
+		//Check WLE
 		DoTask(1);
 		}
 	}
