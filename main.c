@@ -12,6 +12,12 @@
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
 
+char action[32], device[32], path[256], fn[128];
+const char *devices[] = {"mc0:/", "mc1:/"};
+const char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
+const char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
+const char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
+
 typedef struct {
 	u8	ident[16];
 	u16	type;
@@ -59,19 +65,28 @@ void menu_Text(void)
 {
 	scr_clear();
 	menu_header();
-	scr_printf(txtcrossBtn);
-	scr_printf(txtsqrBtn);
-	scr_printf(txtcirBtn);
-	scr_printf(txttriBtn);
-	scr_printf(txtR1Btn);
-	scr_printf(txtL1Btn);
-	scr_printf(txtR2Btn);
-	scr_printf(txtL2Btn);
-	scr_printf(txtselBtn);
+	extern char vtsip[15];
+	scr_printf("IP Address: %s\n\n",vtsip);
+	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n\n",action,device,path,fn);
+	scr_printf("-Press UP to Set Device.\n");
+	scr_printf("-Press DOWN to Set Mode.\n");
+	scr_printf("-Press LEFT to Set Path.\n");
+	scr_printf("-Press RIGHT to Set Target.\n");
+	//scr_printf(txtcrossBtn);
+	//scr_printf(txtsqrBtn);
+	//scr_printf(txtcirBtn);
+	//scr_printf(txttriBtn);
+	//scr_printf(txtR1Btn);
+	//scr_printf(txtL1Btn);
+	//scr_printf(txtR2Btn);
+	//scr_printf(txtL2Btn);
+	//scr_printf(txtselBtn);
 	scr_printf(txtstrtBtn);
-	scr_printf(txtL3Btn);
+	//scr_printf(txtL3Btn);
+	scr_printf("-Press any other key to preform selected action\n");
 	scr_printf(" \n");
 }
+
 void ResetIOP()
 {
 
@@ -412,13 +427,14 @@ void substring(char s[], char sub[], int p, int l) {
    }
    sub[c] = '\0';
 }
+
 void file_crc32(char device[], char path[], char fn[])
 {
-  FILE *fp;
-  size_t len;
-  char tmp[32] = "";
-  char f_crc32[16] = "";
-  char full_path[256] = "";
+	FILE *fp;
+	size_t len;
+	char tmp[32] = "";
+	char f_crc32[16] = "";
+	char full_path[256] = "";
   //Build full_path string
   strcpy(full_path,device);
   strcat(full_path,path);
@@ -444,9 +460,14 @@ void file_crc32(char device[], char path[], char fn[])
   //need to be looped to get large file CRC32
   sprintf(tmp,"%lX",crc_32(buf, len));
   //We only need the last 8 bytes of crc_32 return value
+  //Except .. not anymore apparently?
   substring(tmp,f_crc32,9,8);
   //Display CRC32
-  scr_printf("CRC32: %s\n",f_crc32);
+  if (strlen(tmp) > 8) {
+  	scr_printf("CRC32: %s\n",f_crc32);
+  } else {
+  	scr_printf("CRC32: %s\n",tmp);
+  }
 }
 
 void str_crc32(char str[])
@@ -477,7 +498,9 @@ void DoTask(int task)
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
 	int fd,file_size;
-	char device[128], path[128], fn[128], full_path[256];
+	//extern char device[128], path[128], fn[128];
+	char full_path[256];
+	char tmp2[256];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
@@ -490,24 +513,26 @@ void DoTask(int task)
 		if (task == 1)
 		{
 			checking=1;
-			//Check WLE
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"WLE.ELF");
+			//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
+			sleep(2);
+			//strcpy(device,"mc0:/");
+			//strcpy(path,"APPS/");
+			//strcpy(fn,"WLE.ELF");
 			strcpy(full_path,device);
 			strcat(full_path,path);
 			strcat(full_path,fn);  					
 		}
 		else if (task == 2)
 		{
-			checking=1;
-			//Check HDL
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"HDL.ELF");
+			downloading=1;
+			strcpy(tmp2,"http://hbdl.vts-tech.org/");
+			strcat(tmp2,fn);
+			strcpy(exec_args[0], tmp2);
 			strcpy(full_path,device);
 			strcat(full_path,path);
-			strcat(full_path,fn);  					
+			strcat(full_path,fn);  				
+			argc = 1;
+			sleep(2);							
 		}
 		else if (task == 3)
 		{
@@ -625,6 +650,7 @@ void DoTask(int task)
 				scr_printf("%s Does Not Exist!\n", full_path);
 			}
 			fileXioClose(fd);
+			//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 			file_crc32(device,path,fn);
 		}
 	}
@@ -642,6 +668,7 @@ void DoTask(int task)
 		}
 		fileXioClose(fd);
 		//scr_printf("CRC32: ");
+		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		file_crc32(device,path,fn);
 		scr_printf("\n");
 		sleep(5);		
@@ -672,79 +699,8 @@ void DoTask(int task)
 	ExecPS2((void *)eh->entry, 0, argc, exec_args);
 	}
 	scr_printf("Operations complete. Returning to Main Menu...\n");
-	sleep(12);
+	sleep(4);
 	menu_Text();
-		while (1)
-	{
-		//check to see if the pad is still connected
-		checkPadConnected();
-		//read pad 0
-		buttonStatts(0, 0);
-		
-		if (new_pad & PAD_START)
-		{
-		 gotoOSDSYS(0);
-		}
-		
-		if (new_pad & PAD_SELECT)
-		{
-		 DoTask(6);
-		}
-		
-		if (new_pad & PAD_L1)
-		{
-		 //Download HDL
-		 DoTask(7);
-		}
-		
-		if (new_pad & PAD_R1)
-		{
-		 //Download WLE
-		 DoTask(5);
-		}
-		
-		if (new_pad & PAD_R2)
-		{
-		 //Download OPL
-		 DoTask(8);
-		}
-
-		if (new_pad & PAD_L2)
-		{
-		 //Download ESR
-		 DoTask(9);
-		}
-
-		if (new_pad & PAD_L3)
-		{
-		 //Launch WLE
-		 DoTask(10);
-		}
-						
-		if (new_pad & PAD_TRIANGLE)
-		{
-		 //Check ESR
-		 DoTask(4);
-		}
-
-		if (new_pad & PAD_CIRCLE)
-		{
-		 //Check OPL
-		 DoTask(3);
-		}
-
-		if (new_pad & PAD_SQUARE)
-		{
-		 //Check HDL
-		 DoTask(2);
-		}
-		
-		if(new_pad & PAD_CROSS)
-		{
-		//Check WLE
-		DoTask(1);
-		}
-	}
 }
 
 
@@ -793,6 +749,10 @@ int main(int argc, char *argv[])
 	sleep(1);
 	scr_printf("Modules Loaded Up. Starting up DHCP \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
+	strcpy(action,actions[0]);
+	strcpy(device,devices[0]);
+	strcpy(path,paths[0]);	
+	strcpy(fn,targets[0]);	
 	menu_Text();
 		while (1)
 	{
@@ -801,57 +761,62 @@ int main(int argc, char *argv[])
 		//read pad 0
 		buttonStatts(0, 0);
 		
-		if (new_pad & PAD_START)
-		{
+		if(new_pad & PAD_UP) {
+			if (strcmp(device,"mc0:/") == 0) {
+				strcpy(device,devices[1]);
+			} else {
+				strcpy(device,devices[0]);			
+			}
+		menu_Text();
+		} else if(new_pad & PAD_DOWN)	{
+			if (strcmp(action,"CHECK") == 0) {
+				strcpy(action,actions[1]);
+			} else if (strcmp(action,"DOWNLOAD") == 0) {
+				strcpy(action,actions[2]);
+			} else if (strcmp(action,"LAUNCH") == 0) {
+				strcpy(action,actions[0]);
+			}
+		menu_Text();
+		} else if(new_pad & PAD_LEFT)	{
+			if (strcmp(path,"APPS/") == 0) {
+				//not yet
+				//strcpy(path,paths[1]);
+			} else if (strcmp(path,"APP_$ELF/") == 0) {
+				//not yet
+				//strcpy(path,paths[2]);
+			} else if (strcmp(path,"$ELF/") == 0) {
+				strcpy(path,paths[0]);
+			}
+		menu_Text();
+		}	else if(new_pad & PAD_RIGHT) {
+			if (strcmp(fn,"ESR.ELF") == 0) {
+				strcpy(fn,targets[1]);
+			} else if (strcmp(fn,"GBA.ELF") == 0) {
+				strcpy(fn,targets[2]);
+			} else if (strcmp(fn,"GSM.ELF") == 0) {
+				strcpy(fn,targets[3]);
+			} else if (strcmp(fn,"HDL.ELF") == 0) {
+				strcpy(fn,targets[4]);
+			} else if (strcmp(fn,"NES.ELF") == 0) {
+				strcpy(fn,targets[5]);
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
+				strcpy(fn,targets[6]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[7]);
+			} else if (strcmp(fn,"SNES.ELF") == 0) {
+				strcpy(fn,targets[8]);																				
+			} else if (strcmp(fn,"WLE.ELF") == 0) {
+				strcpy(fn,targets[0]);	
+			}
+		menu_Text();
+		}	else if (new_pad & PAD_START)	{
 		 gotoOSDSYS(0);
-		}
-		
-		if (new_pad & PAD_SELECT)
-		{
-		 DoTask(6);
-		}
-		
-		if (new_pad & PAD_L1)
-		{
-		 DoTask(7);
-		}
-		
-		if (new_pad & PAD_R1)
-		{
-		 scr_printf("\n-WARNING:This Tool Can Cause Data Loss! Please Be CareFul!\n");
-		 sleep(5);
-		 DoTask(5);
-		}
-		
-		if (new_pad & PAD_R2)
-		{
-		 DoTask(8);
-		}
-		
-		if (new_pad & PAD_TRIANGLE)
-		{
-		 //Download WLE
-		 DoTask(4);
-		}
-
-		if (new_pad & PAD_CIRCLE)
-		{
-		 //Download OPL
-		 DoTask(3);
-		}
-
-		if (new_pad & PAD_SQUARE)
-		{
-		 //Check WLE
-		 DoTask(2);
-		}
-		
-		if(new_pad & PAD_CROSS)
-		{
-		//Check OPL
-		DoTask(1);
+		}	else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
+		 if (strcmp(action,"CHECK") == 0) {
+		 	DoTask(1);
+		} else if (strcmp(action,"DOWNLOAD") == 0) {
+			DoTask(2);
+			}		
 		}
 	}
-
 }
-

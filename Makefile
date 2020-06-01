@@ -1,5 +1,8 @@
-EE_BIN = VTSPS2-HBDL.elf
-EE_BIN_PACKED = VTSPS2-HBDL-packed.elf
+VERSION = 0.21
+NAME = VTSPS2-HBDL
+EE_BIN = $(NAME).elf
+EE_BIN_PACKED = $(NAME)-packed.elf
+EE_BIN_STRIPPED = $(NAME)-stripped.elf
 ####
 # C File Objects
 EE_OBJS = main.o loader_elf.o ps2ipc.o
@@ -16,16 +19,25 @@ EE_LDFLAGS = -L$(PS2SDK)/sbv/lib
 EE_LIBS = -lpadx -lmtap -ldebug -lmc -lc -lpatches -ldebug -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
 
 
-all: $(EE_BIN)
-	rm -rf *.o *.s
+all:
+	@echo "======================================="
+	@echo "=== Building $(NAME) v$(VERSION) ==="
+	@echo "======================================="
+	$(MAKE) $(EE_BIN_PACKED)
 
-# Un Comment to Enable Compression of the ELF. you will need ps2packer in the project dir
-
-all: $(EE_BIN)
-	~/ps2homebrew/ps2-packer/ps2-packer -p zlib $(EE_BIN) $(EE_BIN_PACKED)
-	#cp -f --remove-destination $(EE_BIN_PACKED) $(EE_BIN_DIR)/$(EE_BIN)
-	rm -rf *.o *.s
-
+$(EE_BIN_STRIPPED): $(EE_BIN)
+	@echo "================="
+	@echo "=== Stripping ==="
+	@echo "================="
+	$(EE_STRIP) -o $@ $<
+	
+$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
+# Uncomment to compress ELF. Adjust path to match your environment
+	@echo "==================="
+	@echo "=== Compressing ==="
+	@echo "==================="
+	~/ps2homebrew/ps2-packer/ps2-packer -v $< $@
+	rm -f *.o *.s
 
 clean:
 	rm -f *.elf *.o *.s loader/*.o loader/*.elf
@@ -82,7 +94,7 @@ smap.s:
 ps2http.s:
 	bin2s $(PS2SDK)/iop/irx/ps2http.irx ps2http.s ps2http
 
-crc32: crc_32.c crc.h
+crc32: crc32.c crc.h
 	$(CC) $(CFLAGS) -o $@ $<
 	
 include $(PS2SDK)/samples/Makefile.pref

@@ -129,12 +129,13 @@ static int ethApplyIPConfig(int use_dhcp, const struct ip4_addr *ip, const struc
 	return result;
 }
 
+char vtsip[15];
+
 static void ethPrintIPConfig(void)
 {
 	t_ip_info ip_info;
 	const ip_addr_t *dns_curr;
 	u8 ip_address[4], netmask[4], gateway[4], dns[4];
-
 	//SMAP is registered as the "sm0" device to the TCP/IP stack.
 	if (ps2ip_getconfig("sm0", &ip_info) >= 0)
 	{
@@ -169,6 +170,7 @@ static void ethPrintIPConfig(void)
 					netmask[0], netmask[1], netmask[2], netmask[3],
 					gateway[0], gateway[1], gateway[2], gateway[3],
 					dns[0], dns[1], dns[2], dns[3]);
+		sprintf(vtsip,"%d.%d.%d.%d",ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 	}
 	else
 	{
