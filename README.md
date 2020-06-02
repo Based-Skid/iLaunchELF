@@ -5,7 +5,8 @@ HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
-<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Only writes to MC0 for now.</b>
+<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Only writes to MC0 for now.
+Do not use on SCPH-9XXXX with 2.30 BIOS.</b>
 
 Original iLaunchELF Created by krHACKen & Based_Skid
 
