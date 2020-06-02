@@ -8,16 +8,6 @@
  */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
 
-
-char *devices[] = {"mc0:/", "mc1:/"};
-char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
-char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
-char ELF_NO_EXT[] = "";
-char PATH_ELF[] = "";
-char PATH_APP[] = "";
-char make_path[] = "";
-
 #include "main.h"
 #include "strings.h"
 
@@ -72,10 +62,10 @@ void menu_Text(void)
 	scr_clear();
 	menu_header();
 	extern char vtsip[15];
-	char *devices[] = {"mc0:/", "mc1:/"};
-	char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
-	char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-	char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};	
+	//char *devices[] = {"mc0:/", "mc1:/"};
+	//char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
+	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
+	//char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};	
 	scr_printf("IP Address: %s\n",vtsip);
 	scr_printf("\n");
 	scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
@@ -529,7 +519,7 @@ void DoTask(int task)
 	int fd,file_size;
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
-	char tmp2[256];
+	char *url;
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
@@ -542,8 +532,6 @@ void DoTask(int task)
 		if (task == 1)
 		{
 			checking=1;
-			//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-			sleep(2);
 			strcpy(full_path,device);
 			strcat(full_path,path);
 			strcat(full_path,fn);  					
@@ -551,9 +539,9 @@ void DoTask(int task)
 		else if (task == 2)
 		{
 			downloading=1;
-			strcpy(tmp2,"http://hbdl.vts-tech.org/");
-			strcat(tmp2,fn);
-			strcpy(exec_args[0], tmp2);
+			strcpy(url,"http://hbdl.vts-tech.org/");
+			strcat(url,fn);
+			strcpy(exec_args[0], url);
 			strcpy(full_path,device);
 			strcat(full_path,path);
 			substring(full_path,make_path,1,strlen(full_path)-1);
@@ -569,8 +557,7 @@ void DoTask(int task)
 	if (downloading==1){
 	  fileXioClose(fd);
 	  char buf[4000000], *file = full_path;
-	  char *url;
-	  strcpy(url,exec_args[0]);
+	  //strcpy(url,exec_args[0]);
 		scr_printf("Downloading...\n");
 		//Access Test (Make sure The Elf can Actually be Loaded)
 		scr_printf("URL: %s\n", exec_args[0]);
@@ -599,19 +586,22 @@ void DoTask(int task)
 		strcpy(full_path,device);
 		strcat(full_path,path);
 		strcat(full_path,fn);
+		scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		fd = fileXioOpen(full_path, O_RDONLY);
+		scr_printf("Local File Opened: %d \n", fd);
 		file_size = getFileSize(fd);
+		scr_printf("File Size: %d \n", file_size);
 		if (file_size >= 1) {
 			scr_printf("%s Exists!\n", full_path);
 		} else {
 			scr_printf("%s Does Not Exist!\n", full_path);
 		}
-		fileXioClose(fd);
+		//fileXioClose(fd);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		file_crc32(device,path,fn);
 		scr_printf("\n");
-		sleep(5);		
+		sleep(2);		
 	}
 	if (launching == 1) {
 		// Display URL The ELF Is Being Loaded From
@@ -760,7 +750,7 @@ int main(int argc, char *argv[])
 		sleep(2);
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
-		 gotoOSDSYS(0);
+		 return 0;
 		}	else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
 		 if (strcmp(action,"CHECK") == 0) {
 		 	DoTask(1);
