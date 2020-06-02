@@ -7,16 +7,22 @@
 
  */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
+
+
+char *devices[] = {"mc0:/", "mc1:/"};
+char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
+char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
+char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
+char ELF_NO_EXT[] = "";
+char PATH_ELF[] = "";
+char PATH_APP[] = "";
+char make_path[] = "";
+
 #include "main.h"
 #include "strings.h"
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
-
 char action[32], device[32], path[256], fn[128];
-const char *devices[] = {"mc0:/", "mc1:/"};
-const char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
-const char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-const char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
 
 typedef struct {
 	u8	ident[16];
@@ -66,8 +72,30 @@ void menu_Text(void)
 	scr_clear();
 	menu_header();
 	extern char vtsip[15];
-	scr_printf("IP Address: %s\n\n",vtsip);
-	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n\n",action,device,path,fn);
+	char *devices[] = {"mc0:/", "mc1:/"};
+	char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
+	char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
+	char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};	
+	scr_printf("IP Address: %s\n",vtsip);
+	scr_printf("\n");
+	scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
+	//if ((strlen(action) == 0) || (strlen(device) == 0) || (strlen(path) == 0) || (strlen(fn) == 0))  {
+		//strcpy(action,actions[0]);
+		//strcpy(device,devices[0]);
+		//strcpy(path,paths[0]);	
+		//strcpy(fn,targets[0]);
+	//}	
+	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
+		strcpy(action,"CHECK");
+	}
+	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0)) {
+		strcpy(device,"mc0:/");
+	}
+	if (strlen(fn) >= 10) {
+		strcpy(fn,"ESR.ELF");
+	}	
+	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
+	scr_printf("\n");
 	scr_printf("-Press UP to Set Device.\n");
 	scr_printf("-Press DOWN to Set Mode.\n");
 	scr_printf("-Press LEFT to Set Path.\n");
@@ -81,7 +109,7 @@ void menu_Text(void)
 	//scr_printf(txtR2Btn);
 	//scr_printf(txtL2Btn);
 	//scr_printf(txtselBtn);
-	scr_printf(txtstrtBtn);
+	//scr_printf(txtstrtBtn);
 	//scr_printf(txtL3Btn);
 	scr_printf("-Press any other key to preform selected action\n");
 	scr_printf(" \n");
@@ -389,7 +417,7 @@ int Access_Test(char *arg)
 int Download(char *url, char *full_path)
 {
 	int size, urld, target, ret = 0;
-	char buf[8000000];
+	char buf[4000000];
 	//FILE *urld;
 	//FILE *target;
 	fioClose(urld);
@@ -439,8 +467,8 @@ void file_crc32(char device[], char path[], char fn[])
   strcpy(full_path,device);
   strcat(full_path,path);
   strcat(full_path,fn);
-  //8MB file buffer.
-  char buf[8000000], *file = full_path;
+  //4MB file buffer.
+  char buf[4000000], *file = full_path;
   //Close the file
   fclose(fp);  
   if (NULL == (fp = fopen(file, "rb")))
@@ -475,13 +503,12 @@ void str_crc32(char str[])
   size_t len;
   char tmp[32] = "";
   char f_crc32[16] = "";
-  char full_str[8000000] = "";
-  char buf[8000000] = "";
+  char full_str[4000000] = "";
+  char buf[4000000] = "";
   strncpy(full_str,str,strlen(str));
   strcpy(buf,full_str);
   len = strlen(full_str);
   scr_printf("%d bytes read\n", len);
-  //scr_printf("The checksum of %s is:\n\n", file);
   sleep(1);
   sprintf(tmp,"%lX",crc_32(buf, strlen(full_str)));
   substring(tmp,f_crc32,9,8);
@@ -515,9 +542,6 @@ void DoTask(int task)
 			checking=1;
 			//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 			sleep(2);
-			//strcpy(device,"mc0:/");
-			//strcpy(path,"APPS/");
-			//strcpy(fn,"WLE.ELF");
 			strcpy(full_path,device);
 			strcat(full_path,path);
 			strcat(full_path,fn);  					
@@ -530,105 +554,19 @@ void DoTask(int task)
 			strcpy(exec_args[0], tmp2);
 			strcpy(full_path,device);
 			strcat(full_path,path);
+			substring(full_path,make_path,1,strlen(full_path)-1);
+			fileXioMkdir(make_path,0777);
 			strcat(full_path,fn);  				
 			argc = 1;
 			sleep(2);							
 		}
-		else if (task == 3)
-		{
-			checking=1;
-			//Check OPL
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"OPL.ELF");
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  	
-		}
-		else if (task == 4)
-		{
-			checking=1;
-			//Check ESR
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"ESR.ELF");
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  	
-		}
-		else if (task == 5)
-		{
-			//Download WLE
-			downloading=1;
-			strcpy(exec_args[0], "http://hbdl.vts-tech.org/WLE.ELF");
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"WLE.ELF");
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  				
-			argc = 1;
-			sleep(2);
-		}
-		else if (task == 6)
-		{
-			//strcpy(exec_args[0], "http://hbdl.vts-tech.org/1MB.test");
-			//argc = 1;
-			sleep(1);
-		}
-		else if (task == 7)
-		{
-			//Download HDL
-			downloading=1;
-			strcpy(exec_args[0], "http://hbdl.vts-tech.org/HDL.ELF");
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"HDL.ELF");			
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  				
-			argc = 1;
-			sleep(2);
-		}
-		else if (task == 8)
-		{
-			//Download OPL
-			downloading=1;
-			strcpy(exec_args[0], "http://hbdl.vts-tech.org/OPL.ELF");
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"OPL.ELF");			
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  				
-			argc = 1;
-			sleep(2);
-		}
-		else if (task == 9)
-		{
-			//Download ESR
-			downloading=1;
-			strcpy(exec_args[0], "http://hbdl.vts-tech.org/ESR.ELF");
-			strcpy(device,"mc0:/");
-			strcpy(path,"APPS/");
-			strcpy(fn,"ESR.ELF");			
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);  				
-			argc = 1;
-			sleep(2);
-		}
-		else if (task == 9)
-		{
-		//soon
-		}		
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
 	scr_clear();
 	menu_header();
 	if (downloading==1){
 	  fileXioClose(fd);
-	  char buf[8000000], *file = full_path;
+	  char buf[4000000], *file = full_path;
 	  char *url;
 	  strcpy(url,exec_args[0]);
 		scr_printf("Downloading...\n");
@@ -650,8 +588,8 @@ void DoTask(int task)
 				scr_printf("%s Does Not Exist!\n", full_path);
 			}
 			fileXioClose(fd);
-			//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-			file_crc32(device,path,fn);
+			scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			//file_crc32(device,path,fn);
 		}
 	}
 	if (checking == 1) {
@@ -699,7 +637,7 @@ void DoTask(int task)
 	ExecPS2((void *)eh->entry, 0, argc, exec_args);
 	}
 	scr_printf("Operations complete. Returning to Main Menu...\n");
-	sleep(4);
+	sleep(4);	
 	menu_Text();
 }
 
@@ -763,12 +701,13 @@ int main(int argc, char *argv[])
 		
 		if(new_pad & PAD_UP) {
 			if (strcmp(device,"mc0:/") == 0) {
-				strcpy(device,devices[1]);
+				strcpy(device,"mc1:/");
 			} else {
-				strcpy(device,devices[0]);			
+				strcpy(device,"mc0:/");			
 			}
 		menu_Text();
 		} else if(new_pad & PAD_DOWN)	{
+			scr_printf("D1BUG: %s %s %s %s\n", action, device, path, fn);
 			if (strcmp(action,"CHECK") == 0) {
 				strcpy(action,actions[1]);
 			} else if (strcmp(action,"DOWNLOAD") == 0) {
@@ -776,16 +715,20 @@ int main(int argc, char *argv[])
 			} else if (strcmp(action,"LAUNCH") == 0) {
 				strcpy(action,actions[0]);
 			}
+			scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
 			if (strcmp(path,"APPS/") == 0) {
-				//not yet
-				//strcpy(path,paths[1]);
-			} else if (strcmp(path,"APP_$ELF/") == 0) {
-				//not yet
-				//strcpy(path,paths[2]);
-			} else if (strcmp(path,"$ELF/") == 0) {
-				strcpy(path,paths[0]);
+				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				sprintf(path,"APP_%s/",ELF_NO_EXT);
+				strcpy(PATH_APP,path);
+			} else if (strcmp(path,PATH_APP) == 0) {
+				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				sprintf(path,"%s/",ELF_NO_EXT);
+				strcpy(PATH_ELF,path);
+			} else if (strcmp(path,PATH_ELF) == 0) {
+				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				strcpy(path,"APPS/");
 			}
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
@@ -814,8 +757,10 @@ int main(int argc, char *argv[])
 		}	else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
 		 if (strcmp(action,"CHECK") == 0) {
 		 	DoTask(1);
+		 	menu_Text();
 		} else if (strcmp(action,"DOWNLOAD") == 0) {
 			DoTask(2);
+			menu_Text();
 			}		
 		}
 	}
