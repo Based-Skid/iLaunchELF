@@ -28,3 +28,4 @@ char ELF_NO_EXT[] = "";
 char PATH_ELF[] = "";
 char PATH_APP[] = "";
 char make_path[] = "";
+char action[32], device[32], path[256], fn[128];

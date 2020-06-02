@@ -12,7 +12,6 @@
 #include "strings.h"
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
-char action[32], device[32], path[256], fn[128];
 
 typedef struct {
 	u8	ident[16];
@@ -450,6 +449,7 @@ void substring(char s[], char sub[], int p, int l) {
 
 void file_crc32(char device[], char path[], char fn[])
 {
+	scr_printf("DEBUG: file_crc32() called...\n");
 	FILE *fp;
 	size_t len;
 	char tmp[32] = "";
@@ -462,7 +462,8 @@ void file_crc32(char device[], char path[], char fn[])
   //4MB file buffer.
   char buf[4000000], *file = full_path;
   //Close the file
-  fclose(fp);  
+  //fclose(fp);
+  //scr_printf("File Closed: %d\n", fp);
   if (NULL == (fp = fopen(file, "rb")))
   {
         printf("Error! Unable to open %s for reading\n", file);
@@ -472,7 +473,7 @@ void file_crc32(char device[], char path[], char fn[])
   len = fread(buf, sizeof(char), sizeof(buf), fp);
   scr_printf("%d bytes read\n", len);
   //Close the file
-  fclose(fp);
+  //fclose(fp);
   sleep(1);
   //Use sprintf to store crc_32() return value in tmp
   //  
@@ -596,9 +597,9 @@ void DoTask(int task)
 		} else {
 			scr_printf("%s Does Not Exist!\n", full_path);
 		}
-		//fileXioClose(fd);
+		fileXioClose(fd);
 		//scr_printf("CRC32: ");
-		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
+		scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		file_crc32(device,path,fn);
 		scr_printf("\n");
 		sleep(2);		
