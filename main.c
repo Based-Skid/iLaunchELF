@@ -93,7 +93,9 @@ void menu_Text(void)
 	}
 	if (strlen(fn) >= 10) {
 		strcpy(fn,"ESR.ELF");
+		strcpy(path,"APPS/");
 	}	
+
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
 	scr_printf("\n");
 	scr_printf("-Press UP to Set Device.\n");
@@ -112,7 +114,7 @@ void menu_Text(void)
 	//scr_printf(txtstrtBtn);
 	//scr_printf(txtL3Btn);
 	scr_printf("-Press any other key to preform selected action\n");
-	scr_printf(" \n");
+	scr_printf("\n");
 }
 
 void ResetIOP()
@@ -715,7 +717,8 @@ int main(int argc, char *argv[])
 			} else if (strcmp(action,"LAUNCH") == 0) {
 				strcpy(action,actions[0]);
 			}
-			scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
+		scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
+		sleep(2);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
 			if (strcmp(path,"APPS/") == 0) {
@@ -730,6 +733,8 @@ int main(int argc, char *argv[])
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				strcpy(path,"APPS/");
 			}
+		scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
 			if (strcmp(fn,"ESR.ELF") == 0) {
@@ -751,6 +756,8 @@ int main(int argc, char *argv[])
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
+		scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		sleep(2);
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
 		 gotoOSDSYS(0);
