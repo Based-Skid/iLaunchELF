@@ -5,8 +5,12 @@ HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
-<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Only writes to MC0 for now.
-Do not use on SCPH-9XXXX with 2.30 BIOS.</b>
+<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Writes to either MC based on user selection.
+Do not use on SCPH-9XXXX with 2.30 BIOS.
+
+* Fully functional in PCSX2
+* Download works on Real PS2.
+* Check currently freezes on Real PS2</b>
 
 Original iLaunchELF Created by krHACKen & Based_Skid
 
