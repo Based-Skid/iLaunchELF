@@ -1,16 +1,18 @@
-<img src="https://i.gyazo.com/0c5302ecb907ef1cc0e17e8693dd8161.png">
+<img src="https://i.gyazo.com/c27edd9c8763bc89c90da2caa2def48b.png">
 
-VTSPS2-HBDL v0.1
+VTSPS2-HBDL v0.21
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
 <b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Writes to either MC based on user selection.
-Do not use on SCPH-9XXXX with 2.30 BIOS.
+Do not use on SCPH-9XXXX with 2.30 BIOS. Tested on SCPH-70001
 
 * Fully functional in PCSX2
-* Download works on Real PS2.
-* Check currently freezes on Real PS2</b>
+* Downloading works on Real PS2.
+* Checking works on Real PS2
+* Overwriting works on Real PS2
+* Creating folders works on Real PS2</b>
 
 Original iLaunchELF Created by krHACKen & Based_Skid
 

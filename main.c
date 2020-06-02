@@ -49,7 +49,7 @@ int getFileSize(int fd) {
 
 void menu_header(void)
 {
-	scr_printf("\n");
+	scr_printf(" \n");
 	scr_printf(appName);
 	scr_printf(appVer);
 	scr_printf(appAuthor);
@@ -66,8 +66,8 @@ void menu_Text(void)
 	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
 	//char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};	
 	scr_printf("IP Address: %s\n",vtsip);
-	scr_printf("\n");
-	scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
+	scr_printf(" \n");
+	//scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
 	//if ((strlen(action) == 0) || (strlen(device) == 0) || (strlen(path) == 0) || (strlen(fn) == 0))  {
 		//strcpy(action,actions[0]);
 		//strcpy(device,devices[0]);
@@ -86,7 +86,7 @@ void menu_Text(void)
 	}	
 
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
-	scr_printf("\n");
+	scr_printf(" \n");
 	scr_printf("-Press UP to Set Device.\n");
 	scr_printf("-Press DOWN to Set Mode.\n");
 	scr_printf("-Press LEFT to Set Path.\n");
@@ -103,7 +103,7 @@ void menu_Text(void)
 	//scr_printf(txtstrtBtn);
 	//scr_printf(txtL3Btn);
 	scr_printf("-Press any other key to preform selected action\n");
-	scr_printf("\n");
+	scr_printf(" \n");
 }
 
 void ResetIOP()
@@ -449,7 +449,7 @@ void substring(char s[], char sub[], int p, int l) {
 
 void file_crc32(char device[], char path[], char fn[])
 {
-	scr_printf("DEBUG: file_crc32() called...\n");
+	//scr_printf("DEBUG: file_crc32() called...\n");
 	FILE *fp;
 	size_t len;
 	char tmp[32] = "";
@@ -578,7 +578,7 @@ void DoTask(int task)
 				scr_printf("%s Does Not Exist!\n", full_path);
 			}
 			fileXioClose(fd);
-			scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			//file_crc32(device,path,fn);
 		}
 	}
@@ -587,11 +587,11 @@ void DoTask(int task)
 		strcpy(full_path,device);
 		strcat(full_path,path);
 		strcat(full_path,fn);
-		scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
+		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		fd = fileXioOpen(full_path, O_RDONLY);
-		scr_printf("Local File Opened: %d \n", fd);
+		scr_printf("* Local File Opened... %d \n", fd);
 		file_size = getFileSize(fd);
-		scr_printf("File Size: %d \n", file_size);
+		scr_printf("File Size... %d \n", file_size);
 		if (file_size >= 1) {
 			scr_printf("%s Exists!\n", full_path);
 		} else {
@@ -599,9 +599,9 @@ void DoTask(int task)
 		}
 		fileXioClose(fd);
 		//scr_printf("CRC32: ");
-		scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
+		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		file_crc32(device,path,fn);
-		scr_printf("\n");
+		scr_printf(" \n");
 		sleep(2);		
 	}
 	if (launching == 1) {
@@ -629,7 +629,7 @@ void DoTask(int task)
 	FlushCache(2);
 	ExecPS2((void *)eh->entry, 0, argc, exec_args);
 	}
-	scr_printf("Operations complete. Returning to Main Menu...\n");
+	scr_printf("* Operations complete. Returning to Main Menu...\n");
 	sleep(4);	
 	menu_Text();
 }
@@ -677,8 +677,8 @@ int main(int argc, char *argv[])
 	initialize();
 	scr_clear();
 	menu_header();
-	sleep(1);
-	scr_printf("Modules Loaded Up. Starting up DHCP \n");
+	//sleep(1);
+	scr_printf("Modules Loaded. Obtaining an IP Address...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
@@ -700,7 +700,7 @@ int main(int argc, char *argv[])
 			}
 		menu_Text();
 		} else if(new_pad & PAD_DOWN)	{
-			scr_printf("D1BUG: %s %s %s %s\n", action, device, path, fn);
+			//scr_printf("D1BUG: %s %s %s %s\n", action, device, path, fn);
 			if (strcmp(action,"CHECK") == 0) {
 				strcpy(action,actions[1]);
 			} else if (strcmp(action,"DOWNLOAD") == 0) {
@@ -708,8 +708,8 @@ int main(int argc, char *argv[])
 			} else if (strcmp(action,"LAUNCH") == 0) {
 				strcpy(action,actions[0]);
 			}
-		scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
-		sleep(2);
+		//scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
+		//sleep(2);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
 			if (strcmp(path,"APPS/") == 0) {
@@ -724,8 +724,8 @@ int main(int argc, char *argv[])
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				strcpy(path,"APPS/");
 			}
-		scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-		sleep(2);
+		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
 			if (strcmp(fn,"ESR.ELF") == 0) {
@@ -747,8 +747,8 @@ int main(int argc, char *argv[])
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
-		scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-		sleep(2);
+		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		//sleep(2);
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
 		 return 0;
