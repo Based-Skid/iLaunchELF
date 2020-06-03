@@ -13,6 +13,8 @@
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
 
+int http_mirror = 0;
+
 typedef struct {
 	u8	ident[16];
 	u16	type;
@@ -61,11 +63,12 @@ void menu_Text(void)
 	scr_clear();
 	menu_header();
 	extern char vtsip[15];
+	extern char url[];
 	//char *devices[] = {"mc0:/", "mc1:/"};
 	//char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
 	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
 	//char *targets[]= {"2048.ELF", "ESR.ELF", "FCEU.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "PICO.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
-	scr_printf("IP Address: %s\n",vtsip);
+	scr_printf("IP Address: %s Mirror: %s\n",vtsip,url);
 	scr_printf(" \n");
 	//scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
 	//if ((strlen(action) == 0) || (strlen(device) == 0) || (strlen(path) == 0) || (strlen(fn) == 0))  {
@@ -91,6 +94,8 @@ void menu_Text(void)
 	scr_printf("-Press DOWN to Set Mode.\n");
 	scr_printf("-Press LEFT to Set Path.\n");
 	scr_printf("-Press RIGHT to Set Target.\n");
+	scr_printf("-Press SELECT to Set Mirror.\n");
+	scr_printf("-Press START to Exit.\n");
 	scr_printf("-Press any other key to preform selected action\n");
 	scr_printf(" \n");
 }
@@ -509,7 +514,7 @@ void DoTask(int task)
 	int fd,file_size;
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
-	char *url;
+	extern char url[];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
@@ -529,7 +534,11 @@ void DoTask(int task)
 		else if (task == 2)
 		{
 			downloading=1;
-			strcpy(url,"http://hbdl.vts-tech.org/");
+			if (http_mirror == 0) {
+				strcpy(url,"http://hbdl.vts-tech.org/");
+			} else if (http_mirror == 1) {
+				strcpy(url,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+			}
 			strcat(url,fn);
 			strcpy(exec_args[0], url);
 			strcpy(full_path,device);
@@ -604,7 +613,7 @@ void DoTask(int task)
 	}
 	if (launching == 1) {
 		// Display URL The ELF Is Being Loaded From
-		scr_printf("* Launching Application from \n %s", arg0);
+		scr_printf("* Launching Application from %s", arg0);
 		sleep(2);
 		/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
 		eh = (elf_header_t *)&loader_elf;
@@ -678,6 +687,7 @@ int main(int argc, char *argv[])
 	//sleep(1);
 	scr_printf("Modules Loaded. Obtaining an IP Address...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
+	strcpy(url,"http://hbdl.vts-tech.org/");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
@@ -728,26 +738,28 @@ int main(int argc, char *argv[])
 		}	else if(new_pad & PAD_RIGHT) {
 			if (strcmp(fn,"2048.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+			}	else if (strcmp(fn,"ESDL.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			}	else if (strcmp(fn,"FCEU.ELF") == 0) {
+			}	else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			} else if (strcmp(fn,"GBA.ELF") == 0) {
+			}	else if (strcmp(fn,"FCEU.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"GSM.ELF") == 0) {
+			} else if (strcmp(fn,"GBA.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"HDL.ELF") == 0) {
+			} else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"NES.ELF") == 0) {
+			} else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"NES.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"PICO.ELF") == 0) {
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"PICO.ELF") == 0) {
 				strcpy(fn,targets[10]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[11]);
 			} else if (strcmp(fn,"SNES.ELF") == 0) {
-				strcpy(fn,targets[11]);																				
+				strcpy(fn,targets[12]);																				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
@@ -755,18 +767,28 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
-		 return 0;
-		}	else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
-		 if (strcmp(action,"CHECK") == 0) {
-		 	DoTask(1);
-		 	menu_Text();
+		 	return 0;
+		}	else if (new_pad & PAD_SELECT) {
+				if (http_mirror == 0) {
+					http_mirror = 1;
+					strcpy(url,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+					
+				} else if (http_mirror == 1) {
+				 	http_mirror = 0;
+				 	strcpy(url,"http://hbdl.vts-tech.org/");
+				}		
+			menu_Text();
+		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
+		 	if (strcmp(action,"CHECK") == 0) {
+		 		DoTask(1);
+		 		menu_Text();
 		} else if (strcmp(action,"DOWNLOAD") == 0) {
-			DoTask(2);
-			menu_Text();
+				DoTask(2);
+				menu_Text();
 		} else if (strcmp(action,"LAUNCH") == 0) {
-			DoTask(3);
-			menu_Text();
+				DoTask(3);
+				menu_Text();
 		}		
-		}
 	}
+}
 }

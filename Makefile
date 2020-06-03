@@ -7,9 +7,9 @@ EE_BIN_STRIPPED = $(NAME)-stripped.elf
 # C File Objects
 EE_OBJS = main.o loader_elf.o ps2ipc.o
 # SW Module Objects
-EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
+EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o crc32.o
 # Network Module
-EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o crc32.o
+EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
 EE_OBJS += poweroff.o
 # SBV Shit
