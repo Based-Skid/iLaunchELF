@@ -19,6 +19,39 @@ Original iLaunchELF Created by krHACKen & Based_Skid<br>
 crc32.c written by Lammert Bies, (c) 1999-2016 Lammert Bies. File is licensed under the MIT License<br>
 Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues<br>
 
+<pre>
+Changelog:
+v0.22 06-02-2020 9:45PM
+Added support for more homebrew
+2048.ELF, FCEU.ELF, PICO.ELF
+Launching Homebrew now partially functions.
+Launches WLE/OPL in real hardware testing .. but not Pico/FCEU
+
+v0.21 06-02-2020 4:45PM
+New Menu
+Now displays IP on main screen
+Supports many more homebrews.
+Fully functional in PCSX2
+Tentatively fully working on Real PS2
+-Checking
+-Downloading+Overwrite
+-Downloading+Creating Folder
+All work on my SCPH-70001 with this build.
+Code cleanup.
+Removed delays/debug output.
+
+v0.2 05-30-2020 10:15PM
+First functional release.
+
+Supports OPL, WLE, HDL, ESR
+CRC32 is displayed but not compared currently.
+Tested on real hardware (SCPH-70001).
+Overwrites existing files correctly.
+Only writing to MC0 for now.
+
+v0.1 05-26-2020 01:44AM
+Initial Fork
+</pre>
 
 ## Notice
 This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
