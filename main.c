@@ -64,7 +64,7 @@ void menu_Text(void)
 	//char *devices[] = {"mc0:/", "mc1:/"};
 	//char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
 	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-	//char *targets[]= {"ESR.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};	
+	//char *targets[]= {"2048.ELF", "ESR.ELF", "FCEU.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "PICO.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
 	scr_printf("IP Address: %s\n",vtsip);
 	scr_printf(" \n");
 	//scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
@@ -81,7 +81,7 @@ void menu_Text(void)
 		strcpy(device,"mc0:/");
 	}
 	if (strlen(fn) >= 10) {
-		strcpy(fn,"ESR.ELF");
+		strcpy(fn,"2048.ELF");
 		strcpy(path,"APPS/");
 	}	
 
@@ -91,17 +91,6 @@ void menu_Text(void)
 	scr_printf("-Press DOWN to Set Mode.\n");
 	scr_printf("-Press LEFT to Set Path.\n");
 	scr_printf("-Press RIGHT to Set Target.\n");
-	//scr_printf(txtcrossBtn);
-	//scr_printf(txtsqrBtn);
-	//scr_printf(txtcirBtn);
-	//scr_printf(txttriBtn);
-	//scr_printf(txtR1Btn);
-	//scr_printf(txtL1Btn);
-	//scr_printf(txtR2Btn);
-	//scr_printf(txtL2Btn);
-	//scr_printf(txtselBtn);
-	//scr_printf(txtstrtBtn);
-	//scr_printf(txtL3Btn);
 	scr_printf("-Press any other key to preform selected action\n");
 	scr_printf(" \n");
 }
@@ -551,6 +540,15 @@ void DoTask(int task)
 			argc = 1;
 			sleep(2);							
 		}
+		if (task == 3)
+		{
+			launching=1;
+			strcpy(full_path,device);
+			strcat(full_path,path);
+			strcat(full_path,fn);
+			strcpy(exec_args[0],full_path);
+			argc = 1;
+		}		
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
 	scr_clear();
@@ -559,23 +557,23 @@ void DoTask(int task)
 	  fileXioClose(fd);
 	  char buf[4000000], *file = full_path;
 	  //strcpy(url,exec_args[0]);
-		scr_printf("Downloading...\n");
+		scr_printf("* Downloading...\n");
 		//Access Test (Make sure The Elf can Actually be Loaded)
-		scr_printf("URL: %s\n", exec_args[0]);
-		scr_printf("Path: %s\n", full_path);
+		scr_printf("* URL: %s\n", exec_args[0]);
+		scr_printf("* Path: %s\n", full_path);
 		ret = Download(exec_args[0],full_path);
 		sleep(4);
 		if(ret <= 0) {
-			scr_printf("Error! Could not open the file\n");
+			scr_printf("* Error! Could not open the file\n");
 		} else {
-			scr_printf("File Size: %d bytes\n", ret);
+			scr_printf("* File Size: %d bytes\n", ret);
 			sleep(2);
 			fd = fileXioOpen(full_path, O_RDONLY);
 			file_size = getFileSize(fd);			
 			if (file_size >= 1) {
-				scr_printf("%s Exists!\n", full_path);
+				scr_printf("* %s Exists!\n", full_path);
 			} else {
-				scr_printf("%s Does Not Exist!\n", full_path);
+				scr_printf("* %s Does Not Exist!\n", full_path);
 			}
 			fileXioClose(fd);
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
@@ -591,11 +589,11 @@ void DoTask(int task)
 		fd = fileXioOpen(full_path, O_RDONLY);
 		scr_printf("* Local File Opened... %d \n", fd);
 		file_size = getFileSize(fd);
-		scr_printf("File Size... %d \n", file_size);
+		scr_printf("* File Size... %d \n", file_size);
 		if (file_size >= 1) {
-			scr_printf("%s Exists!\n", full_path);
+			scr_printf("* %s Exists!\n", full_path);
 		} else {
-			scr_printf("%s Does Not Exist!\n", full_path);
+			scr_printf("* %s Does Not Exist!\n", full_path);
 		}
 		fileXioClose(fd);
 		//scr_printf("CRC32: ");
@@ -606,7 +604,7 @@ void DoTask(int task)
 	}
 	if (launching == 1) {
 		// Display URL The ELF Is Being Loaded From
-		scr_printf("Launching Application from \n %s", arg0);
+		scr_printf("* Launching Application from \n %s", arg0);
 		sleep(2);
 		/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
 		eh = (elf_header_t *)&loader_elf;
@@ -728,22 +726,28 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
-			if (strcmp(fn,"ESR.ELF") == 0) {
+			if (strcmp(fn,"2048.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			} else if (strcmp(fn,"GBA.ELF") == 0) {
+			}	else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			} else if (strcmp(fn,"GSM.ELF") == 0) {
+			}	else if (strcmp(fn,"FCEU.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			} else if (strcmp(fn,"HDL.ELF") == 0) {
+			} else if (strcmp(fn,"GBA.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"NES.ELF") == 0) {
+			} else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"NES.ELF") == 0) {
 				strcpy(fn,targets[7]);
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
+				strcpy(fn,targets[8]);
+			} else if (strcmp(fn,"PICO.ELF") == 0) {
+				strcpy(fn,targets[9]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[10]);
 			} else if (strcmp(fn,"SNES.ELF") == 0) {
-				strcpy(fn,targets[8]);																				
+				strcpy(fn,targets[11]);																				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
@@ -759,7 +763,10 @@ int main(int argc, char *argv[])
 		} else if (strcmp(action,"DOWNLOAD") == 0) {
 			DoTask(2);
 			menu_Text();
-			}		
+		} else if (strcmp(action,"LAUNCH") == 0) {
+			DoTask(3);
+			menu_Text();
+		}		
 		}
 	}
 }

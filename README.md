@@ -1,6 +1,6 @@
 <img src="https://i.gyazo.com/c27edd9c8763bc89c90da2caa2def48b.png">
 
-VTSPS2-HBDL v0.21
+VTSPS2-HBDL v0.22
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
