@@ -1,4 +1,4 @@
-VERSION = 0.21
+VERSION = 0.22
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
