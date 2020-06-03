@@ -23,7 +23,10 @@ Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues
 Changelog:
 v0.22 06-02-2020 9:45PM
 Added support for more homebrew
-2048.ELF, FCEU.ELF, PICO.ELF
+Added HTTP Mirror support.
+Added Cuban mirror. Thanks HWC!
+Added missing 'Push Start to Exit' to menu
+Added ESDL.ELF, 2048.ELF, FCEU.ELF, PICO.ELF
 Launching Homebrew now partially functions.
 Launches WLE/OPL in real hardware testing .. but not Pico/FCEU
 
