@@ -63,12 +63,19 @@ void menu_Text(void)
 	scr_clear();
 	menu_header();
 	extern char vtsip[15];
-	extern char url[];
+	extern char mirror0[];
+	extern char mirror1[];
 	//char *devices[] = {"mc0:/", "mc1:/"};
 	//char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
 	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
 	//char *targets[]= {"2048.ELF", "ESR.ELF", "FCEU.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "PICO.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
-	scr_printf("IP Address: %s Mirror: %s\n",vtsip,url);
+	if (http_mirror == 0) {
+		sprintf(mirror0,"http://hbdl.vts-tech.org/");
+		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
+	} else if (http_mirror == 1) {
+		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
+	}
 	scr_printf(" \n");
 	//scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
 	//if ((strlen(action) == 0) || (strlen(device) == 0) || (strlen(path) == 0) || (strlen(fn) == 0))  {
@@ -86,8 +93,7 @@ void menu_Text(void)
 	if (strlen(fn) >= 10) {
 		strcpy(fn,"2048.ELF");
 		strcpy(path,"APPS/");
-	}	
-
+	}
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
 	scr_printf(" \n");
 	scr_printf("-Press UP to Set Device.\n");
@@ -399,7 +405,7 @@ int Access_Test(char *arg)
 	return size;
 }
 
-int Download(char *url, char *full_path)
+int Download(char *urll, char *full_path)
 {
 	int size, urld, target, ret = 0;
 	char buf[4000000];
@@ -407,14 +413,14 @@ int Download(char *url, char *full_path)
 	//FILE *target;
 	fioClose(urld);
 	fileXioClose(target);
-	urld = fioOpen(url, O_RDONLY);
+	urld = fioOpen(urll, O_RDONLY);
 	scr_printf("* URL Opened... %d\n", urld);
 	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
 	scr_printf("* Local File Opened... %d\n", target);
 	//fioClose(target);
 	if(urld >= 0) {
 		size = fioLseek(urld, 0, SEEK_END);
-		//fileXioLseek(url, 0, SEEK_SET);
+		//fileXioLseek(urll, 0, SEEK_SET);
 		fioRead(urld, buf, size);
 		sleep(1);
 		scr_printf("* Downloaded Size... %d\n", size);
@@ -535,14 +541,15 @@ void DoTask(int task)
 		{
 			downloading=1;
 			if (http_mirror == 0) {
-				strcpy(url,"http://hbdl.vts-tech.org/");
+				strcpy(url,mirror0);
 			} else if (http_mirror == 1) {
-				strcpy(url,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+				strcpy(url,mirror1);
 			}
 			strcat(url,fn);
 			strcpy(exec_args[0], url);
 			strcpy(full_path,device);
 			strcat(full_path,path);
+			//remove trailing / for MkDir
 			substring(full_path,make_path,1,strlen(full_path)-1);
 			fileXioMkdir(make_path,0777);
 			strcat(full_path,fn);  				
@@ -687,7 +694,7 @@ int main(int argc, char *argv[])
 	//sleep(1);
 	scr_printf("Modules Loaded. Obtaining an IP Address...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
-	strcpy(url,"http://hbdl.vts-tech.org/");
+	//strcpy(url,"http://hbdl.vts-tech.org/");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
@@ -771,11 +778,11 @@ int main(int argc, char *argv[])
 		}	else if (new_pad & PAD_SELECT) {
 				if (http_mirror == 0) {
 					http_mirror = 1;
-					strcpy(url,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+					//strcpy(url,mirror1);
 					
 				} else if (http_mirror == 1) {
 				 	http_mirror = 0;
-				 	strcpy(url,"http://hbdl.vts-tech.org/");
+				 	//strcpy(url,mirror0);
 				}		
 			menu_Text();
 		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {

@@ -29,4 +29,6 @@ char PATH_ELF[] = "";
 char PATH_APP[] = "";
 char make_path[] = "";
 char action[32], device[32], path[256], fn[128];
-char url[] = "http://hbdl.vts-tech.org/";
+char url[] = "";
+char mirror0[] = "http://hbdl.vts-tech.org/";
+char mirror1[] = "http://www.hwc.nat.cu/ps2-vault/ps2hbdl/";
