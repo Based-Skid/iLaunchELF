@@ -90,8 +90,8 @@ void menu_Text(void)
 	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0)) {
 		strcpy(device,"mc0:/");
 	}
-	if (strlen(fn) >= 10) {
-		strcpy(fn,"2048.ELF");
+	if (strlen(fn) >= 13) {
+		strcpy(fn,"ESDL.ELF");
 		strcpy(path,"APPS/");
 	}
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
@@ -619,7 +619,7 @@ void DoTask(int task)
 		sleep(2);		
 	}
 	if (launching == 1) {
-		// Display URL The ELF Is Being Loaded From
+		// Display Path The ELF Is Being Loaded From
 		scr_printf("* Launching Application from %s", arg0);
 		sleep(2);
 		/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
@@ -670,7 +670,6 @@ void initialize(void)
 		#endif
 		SleepThread();
 	}
-
 	if (!initializePad(0, 0))
 	{
 		#if defined DEBUG
@@ -679,7 +678,25 @@ void initialize(void)
 		SleepThread();
 
 	}
+}
 
+void readlines(){
+   FILE *fp;
+   char str[80];
+   fp = fopen("VTSPS2-HBDL.TXT", "r");
+   if(fp == NULL) {
+      perror("Error opening file");
+      return(-1);
+   }
+   while(1) {
+   if( fgets (str, 80, fp)!=NULL ) {
+      /* writing content to stdout */
+      puts(str);
+   } else {
+   		break;
+   }
+   }
+   fclose(fp);
 }
 
 int main(int argc, char *argv[])
@@ -698,7 +715,8 @@ int main(int argc, char *argv[])
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
-	strcpy(fn,targets[0]);	
+	strcpy(fn,targets[0]);
+	readlines();
 	menu_Text();
 		while (1)
 	{
@@ -743,30 +761,36 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
-			if (strcmp(fn,"2048.ELF") == 0) {
+			//"ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF"
+			//"RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "WLE.ELF"
+			if (strcmp(fn,"ESDL.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			}	else if (strcmp(fn,"ESDL.ELF") == 0) {
-				strcpy(fn,targets[2]);
 			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+				strcpy(fn,targets[2]);
+			}	else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			}	else if (strcmp(fn,"FCEU.ELF") == 0) {
+			}	else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"GBA.ELF") == 0) {
+			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"GSM.ELF") == 0) {
-				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"HDL.ELF") == 0) {
-				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"NES.ELF") == 0) {
-				strcpy(fn,targets[8]);
 			} else if (strcmp(fn,"OPL.ELF") == 0) {
+				strcpy(fn,targets[6]);
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+				strcpy(fn,targets[7]);
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+				strcpy(fn,targets[8]);
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"PICO.ELF") == 0) {
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"SNES.ELF") == 0) {
-				strcpy(fn,targets[12]);																				
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+				strcpy(fn,targets[12]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[13]);
+			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
+				strcpy(fn,targets[14]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}

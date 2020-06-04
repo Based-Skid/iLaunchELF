@@ -1,6 +1,6 @@
-<img src="https://i.gyazo.com/a4e30f3c627d26ee6af3e0f372b69299.png">
+<img src="https://i.gyazo.com/c06d1626909c7f0850dd9f2c5fc5f738.png">
 
-VTSPS2-HBDL v0.22
+VTSPS2-HBDL v0.23
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -21,6 +21,12 @@ Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues
 
 <pre>
 Changelog:
+v0.23 06-03-2020 8:29PM
+Added INFOGB, PS2SX
+Now Supports 15 Total Homebrews
+Now using 8.3 Filename standard.
+Current CRC32 List now distributed with binary releases.
+
 v0.22 06-02-2020 9:45PM
 Added support for more homebrew
 Added HTTP Mirror support.
