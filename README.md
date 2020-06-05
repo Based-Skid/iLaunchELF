@@ -1,4 +1,4 @@
-<img src="https://i.gyazo.com/3231643f620fea05e6e36f40a49dd73f.png">
+<img src="https://i.gyazo.com/015b0661edb6639c51db4be950574b62.png">
 
 VTSPS2-HBDL v0.24
 HomeBrew DownLoader
