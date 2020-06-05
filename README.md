@@ -1,6 +1,6 @@
-<img src="https://i.gyazo.com/c06d1626909c7f0850dd9f2c5fc5f738.png">
+<img src="https://i.gyazo.com/3231643f620fea05e6e36f40a49dd73f.png">
 
-VTSPS2-HBDL v0.23
+VTSPS2-HBDL v0.24
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -21,6 +21,12 @@ Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues
 
 <pre>
 Changelog:
+v0.24 2020-06-05 6:29AM
+Now displays Remote CRC32
+Local CRC32 defaults to 'unchecked'
+Checking for files that don't exist tentatively working.
+00000000 is File Not Exist
+
 v0.23 06-03-2020 8:29PM
 Added INFOGB, PS2SX
 Now Supports 15 Total Homebrews

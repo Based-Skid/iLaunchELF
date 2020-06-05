@@ -104,10 +104,13 @@ void menu_Text(void)
 			strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+2),9);
 			scr_printf("Local CRC32: ");
-			if (strcmp(localcrc,"00000000") == 0) {
+			if (strcmp(localcrc,"00000001") == 0) {
 				scr_printf("unchecked");
+			} else if (strcmp(localcrc,"00000000") == 0) {
+				scr_printf("00000000");
 			} else {
-			sprintf(localcrc,file_crc32(device,path,fn));
+			//sprintf(localcrc,file_crc32(device,path,fn));
+			scr_printf("%s",localcrc);
 			}
 			scr_printf(" Remote CRC32:%s\n", remotecrc);
 		}
@@ -478,7 +481,8 @@ char* file_crc32(char device[], char path[], char fn[])
   if (NULL == (fp = fopen(file, "rb")))
   {
         printf("Error! Unable to open %s for reading\n", file);
-        //return -1;
+        sprintf(localcrc,"00000000");
+        return NULL;
   }
   //read file, store length in len, file contents in buf
   len = fread(buf, sizeof(char), sizeof(buf), fp);
@@ -622,7 +626,9 @@ void DoTask(int task)
 		if (file_size >= 1) {
 			//scr_printf("* %s Exists!\n", full_path);
 		} else {
-			scr_printf("! %s Does Not Exist!\n", full_path);
+			//scr_printf("! %s Does Not Exist!\n", full_path);
+			sprintf(localcrc,"00000000");
+			return;
 		}
 		fileXioClose(fd);
 		//scr_printf("CRC32: ");
@@ -743,7 +749,7 @@ int main(int argc, char *argv[])
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
 	strcpy(fn,targets[0]);
-	sprintf(localcrc,"00000000");
+	sprintf(localcrc,"00000001");
 	readcrc(); //populates CRC32DB[]
 	menu_Text();
 		while (1)
@@ -824,7 +830,7 @@ int main(int argc, char *argv[])
 			}
 		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
-		sprintf(localcrc,"00000000");
+		sprintf(localcrc,"00000001");
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
 		 	return 0;
