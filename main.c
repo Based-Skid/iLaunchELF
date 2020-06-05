@@ -14,7 +14,10 @@
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
 
 int http_mirror = 0;
-
+char CRC32DB[35][128] = {""};
+char remotecrc[9];
+char localcrc[9];
+	
 typedef struct {
 	u8	ident[16];
 	u16	type;
@@ -49,6 +52,16 @@ int getFileSize(int fd) {
 	return size;
 }
 
+void substring(char s[], char sub[], int p, int l) {
+   int c = 0;
+   
+   while (c < l) {
+      sub[c] = s[p+c-1];
+      c++;
+   }
+   sub[c] = '\0';
+}
+
 void menu_header(void)
 {
 	scr_printf(" \n");
@@ -65,10 +78,8 @@ void menu_Text(void)
 	extern char vtsip[15];
 	extern char mirror0[];
 	extern char mirror1[];
-	//char *devices[] = {"mc0:/", "mc1:/"};
-	//char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
-	//char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-	//char *targets[]= {"2048.ELF", "ESR.ELF", "FCEU.ELF", "GBA.ELF", "GSM.ELF", "HDL.ELF", "NES.ELF", "OPL.ELF", "PICO.ELF", "SMS.ELF", "SNES.ELF", "WLE.ELF"};
+	char remotefn[15];
+	int x = 17;
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
@@ -77,13 +88,6 @@ void menu_Text(void)
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
 	}
 	scr_printf(" \n");
-	//scr_printf("DEBUG: %s %s %s %s %d %d %d %d\n", action, device, path, fn, strlen(action), strlen(device), strlen(path), strlen(fn));
-	//if ((strlen(action) == 0) || (strlen(device) == 0) || (strlen(path) == 0) || (strlen(fn) == 0))  {
-		//strcpy(action,actions[0]);
-		//strcpy(device,devices[0]);
-		//strcpy(path,paths[0]);	
-		//strcpy(fn,targets[0]);
-	//}	
 	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
 		strcpy(action,"CHECK");
 	}
@@ -95,6 +99,23 @@ void menu_Text(void)
 		strcpy(path,"APPS/");
 	}
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
+	while(x<=35) {
+		if (strstr(CRC32DB[x],fn)) {
+			strcpy(remotefn,fn);
+			substring(CRC32DB[x],remotecrc,(strlen(fn)+2),9);
+			scr_printf("Local CRC32: ");
+			if (strcmp(localcrc,"00000000") == 0) {
+				scr_printf("unchecked");
+			} else {
+			sprintf(localcrc,file_crc32(device,path,fn));
+			}
+			scr_printf(" Remote CRC32:%s\n", remotecrc);
+		}
+		//scr_printf("D2: %s",CRC32DB[x][-8]);
+		x=x+1;
+	}	
+	//scr_printf("Test CRC: %s\n",CRC32DB[18]);
+	//sleep(10);
 	scr_printf(" \n");
 	scr_printf("-Press UP to Set Device.\n");
 	scr_printf("-Press DOWN to Set Mode.\n");
@@ -391,19 +412,19 @@ void pad_wait_button(u32 button)
 	}
 }
 
-int Access_Test(char *arg)
-{
-	int fd, size;
-	fileXioClose(fd);
-	fd = fileXioOpen(arg, O_RDONLY);
-
-	if(fd >= 0) {
-		size = fileXioLseek(fd, 0, SEEK_END);
-		fileXioClose(fd);
-	} else return fd;
-
-	return size;
-}
+//int Access_Test(char *arg)
+//{
+//	int fd, size;
+//	fileXioClose(fd);
+//	fd = fileXioOpen(arg, O_RDONLY);
+//
+//	if(fd >= 0) {
+//		size = fileXioLseek(fd, 0, SEEK_END);
+//		fileXioClose(fd);
+//	} else return fd;
+//
+//	return size;
+//}
 
 int Download(char *urll, char *full_path)
 {
@@ -437,17 +458,7 @@ int Download(char *urll, char *full_path)
 	return size;
 }
 
-void substring(char s[], char sub[], int p, int l) {
-   int c = 0;
-   
-   while (c < l) {
-      sub[c] = s[p+c-1];
-      c++;
-   }
-   sub[c] = '\0';
-}
-
-void file_crc32(char device[], char path[], char fn[])
+char* file_crc32(char device[], char path[], char fn[])
 {
 	//scr_printf("DEBUG: file_crc32() called...\n");
 	FILE *fp;
@@ -471,7 +482,7 @@ void file_crc32(char device[], char path[], char fn[])
   }
   //read file, store length in len, file contents in buf
   len = fread(buf, sizeof(char), sizeof(buf), fp);
-  scr_printf("%d bytes read\n", len);
+  //scr_printf("%d bytes read\n", len);
   //Close the file
   //fclose(fp);
   sleep(1);
@@ -485,9 +496,11 @@ void file_crc32(char device[], char path[], char fn[])
   substring(tmp,f_crc32,9,8);
   //Display CRC32
   if (strlen(tmp) > 8) {
-  	scr_printf("CRC32: %s\n",f_crc32);
+  	scr_printf("%s",f_crc32);
+  	return f_crc32;
   } else {
-  	scr_printf("CRC32: %s\n",tmp);
+  	scr_printf("%s",tmp);
+  	return tmp;
   }
 }
 
@@ -603,19 +616,19 @@ void DoTask(int task)
 		strcat(full_path,fn);
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		fd = fileXioOpen(full_path, O_RDONLY);
-		scr_printf("* Local File Opened... %d \n", fd);
+		//scr_printf("* Local File Opened... %d \n", fd);
 		file_size = getFileSize(fd);
-		scr_printf("* File Size... %d \n", file_size);
+		//scr_printf("* File Size... %d \n", file_size);
 		if (file_size >= 1) {
-			scr_printf("* %s Exists!\n", full_path);
+			//scr_printf("* %s Exists!\n", full_path);
 		} else {
-			scr_printf("* %s Does Not Exist!\n", full_path);
+			scr_printf("! %s Does Not Exist!\n", full_path);
 		}
 		fileXioClose(fd);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		file_crc32(device,path,fn);
-		scr_printf(" \n");
+		sprintf(localcrc,file_crc32(device,path,fn));
+		//scr_printf("CRC32:%s\n",localcrc);
 		sleep(2);		
 	}
 	if (launching == 1) {
@@ -680,23 +693,30 @@ void initialize(void)
 	}
 }
 
-void readlines(){
-   FILE *fp;
-   char str[80];
-   fp = fopen("VTSPS2-HBDL.TXT", "r");
-   if(fp == NULL) {
-      perror("Error opening file");
-      return(-1);
-   }
-   while(1) {
-   if( fgets (str, 80, fp)!=NULL ) {
-      /* writing content to stdout */
-      puts(str);
-   } else {
-   		break;
-   }
-   }
-   fclose(fp);
+void readcrc() {
+  char line[35][128];
+	char fname[15] = "VTSPS2-HBDL.TXT";
+  FILE *fptr = NULL;
+  //char hbdl_path;
+	//getcwd(hbdl_path,256);
+	//strcat(hbdl_path,fname);
+  int i = 0;
+  int tot = 0;
+	scanf("%s",fname);	
+    fptr = fopen(fname, "r");
+    while(fgets(line[i], 128, fptr)) 
+	{
+        line[i][strlen(line[i]) - 1] = '\0';
+        i++;
+    }
+    tot = i;
+    for(i = 0; i < tot; ++i)
+    {
+        //printf(" %s\n", line[i]);
+        sprintf(CRC32DB[i]," %s\n", line[i]);
+    }
+    //printf("\n\nDebug: %s %s %s\n", CRC32DB[1], CRC32DB[2], CRC32DB[20]);
+    fclose(fptr);
 }
 
 int main(int argc, char *argv[])
@@ -712,11 +732,19 @@ int main(int argc, char *argv[])
 	scr_printf("Modules Loaded. Obtaining an IP Address...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	//strcpy(url,"http://hbdl.vts-tech.org/");
+	//scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
+	//char hbdl_path;
+	//getcwd(hbdl_path,256);
+	//strcat(hbdl_path,"VTSPS2-HBDL.TXT");
+	//scr_printf("Debug: %s",hbdl_path);
+	//Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.TXT",hbdl_path);
+	//sleep(4);
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
 	strcpy(fn,targets[0]);
-	readlines();
+	sprintf(localcrc,"00000000");
+	readcrc(); //populates CRC32DB[]
 	menu_Text();
 		while (1)
 	{
@@ -796,6 +824,7 @@ int main(int argc, char *argv[])
 			}
 		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
+		sprintf(localcrc,"00000000");
 		menu_Text();
 		}	else if (new_pad & PAD_START)	{
 		 	return 0;
