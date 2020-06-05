@@ -126,7 +126,7 @@ void menu_Text(void)
 	scr_printf("-Press RIGHT to Set Target.\n");
 	scr_printf("-Press SELECT to Set Mirror.\n");
 	scr_printf("-Press START to Exit.\n");
-	scr_printf("-Press any other key to preform selected action\n");
+	scr_printf("-Press any other key to perform selected action\n");
 	scr_printf(" \n");
 }
 
