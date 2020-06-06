@@ -700,7 +700,7 @@ void DoTask(int task)
 	FlushCache(2);
 	ExecPS2((void *)eh->entry, 0, argc, exec_args);
 	}
-	scr_printf("* Operations complete. Returning to Main Menu...\n");
+	scr_printf("\n* Operations complete. Returning to Main Menu...\n");
 	sleep(4);	
 	menu_Text();
 }
@@ -741,7 +741,7 @@ void readcrc() {
   char line[35][128];
 	//uncomment for release builds
 	char fname[15] = "VTSPS2-HBDL.TXT";
-	//hardcode path during dev. cwd is 'host' in PCSX2
+	//hardcoded path during dev. cwd is 'host' in PCSX2
 	//char fname[25] = "mc0:/APPS/VTSPS2-HBDL.TXT";
   FILE *fptr = NULL;
   //char hbdl_path;

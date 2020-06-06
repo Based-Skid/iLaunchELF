@@ -1,18 +1,19 @@
-<img src="https://i.gyazo.com/6e8264c6e2de352aeb649bdba04a75e4.png">
+<img src="https://i.gyazo.com/de35beb0e596e2300a1beec524345d6c.png">
 
-VTSPS2-HBDL v0.24
+VTSPS2-HBDL v0.25
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
-<b>Somewhat unstable right now. Under heavy development. Works in testing on real hardware. Use with caution. Writes to either MC based on user selection.
+<b>Moderately stable right now. Almost feature complete. Works in testing on real hardware. Writes to either MC or USB based on user selection.
 Do not use on SCPH-9XXXX with 2.30 BIOS. Tested on SCPH-70001
 
 * Fully functional in PCSX2
 * Downloading works on Real PS2.
 * Checking works on Real PS2
 * Overwriting works on Real PS2
-* Creating folders works on Real PS2</b>
+* Creating folders works on Real PS2
+* USB Support</b>
 
 Credits:<br>
 Original iLaunchELF Created by krHACKen & Based_Skid<br>
@@ -21,6 +22,13 @@ Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues
 
 <pre>
 Changelog:
+v0.25 2020-06-06 1:05AM
+Now supports USB!
+2 more Homebrews added
+(VTSPS2-EJECT & VTSPS2-TESTMODE)
+Now supports 17 total Homebrews
+No longer in ALPHA, First BETA release.
+
 v0.24 2020-06-05 6:29AM
 Now displays Remote CRC32
 Local CRC32 defaults to 'unchecked'
