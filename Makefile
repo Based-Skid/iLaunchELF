@@ -1,17 +1,17 @@
-VERSION = 0.22
+VERSION = 0.25
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
 ####
 # C File Objects
-EE_OBJS = main.o loader_elf.o ps2ipc.o
+EE_OBJS = $(NAME).o loader_elf.o ps2ipc.o
 # SW Module Objects
-EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o crc32.o
+EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
 # Network Module
 EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
-EE_OBJS += poweroff.o
+EE_OBJS += poweroff.o crc32.o usbd.o usbhdfsd.o
 # SBV Shit
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
@@ -93,6 +93,13 @@ smap.s:
 
 ps2http.s:
 	bin2s $(PS2SDK)/iop/irx/ps2http.irx ps2http.s ps2http
+
+#thx KrahJohlito
+usbd.s:
+	bin2s $(PS2SDK)/iop/irx/usbd.irx usbd.s usbd
+	
+usbhdfsd.s:
+	bin2s $(PS2SDK)/iop/irx/usbhdfsd.irx usbhdfsd.s usbhdfsd
 
 crc32: crc32.c crc.h
 	$(CC) $(CFLAGS) -o $@ $<

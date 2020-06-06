@@ -8,7 +8,7 @@
  */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
 
-#include "main.h"
+#include "VTSPS2-HBDL.h"
 #include "strings.h"
 
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
@@ -79,7 +79,7 @@ void menu_Text(void)
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
-	int x = 17;
+	int x = 18;
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
@@ -91,15 +91,15 @@ void menu_Text(void)
 	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
 		strcpy(action,"CHECK");
 	}
-	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0)) {
+	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0) && (strcmp(device,"mass:/") != 0)) {
 		strcpy(device,"mc0:/");
 	}
 	if (strlen(fn) >= 13) {
-		strcpy(fn,"ESDL.ELF");
+		strcpy(fn,"EJECT.ELF");
 		strcpy(path,"APPS/");
 	}
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
-	while(x<=35) {
+	while(x<=36) {
 		if (strstr(CRC32DB[x],fn)) {
 			strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+2),9);
@@ -108,6 +108,12 @@ void menu_Text(void)
 				scr_printf("unchecked");
 			} else if (strcmp(localcrc,"00000000") == 0) {
 				scr_printf("00000000");
+			} else if (strlen(localcrc) == 7) {
+				scr_printf("0%s",localcrc);
+			} else if (strlen(localcrc) == 6) {
+				scr_printf("00%s",localcrc);
+			} else if (strlen(localcrc) == 5) {
+				scr_printf("000%s",localcrc);
 			} else {
 			//sprintf(localcrc,file_crc32(device,path,fn));
 			scr_printf("%s",localcrc);
@@ -274,9 +280,35 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&ps2http, size_ps2http, 0, NULL, NULL);
 	if (ret < 0)
 	{
-        	scr_printf("	Could not load ps2http.IRX! %d\n", ret);
+    scr_printf(" Could not load ps2http.IRX! %d\n", ret);
 		gotoOSDSYS(5);
 	}
+
+	ret = SifExecModuleBuffer(&usbd, size_usbd, 0, NULL, NULL);
+	if (ret < 0)
+	{
+		scr_printf(" Could not load usbd.irx! %d\n", ret);
+		SleepThread();
+	}
+
+	ret = SifExecModuleBuffer(&usbhdfsd, size_usbhdfsd, 0, NULL, NULL);
+	if (ret < 0)
+	{
+		scr_printf(" Could not load usbhdfsd.irx! %d\n", ret);
+		SleepThread();
+	}	
+//	char usbdirx[256];
+//	char usbhdfsdirx[256];
+//	char cwd[256];
+//	getcwd(cwd,sizeof(cwd));
+//	sprintf(usbdirx,"%s",cwd);
+//	strcat(usbdirx,"usbd.irx");
+//	sprintf(usbhdfsdirx,"%s",cwd);
+//	strcat(usbhdfsdirx,"usbhdfsd.irx");
+//	SifLoadModule(usbdirx, 0, NULL);
+//	SifLoadModule(usbhdfsdirx, 0, NULL);
+//	scr_printf("DEBUG: %s",usbdirx);
+//	sleep(1);
 
 }
 
@@ -446,15 +478,21 @@ int Download(char *urll, char *full_path)
 		size = fioLseek(urld, 0, SEEK_END);
 		//fileXioLseek(urll, 0, SEEK_SET);
 		fioRead(urld, buf, size);
-		sleep(1);
+		sleep(2);
 		scr_printf("* Downloaded Size... %d\n", size);
 		ret = fileXioWrite(target,buf,size);
 		scr_printf("* Local File Written! %d\n", ret);
-		sleep(1);
+		sleep(2);
 		fioClose(urld);
 		scr_printf("* URL Closed... %d\n", urld);
 		fileXioClose(target);
 		scr_printf("* Local File Closed... %d\n", target);
+		sprintf(localcrc,file_crc32(device,path,fn));
+		if (strcmp(localcrc,remotecrc) != 0) {
+			//Warns even when they do match, need to try another way.
+			//scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
+			//sleep(4);
+		}
 	} else {
 		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
 	}
@@ -701,7 +739,10 @@ void initialize(void)
 
 void readcrc() {
   char line[35][128];
+	//uncomment for release builds
 	char fname[15] = "VTSPS2-HBDL.TXT";
+	//hardcode path during dev. cwd is 'host' in PCSX2
+	//char fname[25] = "mc0:/APPS/VTSPS2-HBDL.TXT";
   FILE *fptr = NULL;
   //char hbdl_path;
 	//getcwd(hbdl_path,256);
@@ -762,6 +803,8 @@ int main(int argc, char *argv[])
 		if(new_pad & PAD_UP) {
 			if (strcmp(device,"mc0:/") == 0) {
 				strcpy(device,"mc1:/");
+			} else if (strcmp(device,"mc1:/") == 0) {
+				strcpy(device,"mass:/");
 			} else {
 				strcpy(device,"mc0:/");			
 			}
@@ -797,34 +840,38 @@ int main(int argc, char *argv[])
 		}	else if(new_pad & PAD_RIGHT) {
 			//"ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF"
 			//"RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "WLE.ELF"
-			if (strcmp(fn,"ESDL.ELF") == 0) {
+			if (strcmp(fn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+			} else if (strcmp(fn,"ESDL.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			}	else if (strcmp(fn,"GSM.ELF") == 0) {
+			}	else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			}	else if (strcmp(fn,"HDL.ELF") == 0) {
+			}	else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
+			}	else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
 				strcpy(fn,targets[13]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[14]);
 			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
-				strcpy(fn,targets[14]);				
+				strcpy(fn,targets[15]);				
+			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+				strcpy(fn,targets[16]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}

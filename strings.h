@@ -1,6 +1,6 @@
 //Strings
 char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-char *appVer = " v0.24 2020-06-05 (Commit: c6b51da)\n";
+char *appVer = " v0.25 2020-06-06 (Commit: DEV)\n";
 char *appAuthor = "http://hbdl.vts-tech.org\nForked from iLaunchElf by VTSTech\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018\n\n";
 char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 char *osdmsg = "Exiting to OSDSYS\n";
@@ -23,7 +23,7 @@ char *txtL3Btn = "-Press L3 to Start WLE.ELF.\n";
 char *devices[] = {"mc0:/", "mc1:/"};
 char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
 char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-char *targets[]= {"ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "WLE.ELF"};
+char *targets[]= {"EJECT.ELF", "ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "TESTMODE.ELF", "WLE.ELF"};
 char ELF_NO_EXT[] = "";
 char PATH_ELF[] = "";
 char PATH_APP[] = "";
@@ -32,4 +32,3 @@ char action[32], device[32], path[256], fn[128];
 char url[] = "";
 char mirror0[] = "http://hbdl.vts-tech.org/";
 char mirror1[] = "http://www.hwc.nat.cu/ps2-vault/ps2hbdl/";
-
