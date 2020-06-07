@@ -80,7 +80,7 @@ void menu_Text(void)
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
-	int x = 23; //starting line # of CRC's from VTSPS2-HBDL.TXT
+	int x = (dbsize / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);

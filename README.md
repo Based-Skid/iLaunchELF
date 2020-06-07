@@ -1,6 +1,6 @@
-<img src="https://i.gyazo.com/de35beb0e596e2300a1beec524345d6c.png">
-
-VTSPS2-HBDL v0.25
+<img src="https://i.gyazo.com/fd61e3b3fb98e18474fefddb837e1d8a.png">
+<img src="https://i.gyazo.com/c3c64095e42aa5c0a6a672fde085a1e5.png">
+VTSPS2-HBDL v0.26
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -13,7 +13,8 @@ Do not use on SCPH-9XXXX with 2.30 BIOS. Tested on SCPH-70001
 * Checking works on Real PS2
 * Overwriting works on Real PS2
 * Creating folders works on Real PS2
-* USB Support</b>
+* Launching partially works on Real PS2 (WLE, OPL will launch, many others wont)
+* USB Support, Sequential Downloads</b>
 
 Credits:<br>
 Original iLaunchELF Created by krHACKen & Based_Skid<br>
@@ -22,6 +23,17 @@ Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues
 
 <pre>
 Changelog:
+v0.26 2020-06-07 10:15AM
+Renamed ESDL to PS2ESDL
+Now supports downloading multiple files per homebrew!
+Added NEOCD
+Added PGEN
+Added PSMS
+Added PVCS
+Added SNES9X
+Fixed bug reading CRC's when entire filename was present in two homebrews.
+Now supports 22 Homebrews
+
 v0.25 2020-06-06 1:05AM
 Now supports USB!
 2 more Homebrews added
@@ -77,7 +89,7 @@ Initial Fork
 </pre>
 
 ## Notice
-This Program Was Built with The PS2DEV sdk and has utilized sample code from it https://github.com/ps2dev/ps2sdk
+This Program Was Built with The PS2DEV SDK (Compiled May 28th 2020, Commit: ec0cbfd) and has utilized sample code from it https://github.com/ps2dev/ps2sdk
 
 This Program Utilizes the HTTP Client File System from the PS2DEV sdk
 
