@@ -14,7 +14,8 @@
 extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
 
 int http_mirror = 0;
-char CRC32DB[35][128] = {""};
+int dbsize = 46;
+char CRC32DB[46][128] = {""};
 char remotecrc[9];
 char localcrc[9];
 	
@@ -79,7 +80,7 @@ void menu_Text(void)
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
-	int x = 18;
+	int x = 23; //starting line # of CRC's from VTSPS2-HBDL.TXT
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
@@ -99,9 +100,13 @@ void menu_Text(void)
 		strcpy(path,"APPS/");
 	}
 	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
-	while(x<=36) {
-		if (strstr(CRC32DB[x],fn)) {
-			strcpy(remotefn,fn);
+	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
+		int fnsize = (strlen(CRC32DB[x]) - 9);
+		sprintf(remotefn,"");
+		substring(CRC32DB[x],remotefn,1,fnsize);
+		//scr_printf("DEBUG: %d %d",strlen(fn),strlen(remotefn));
+		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+2)) {
+			//strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+2),9);
 			scr_printf("Local CRC32: ");
 			if (strcmp(localcrc,"00000001") == 0) {
@@ -297,19 +302,6 @@ void LoadModules(void)
 		scr_printf(" Could not load usbhdfsd.irx! %d\n", ret);
 		SleepThread();
 	}	
-//	char usbdirx[256];
-//	char usbhdfsdirx[256];
-//	char cwd[256];
-//	getcwd(cwd,sizeof(cwd));
-//	sprintf(usbdirx,"%s",cwd);
-//	strcat(usbdirx,"usbd.irx");
-//	sprintf(usbhdfsdirx,"%s",cwd);
-//	strcat(usbhdfsdirx,"usbhdfsd.irx");
-//	SifLoadModule(usbdirx, 0, NULL);
-//	SifLoadModule(usbhdfsdirx, 0, NULL);
-//	scr_printf("DEBUG: %s",usbdirx);
-//	sleep(1);
-
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -461,44 +453,6 @@ void pad_wait_button(u32 button)
 //	return size;
 //}
 
-int Download(char *urll, char *full_path)
-{
-	int size, urld, target, ret = 0;
-	char buf[4000000];
-	//FILE *urld;
-	//FILE *target;
-	fioClose(urld);
-	fileXioClose(target);
-	urld = fioOpen(urll, O_RDONLY);
-	scr_printf("* URL Opened... %d\n", urld);
-	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
-	scr_printf("* Local File Opened... %d\n", target);
-	//fioClose(target);
-	if(urld >= 0) {
-		size = fioLseek(urld, 0, SEEK_END);
-		//fileXioLseek(urll, 0, SEEK_SET);
-		fioRead(urld, buf, size);
-		sleep(2);
-		scr_printf("* Downloaded Size... %d\n", size);
-		ret = fileXioWrite(target,buf,size);
-		scr_printf("* Local File Written! %d\n", ret);
-		sleep(2);
-		fioClose(urld);
-		scr_printf("* URL Closed... %d\n", urld);
-		fileXioClose(target);
-		scr_printf("* Local File Closed... %d\n", target);
-		sprintf(localcrc,file_crc32(device,path,fn));
-		if (strcmp(localcrc,remotecrc) != 0) {
-			//Warns even when they do match, need to try another way.
-			//scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
-			//sleep(4);
-		}
-	} else {
-		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
-	}
-	return size;
-}
-
 char* file_crc32(char device[], char path[], char fn[])
 {
 	//scr_printf("DEBUG: file_crc32() called...\n");
@@ -546,21 +500,107 @@ char* file_crc32(char device[], char path[], char fn[])
   }
 }
 
-void str_crc32(char str[])
+int Download(char *urll, char *full_path)
 {
-  size_t len;
-  char tmp[32] = "";
-  char f_crc32[16] = "";
-  char full_str[4000000] = "";
-  char buf[4000000] = "";
-  strncpy(full_str,str,strlen(str));
-  strcpy(buf,full_str);
-  len = strlen(full_str);
-  scr_printf("%d bytes read\n", len);
-  sleep(1);
-  sprintf(tmp,"%lX",crc_32(buf, strlen(full_str)));
-  substring(tmp,f_crc32,9,8);
-  scr_printf("CRC32: %s\n",f_crc32);
+	int size, urld, target, ret = 0;
+	char buf[4000000];
+	//FILE *urld;
+	//FILE *target;
+	fioClose(urld);
+	fileXioClose(target);
+	urld = fioOpen(urll, O_RDONLY);
+	scr_printf("* URL Opened... %d\n", urld);
+	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
+	scr_printf("* Local File Opened... %d\n", target);
+	//fioClose(target);
+	if(urld >= 0) {
+		size = fioLseek(urld, 0, SEEK_END);
+		//fileXioLseek(urll, 0, SEEK_SET);
+		fioRead(urld, buf, size);
+		sleep(2);
+		scr_printf("* Downloaded Size... %d\n", size);
+		ret = fileXioWrite(target,buf,size);
+		scr_printf("* Local File Written! %d\n", ret);
+		sleep(2);
+		fioClose(urld);
+		scr_printf("* URL Closed... %d\n", urld);
+		fileXioClose(target);
+		scr_printf("* Local File Closed... %d\n", target);
+		//sprintf(localcrc,file_crc32(device,path,fn));
+		//if (strcmp(localcrc,remotecrc) != 0) {
+			//Warns even when they do match, need to try another way.
+			//scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
+			//sleep(4);
+		//}
+	} else {
+		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
+	}
+	return size;
+}
+
+void DownloadList(char device[], char path[], char fn[]){
+	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
+	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
+	int argc = 0;
+	int z = 0;
+	int ret = 0;
+	int fd,file_size;
+	char full_path[256];
+	//patches.ppi
+	if (http_mirror == 0) {
+		sprintf(mirror0,"http://hbdl.vts-tech.org/");
+	} else if (http_mirror == 1) {
+		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+	}	
+	if (http_mirror == 0) {
+		strcpy(exec_args[0],mirror0);
+		strcpy(exec_args[1],mirror0);
+		strcpy(exec_args[2],mirror0);
+		strcpy(exec_args[3],mirror0);
+		strcpy(exec_args[4],mirror0);
+	} else if (http_mirror == 1) {
+		strcpy(exec_args[0],mirror1);
+		strcpy(exec_args[1],mirror1);
+		strcpy(exec_args[2],mirror1);
+		strcpy(exec_args[3],mirror1);
+		strcpy(exec_args[4],mirror1);
+	}	
+	if (strstr("PS2ESDL.ELF",fn)) {
+		argc = 4;
+		strcat(exec_args[0],fn);
+		strcpy(exec_args[1],fn);
+		strcat(exec_args[2],"patches.ppi");
+		strcpy(exec_args[3],"patches.ppi");
+	}
+	for (z=0;z<argc;z=z+2) {
+		fileXioClose(fd);
+		sprintf(full_path,"");
+		strcpy(full_path,device);
+		strcat(full_path,path);
+		strcat(full_path,exec_args[z+1]);
+		//strcpy(url,exec_args[0]);
+		scr_printf("* Downloading...\n");
+		scr_printf("* URL: %s\n", exec_args[z]);
+		scr_printf("* Path: %s\n", full_path);
+		ret = Download(exec_args[z],full_path);
+		sleep(4);
+		if(ret <= 0) {
+			scr_printf("* Error! Could not open the file\n");
+		} else {
+			//scr_printf("* File Size: %d bytes\n", ret);
+			sleep(2);
+			fd = fileXioOpen(full_path, O_RDONLY);
+			file_size = getFileSize(fd);			
+			if (file_size >= 1) {
+				scr_printf("* %s Exists!\n", full_path);
+			} else {
+				scr_printf("* %s Does Not Exist!\n", full_path);
+			}
+			fileXioClose(fd);
+			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			//file_crc32(device,path,fn);	
+		}
+	}
 }
 
 void DoTask(int task)
@@ -603,10 +643,13 @@ void DoTask(int task)
 			strcat(url,fn);
 			strcpy(exec_args[0], url);
 			strcpy(full_path,device);
+			sleep(1);
 			strcat(full_path,path);
 			//remove trailing / for MkDir
+			sleep(1);
 			substring(full_path,make_path,1,strlen(full_path)-1);
 			fileXioMkdir(make_path,0777);
+			sleep(1);
 			strcat(full_path,fn);  				
 			argc = 1;
 			sleep(2);							
@@ -625,32 +668,35 @@ void DoTask(int task)
 	scr_clear();
 	menu_header();
 	if (downloading==1){
-	  fileXioClose(fd);
-	  char buf[4000000], *file = full_path;
-	  //strcpy(url,exec_args[0]);
-		scr_printf("* Downloading...\n");
-		//Access Test (Make sure The Elf can Actually be Loaded)
-		scr_printf("* URL: %s\n", exec_args[0]);
-		scr_printf("* Path: %s\n", full_path);
-		ret = Download(exec_args[0],full_path);
-		sleep(4);
-		if(ret <= 0) {
-			scr_printf("* Error! Could not open the file\n");
-		} else {
-			scr_printf("* File Size: %d bytes\n", ret);
-			sleep(2);
-			fd = fileXioOpen(full_path, O_RDONLY);
-			file_size = getFileSize(fd);			
-			if (file_size >= 1) {
-				scr_printf("* %s Exists!\n", full_path);
-			} else {
-				scr_printf("* %s Does Not Exist!\n", full_path);
+	  if (strstr("PS2ESDL.ELF",fn)) {
+	  	DownloadList(device,path,"PS2ESDL.ELF");
+	  } else {
+			  fileXioClose(fd);
+			  //char buf[4000000], *file = full_path;
+			  //strcpy(url,exec_args[0]);
+				scr_printf("* Downloading...\n");
+				scr_printf("* URL: %s\n", exec_args[0]);
+				scr_printf("* Path: %s\n", full_path);
+				ret = Download(exec_args[0],full_path);
+				sleep(4);
+				if(ret <= 0) {
+					scr_printf("* Error! Could not open the file\n");
+				} else {
+					scr_printf("* File Size: %d bytes\n", ret);
+					sleep(2);
+					fd = fileXioOpen(full_path, O_RDONLY);
+					file_size = getFileSize(fd);			
+					if (file_size >= 1) {
+						scr_printf("* %s Exists!\n", full_path);
+					} else {
+						scr_printf("* %s Does Not Exist!\n", full_path);
+					}
+					fileXioClose(fd);
+					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+					//file_crc32(device,path,fn);
+				}
 			}
-			fileXioClose(fd);
-			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-			//file_crc32(device,path,fn);
 		}
-	}
 	if (checking == 1) {
 		fileXioClose(fd);
 		strcpy(full_path,device);
@@ -738,7 +784,7 @@ void initialize(void)
 }
 
 void readcrc() {
-  char line[35][128];
+  char line[dbsize][128]; //maxlines
 	//uncomment for release builds
 	char fname[15] = "VTSPS2-HBDL.TXT";
 	//hardcoded path during dev. cwd is 'host' in PCSX2
@@ -776,21 +822,24 @@ int main(int argc, char *argv[])
 	scr_clear();
 	menu_header();
 	//sleep(1);
-	scr_printf("Modules Loaded. Obtaining an IP Address...\n");
+	scr_printf("Modules Loaded. Obtaining an IP Address ...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	//strcpy(url,"http://hbdl.vts-tech.org/");
 	//scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
-	//char hbdl_path;
+	//char hbdl_path[] = "";
+	//uncomment below for release
 	//getcwd(hbdl_path,256);
+	//sprintf(hbdl_path,"mc0:/APPS/");//hardcoded.
 	//strcat(hbdl_path,"VTSPS2-HBDL.TXT");
 	//scr_printf("Debug: %s",hbdl_path);
 	//Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.TXT",hbdl_path);
-	//sleep(4);
+	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);	
 	strcpy(fn,targets[0]);
 	sprintf(localcrc,"00000001");
+	sleep(2);
 	readcrc(); //populates CRC32DB[]
 	menu_Text();
 		while (1)
@@ -838,40 +887,48 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
-			//"ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF"
-			//"RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "WLE.ELF"
 			if (strcmp(fn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			} else if (strcmp(fn,"ESDL.ELF") == 0) {
-				strcpy(fn,targets[2]);
 			}	else if (strcmp(fn,"ESR.ELF") == 0) {
-				strcpy(fn,targets[3]);
+				strcpy(fn,targets[2]);
 			}	else if (strcmp(fn,"GSM.ELF") == 0) {
-				strcpy(fn,targets[4]);
+				strcpy(fn,targets[3]);
 			}	else if (strcmp(fn,"HDL.ELF") == 0) {
-				strcpy(fn,targets[5]);
+				strcpy(fn,targets[4]);
 			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
+				strcpy(fn,targets[5]);
+			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[6]);
 			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(fn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(fn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(fn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[14]);
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+				strcpy(fn,targets[15]);
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+				strcpy(fn,targets[16]);
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+				strcpy(fn,targets[17]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[18]);
+			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
+				strcpy(fn,targets[19]);				
 			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
-				strcpy(fn,targets[15]);				
+				strcpy(fn,targets[20]);				
 			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
-				strcpy(fn,targets[16]);				
+				strcpy(fn,targets[21]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}

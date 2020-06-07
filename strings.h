@@ -1,6 +1,6 @@
 //Strings
 char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-char *appVer = " v0.25 2020-06-06 (Commit: 52ea6b8)\n";
+char *appVer = " v0.26 2020-06-07 (Commit: DEV)\n";
 char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018\n\n";
 char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 char *osdmsg = "Exiting to OSDSYS\n";
@@ -20,10 +20,10 @@ char *txtselBtn = "-Press Select to unused...\n";
 char *txtstrtBtn = "-Press Start to Reboot PS2.\n";
 char *txtL3Btn = "-Press L3 to Start WLE.ELF.\n";
 
-char *devices[] = {"mc0:/", "mc1:/"};
+char *devices[] = {"mc0:/", "mc1:/", "mass:/"};
 char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
 char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-char *targets[]= {"EJECT.ELF", "ESDL.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "OPL.ELF", "PS2SX.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNESSTN.ELF", "TESTMODE.ELF", "WLE.ELF"};
+char *targets[]= {"EJECT.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "NEOCD.ELF", "OPL.ELF", "PGEN.ELF", "PS2ESDL.ELF", "PS2SX.ELF", "PSMS.ELF", "PVCS.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNES9X.ELF", "SNESSTN.ELF", "TESTMODE.ELF", "WLE.ELF"};
 char ELF_NO_EXT[] = "";
 char PATH_ELF[] = "";
 char PATH_APP[] = "";
