@@ -1,4 +1,4 @@
-<img src="https://i.gyazo.com/fd61e3b3fb98e18474fefddb837e1d8a.png">
+<img src="https://i.gyazo.com/d236abeeef449162b6acedf722071ada.png">
 <img src="https://i.gyazo.com/c3c64095e42aa5c0a6a672fde085a1e5.png">
 VTSPS2-HBDL v0.27
 HomeBrew DownLoader
@@ -19,6 +19,7 @@ Do not use on SCPH-9XXXX with 2.30 BIOS. Extensively tested on SCPH-70001. Worki
 Credits:<br>
 Original iLaunchELF Created by krHACKen & Based_Skid<br>
 crc32.c written by Lammert Bies, (c) 1999-2016 Lammert Bies. File is licensed under the MIT License<br>
+Packed with PS2-Packer v1.1.0 by Nicolas "Pixel" Noble<br>
 Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues<br>
 Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
@@ -105,9 +106,6 @@ Initial Fork
 This Program Was Built with The PS2DEV SDK (Compiled May 28th 2020, Commit: ec0cbfd) and has utilized sample code from it https://github.com/ps2dev/ps2sdk
 
 This Program Utilizes the HTTP Client File System from the PS2DEV sdk
-
-The ELF Loading Portion of the Code is From the w/uLE project https://github.com/AKuHAK/uLaunchELF/tree/master/loader
-
 
 ## Warranty
 This Application Has No Warranty. The Creators of this app cannot be held Responsible for any damage
