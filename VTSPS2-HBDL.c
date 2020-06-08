@@ -2,8 +2,8 @@
                  VTSPS2-HBDL by VTSTech
 	Based on iLaunchELF by krHACKen & Based_Skid
 
-   ELF loading Portions of this Code are From loader.c
-   https://github.com/AKuHAK/uLaunchELF/blob/master/loader/loader.c
+   ELF loading Portions of this Code are From Function LoadElf()
+   from main.c MPLUS-LOADER3.ELF
 
  */
 // All Includes and Declarations are in Main.h, additional C Files should include main.h
@@ -11,11 +11,9 @@
 #include "VTSPS2-HBDL.h"
 #include "strings.h"
 
-extern void loader_elf; // wLaunchELF's loader.elf. Embed this sukka in your ELF.
-
 int http_mirror = 0;
-int dbsize = 46;
-char CRC32DB[46][128] = {""};
+int dbsize = 50;
+char CRC32DB[50][128] = {""};
 char remotecrc[9];
 char localcrc[9];
 	
@@ -80,7 +78,9 @@ void menu_Text(void)
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
+	char hbsize[7];
 	int x = (dbsize / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
+	int z = 0;
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
@@ -96,10 +96,44 @@ void menu_Text(void)
 		strcpy(device,"mc0:/");
 	}
 	if (strlen(fn) >= 13) {
-		strcpy(fn,"EJECT.ELF");
+		strcpy(fn,"AURA.ELF");
 		strcpy(path,"APPS/");
 	}
-	scr_printf("Mode: %s Device: %s Path: %s Target: %s\n",action,device,path,fn);
+	char spc_pad[] = "";
+	int spc_cnt = 0;
+
+	if (strlen(fn) > strlen(action)) {
+		spc_cnt = (strlen(fn) - strlen(action));
+	} else {
+		spc_cnt = (strlen(action) - strlen(fn));	
+	}
+	
+	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
+		strcat(spc_pad," ");
+	}
+	
+	if (strlen(fn) > strlen(action)) {
+		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
+	} else {	
+		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
+	}
+	
+	while(z<=x) {
+		int fnsize = (strlen(fn));
+		char hbfn[] = "";
+		char hbver[] = "";
+		substring(CRC32DB[z],hbfn,14,fnsize);
+		sprintf(hbsize,"");
+		//scr_printf("DEBUG: %s %d \n",hbfn, fnsize);
+		if (strstr(hbfn,fn)) {
+			substring(CRC32DB[z],hbsize,(14+fnsize),6);
+			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
+			scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
+			//scr_printf("DEBUG: %d %d",strlen(hbsize),hbsize);
+		}
+		//scr_printf("D2: %s",CRC32DB[x][-8]);
+		z++;
+	}
 	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
 		int fnsize = (strlen(CRC32DB[x]) - 9);
 		sprintf(remotefn,"");
@@ -131,10 +165,10 @@ void menu_Text(void)
 	//scr_printf("Test CRC: %s\n",CRC32DB[18]);
 	//sleep(10);
 	scr_printf(" \n");
-	scr_printf("-Press UP to Set Device.\n");
-	scr_printf("-Press DOWN to Set Mode.\n");
-	scr_printf("-Press LEFT to Set Path.\n");
-	scr_printf("-Press RIGHT to Set Target.\n");
+	scr_printf("-Press UP to Set [D]evice.\n");
+	scr_printf("-Press DOWN to Set [M]ode.\n");
+	scr_printf("-Press LEFT to Set [P]ath.\n");
+	scr_printf("-Press RIGHT to Set [T]arget.\n");
 	scr_printf("-Press SELECT to Set Mirror.\n");
 	scr_printf("-Press START to Exit.\n");
 	scr_printf("-Press any other key to perform selected action\n");
@@ -439,20 +473,6 @@ void pad_wait_button(u32 button)
 	}
 }
 
-//int Access_Test(char *arg)
-//{
-//	int fd, size;
-//	fileXioClose(fd);
-//	fd = fileXioOpen(arg, O_RDONLY);
-//
-//	if(fd >= 0) {
-//		size = fileXioLseek(fd, 0, SEEK_END);
-//		fileXioClose(fd);
-//	} else return fd;
-//
-//	return size;
-//}
-
 char* file_crc32(char device[], char path[], char fn[])
 {
 	//scr_printf("DEBUG: file_crc32() called...\n");
@@ -466,7 +486,7 @@ char* file_crc32(char device[], char path[], char fn[])
   strcat(full_path,path);
   strcat(full_path,fn);
   //4MB file buffer.
-  char buf[4000000], *file = full_path;
+  char buf[5600000], *file = full_path;
   //Close the file
   //fclose(fp);
   //scr_printf("File Closed: %d\n", fp);
@@ -503,7 +523,7 @@ char* file_crc32(char device[], char path[], char fn[])
 int Download(char *urll, char *full_path)
 {
 	int size, urld, target, ret = 0;
-	char buf[4000000];
+	char buf[5600000];
 	//FILE *urld;
 	//FILE *target;
 	fioClose(urld);
@@ -603,18 +623,50 @@ void DownloadList(char device[], char path[], char fn[]){
 	}
 }
 
+//** Function LoadElf() from main.c MPLUS-LOADER3.ELF
+//** http://lukasz.dk/2008/04/22/datel-memory-plus-64-mb/
+//slightly modified
+void LoadElf(const char *elf, char* path)
+{
+	char* args[1];
+	t_ExecData exec;	
+
+	SifLoadElf(elf, &exec);
+
+	#ifdef DEBUG
+		//scr_printf("Trying to load ELF: %s\n", elf);
+	#endif	
+
+	if(exec.epc > 0)
+	{	
+		FlushCache(0);
+		FlushCache(2);
+
+		// Reset IOP, since not all ELF's do it and we've loaded additional IOP
+		// modules which need to be unloaded
+		ResetIOP();
+
+		if(path != 0)
+		{
+			args[0] = path;
+			ExecPS2((void*)exec.epc, (void*)exec.gp, 1, args);
+		}
+		else
+		{
+			ExecPS2((void*)exec.epc, (void*)exec.gp, 0, NULL);
+		}
+	}
+}
 void DoTask(int task)
 {
-	u8 *pdata, *dest;
-	elf_header_t *eh;
-	elf_pheader_t *eph;
-	int i, j, ret,launching,downloading,checking;
+	int ret,launching,downloading,checking;
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
 	int fd,file_size;
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
+	char half_path[256];
 	extern char url[];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
@@ -659,6 +711,7 @@ void DoTask(int task)
 			launching=1;
 			strcpy(full_path,device);
 			strcat(full_path,path);
+			strcpy(half_path,full_path);
 			strcat(full_path,fn);
 			strcpy(exec_args[0],full_path);
 			argc = 1;
@@ -725,26 +778,13 @@ void DoTask(int task)
 		// Display Path The ELF Is Being Loaded From
 		scr_printf("* Launching Application from %s", arg0);
 		sleep(2);
-		/* Load the embedded wLaunchELF's loader.elf to its load address, by parsing its ELF header */
-		eh = (elf_header_t *)&loader_elf;
-		eph = (elf_pheader_t *)(&loader_elf + eh->phoff);
-
-		for(i = 0; i < eh->phnum; i++) {
-			dest = (u8*)(eph[i].vaddr);
-			pdata = (u8*)(&loader_elf + eph[i].offset);
-			for(j = 0; j < eph[i].filesz; j++) dest[j] = pdata[j];
-			if(eph[i].memsz > eph[i].filesz) {
-				dest = (u8 *)(eph[i].vaddr + eph[i].filesz);
-				for(j = 0; j < eph[i].memsz - eph[i].filesz; j++) dest[j] = '\0';
-			}
-		}
-	padPortClose(0, 0);
-	padEnd();
-	NetManDeinit();
-	SifExitRpc();
-	FlushCache(0);
-	FlushCache(2);
-	ExecPS2((void *)eh->entry, 0, argc, exec_args);
+	//padPortClose(0, 0);
+	//padEnd();
+	//NetManDeinit();
+	//SifExitRpc();
+	//FlushCache(0);
+	//FlushCache(2);
+	LoadElf(full_path, half_path);
 	}
 	scr_printf("\n* Operations complete. Returning to Main Menu...\n");
 	sleep(4);	
@@ -887,49 +927,53 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
-			if (strcmp(fn,"EJECT.ELF") == 0) {
+			if (strcmp(fn,"AURA.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+			} else if (strcmp(fn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			}	else if (strcmp(fn,"GSM.ELF") == 0) {
+			}	else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			}	else if (strcmp(fn,"HDL.ELF") == 0) {
+			}	else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
+			}	else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
+			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"PGEN.ELF") == 0) {
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
+			} else if (strcmp(fn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"PSMS.ELF") == 0) {
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"PVCS.ELF") == 0) {
+			} else if (strcmp(fn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(fn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[14]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[15]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[16]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[17]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
 				strcpy(fn,targets[18]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[19]);
 			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
-				strcpy(fn,targets[19]);				
-			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[20]);				
-			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[21]);				
+			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+				strcpy(fn,targets[22]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
+				strcpy(fn,targets[23]);	
+			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
 		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);

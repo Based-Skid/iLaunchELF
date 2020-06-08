@@ -5,7 +5,7 @@ EE_BIN_PACKED = $(NAME)-packed.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
 ####
 # C File Objects
-EE_OBJS = $(NAME).o loader_elf.o ps2ipc.o
+EE_OBJS = $(NAME).o ps2ipc.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
 # Network Module
@@ -40,16 +40,8 @@ $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	rm -f *.o *.s
 
 clean:
-	rm -f *.elf *.o *.s loader/*.o loader/*.elf
+	rm -f *.elf *.o *.s
 
-
-#wLaunchELF's loader.elf
-
-loader/loader.elf: loader
-	$(MAKE) -C $<
-
-loader_elf.s: loader/loader.elf
-	bin2s $< $@ loader_elf
 
 #poweroff Module
 

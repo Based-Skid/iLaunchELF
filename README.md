@@ -1,28 +1,41 @@
 <img src="https://i.gyazo.com/fd61e3b3fb98e18474fefddb837e1d8a.png">
 <img src="https://i.gyazo.com/c3c64095e42aa5c0a6a672fde085a1e5.png">
-VTSPS2-HBDL v0.26
+VTSPS2-HBDL v0.27
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
 
-<b>Moderately stable right now. Almost feature complete. Works in testing on real hardware. Writes to either MC or USB based on user selection.
-Do not use on SCPH-9XXXX with 2.30 BIOS. Tested on SCPH-70001
+<b>Rather stable right now. Almost feature complete. Works in testing on real hardware. Writes to either MC or USB based on user selection.
+Do not use on SCPH-9XXXX with 2.30 BIOS. Extensively tested on SCPH-70001. Working reports from SCPH-5XXXX as well.
 
 * Fully functional in PCSX2
 * Downloading works on Real PS2.
 * Checking works on Real PS2
 * Overwriting works on Real PS2
 * Creating folders works on Real PS2
-* Launching partially works on Real PS2 (WLE, OPL will launch, many others wont)
+* Launching mostly works on Real PS2 (WLE, OPL, GSM launch, a few others don't)
 * USB Support, Sequential Downloads</b>
 
 Credits:<br>
 Original iLaunchELF Created by krHACKen & Based_Skid<br>
 crc32.c written by Lammert Bies, (c) 1999-2016 Lammert Bies. File is licensed under the MIT License<br>
 Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues<br>
+Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
 <pre>
 Changelog:
+v0.27 2020-06-08 5:10AM
+No longer using loader.elf
+Using LoadElf() from MPLUS-LOADER3
+Now displays remote filesize
+Now displays remote version
+Reorganized menu to accomodate new items
+Menu now dynamically aligns itself
+Added 'Aura for Laura' Demo
+Added ZoneLoader
+Updated RetroArch
+Now supports 24 Homebrews
+
 v0.26 2020-06-07 10:15AM
 Renamed ESDL to PS2ESDL
 Now supports downloading multiple files per homebrew!
