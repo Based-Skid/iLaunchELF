@@ -30,7 +30,7 @@ No longer using loader.elf
 Using LoadElf() from MPLUS-LOADER3
 Now displays remote filesize
 Now displays remote version
-Reorganized menu to accomodate new items
+Reorganized menu to accommodate new items
 Menu now dynamically aligns itself
 Added 'Aura for Laura' Demo
 Added ZoneLoader
