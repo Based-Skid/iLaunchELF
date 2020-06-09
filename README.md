@@ -34,7 +34,7 @@ Reorganized menu to accommodate new items
 Menu now dynamically aligns itself
 Added 'Aura for Laura' Demo
 Added ZoneLoader
-Updated RetroArch
+Updated RetroArch, OPL, SNES9X, PSMS
 Now supports 24 Homebrews
 
 v0.26 2020-06-07 10:15AM

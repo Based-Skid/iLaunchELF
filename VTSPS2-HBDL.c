@@ -911,7 +911,7 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
-			scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			sleep(2);
 			if (strcmp(path,"APPS/") == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
