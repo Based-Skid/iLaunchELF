@@ -1,6 +1,8 @@
-<img src="https://i.gyazo.com/d236abeeef449162b6acedf722071ada.png">
+<img src="https://i.gyazo.com/ede5d055481f932dabc4e98720ddf9f6.png">
+<img src="https://i.gyazo.com/fa654b72bde450f4d6cfd9129b24669c.png">
 <img src="https://i.gyazo.com/c3c64095e42aa5c0a6a672fde085a1e5.png">
-VTSPS2-HBDL v0.27
+
+VTSPS2-HBDL v0.28
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -25,6 +27,13 @@ Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
 <pre>
 Changelog:
+v0.28 2020-06-09 1:26AM
+Now downloads HomeBrew List upon start.
+Added DOSBox, PS2DOOM
+Removed some verbosity from Download()
+Added some verbosity to DownloadList()
+Now supports 26 HomeBrews
+
 v0.27 2020-06-08 5:10AM
 No longer using loader.elf
 Using LoadElf() from MPLUS-LOADER3
