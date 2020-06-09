@@ -830,13 +830,13 @@ void readcrc() {
 	//hardcoded path during dev. cwd is 'host' in PCSX2
 	//char fname[25] = "mc0:/APPS/VTSPS2-HBDL.TXT";
   FILE *fptr = NULL;
-  //char hbdl_path;
-	//getcwd(hbdl_path,256);
-	//strcat(hbdl_path,fname);
+  char hbdl_path[256];
+	getcwd(hbdl_path,256);
+	strcat(hbdl_path,fname);
   int i = 0;
   int tot = 0;
 	scanf("%s",fname);	
-    fptr = fopen(fname, "r");
+    fptr = fopen(hbdl_path, "r");
     while(fgets(line[i], 128, fptr)) 
 	{
         line[i][strlen(line[i]) - 1] = '\0';
@@ -911,12 +911,16 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
+			scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			sleep(2);
 			if (strcmp(path,"APPS/") == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				sleep(1);
 				sprintf(path,"APP_%s/",ELF_NO_EXT);
 				strcpy(PATH_APP,path);
 			} else if (strcmp(path,PATH_APP) == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				sleep(1);
 				sprintf(path,"%s/",ELF_NO_EXT);
 				strcpy(PATH_ELF,path);
 			} else if (strcmp(path,PATH_ELF) == 0) {
