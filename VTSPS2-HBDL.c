@@ -12,8 +12,8 @@
 #include "strings.h"
 
 int http_mirror = 0;
-int dbsize = 50;
-char CRC32DB[50][128] = {""};
+int dbsize = 54;
+char CRC32DB[54][128] = {""};
 char remotecrc[9];
 char localcrc[9];
 	
@@ -531,7 +531,7 @@ int Download(char *urll, char *full_path)
 	urld = fioOpen(urll, O_RDONLY);
 	scr_printf("* URL Opened... %d\n", urld);
 	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
-	scr_printf("* Local File Opened... %d\n", target);
+	//scr_printf("* Local File Opened... %d\n", target);
 	//fioClose(target);
 	if(urld >= 0) {
 		size = fioLseek(urld, 0, SEEK_END);
@@ -543,9 +543,9 @@ int Download(char *urll, char *full_path)
 		scr_printf("* Local File Written! %d\n", ret);
 		sleep(2);
 		fioClose(urld);
-		scr_printf("* URL Closed... %d\n", urld);
+		//scr_printf("* URL Closed... %d\n", urld);
 		fileXioClose(target);
-		scr_printf("* Local File Closed... %d\n", target);
+		//scr_printf("* Local File Closed... %d\n", target);
 		//sprintf(localcrc,file_crc32(device,path,fn));
 		//if (strcmp(localcrc,remotecrc) != 0) {
 			//Warns even when they do match, need to try another way.
@@ -562,36 +562,73 @@ void DownloadList(char device[], char path[], char fn[]){
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
+	int y = 0;
 	int z = 0;
 	int ret = 0;
 	int fd,file_size;
 	char full_path[256];
 	//patches.ppi
+	
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
+		scr_printf("* Mirror 1 Selected... \n");
 	} else if (http_mirror == 1) {
 		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-	}	
-	if (http_mirror == 0) {
-		strcpy(exec_args[0],mirror0);
-		strcpy(exec_args[1],mirror0);
-		strcpy(exec_args[2],mirror0);
-		strcpy(exec_args[3],mirror0);
-		strcpy(exec_args[4],mirror0);
-	} else if (http_mirror == 1) {
-		strcpy(exec_args[0],mirror1);
-		strcpy(exec_args[1],mirror1);
-		strcpy(exec_args[2],mirror1);
-		strcpy(exec_args[3],mirror1);
-		strcpy(exec_args[4],mirror1);
-	}	
-	if (strstr("PS2ESDL.ELF",fn)) {
+		scr_printf("* Mirror 2 Selected... \n");
+	}
+	scr_printf("* Building Download List... \n");
+	if (strstr("DOSBOX.ELF",fn)) {
 		argc = 4;
+		scr_printf("* DOSBox ... \n");
+		if (http_mirror == 0) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror0);
+			}
+		} else if (http_mirror == 1) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror1);
+			}
+		}
+		strcat(exec_args[0],fn);
+		strcpy(exec_args[1],fn);
+		strcat(exec_args[2],"dosbox.bin");
+		strcpy(exec_args[3],"dosbox.conf");
+	} else if (strstr("PS2DOOM.ELF",fn)) {
+		argc = 6;
+		scr_printf("* PS2Doom ... \n");
+		if (http_mirror == 0) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror0);
+			}
+		} else if (http_mirror == 1) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror1);
+			}
+		}
+		strcat(exec_args[0],fn);
+		strcpy(exec_args[1],fn);
+		strcat(exec_args[2],"ps2doom.bin");
+		strcpy(exec_args[3],"ps2doom.config");
+		strcat(exec_args[4],"doom1.wad");
+		strcpy(exec_args[5],"doom1.wad");
+	} else if (strstr("PS2ESDL.ELF",fn)) {
+		argc = 4;
+		scr_printf("* PS2ESDL ... \n");
+		if (http_mirror == 0) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror0);
+			}
+		} else if (http_mirror == 1) {
+			for (y=0;y<=argc;y=y+1) {
+				strcpy(exec_args[y],mirror1);
+			}
+		}
 		strcat(exec_args[0],fn);
 		strcpy(exec_args[1],fn);
 		strcat(exec_args[2],"patches.ppi");
 		strcpy(exec_args[3],"patches.ppi");
 	}
+	
 	for (z=0;z<argc;z=z+2) {
 		fileXioClose(fd);
 		sprintf(full_path,"");
@@ -723,6 +760,10 @@ void DoTask(int task)
 	if (downloading==1){
 	  if (strstr("PS2ESDL.ELF",fn)) {
 	  	DownloadList(device,path,"PS2ESDL.ELF");
+	  } else if (strstr("PS2DOOM.ELF",fn)) {
+	  	DownloadList(device,path,"PS2DOOM.ELF");
+	  } else if (strstr("DOSBOX.ELF",fn)) {
+	  	DownloadList(device,path,"DOSBOX.ELF");
 	  } else {
 			  fileXioClose(fd);
 			  //char buf[4000000], *file = full_path;
@@ -864,15 +905,16 @@ int main(int argc, char *argv[])
 	//sleep(1);
 	scr_printf("Modules Loaded. Obtaining an IP Address ...\n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
-	//strcpy(url,"http://hbdl.vts-tech.org/");
-	//scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
-	//char hbdl_path[] = "";
+	menu_header();
+	strcpy(url,"http://hbdl.vts-tech.org/");
+	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
+	char hbdl_path[] = "";
 	//uncomment below for release
-	//getcwd(hbdl_path,256);
+	getcwd(hbdl_path,256);
 	//sprintf(hbdl_path,"mc0:/APPS/");//hardcoded.
-	//strcat(hbdl_path,"VTSPS2-HBDL.TXT");
+	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
 	//scr_printf("Debug: %s",hbdl_path);
-	//Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.TXT",hbdl_path);
+	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
@@ -933,50 +975,54 @@ int main(int argc, char *argv[])
 		}	else if(new_pad & PAD_RIGHT) {
 			if (strcmp(fn,"AURA.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			} else if (strcmp(fn,"EJECT.ELF") == 0) {
+			} else if (strcmp(fn,"DOSBOX.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+			} else if (strcmp(fn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			}	else if (strcmp(fn,"GSM.ELF") == 0) {
+			}	else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			}	else if (strcmp(fn,"HDL.ELF") == 0) {
+			}	else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
+			}	else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
+			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"PGEN.ELF") == 0) {
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
+			} else if (strcmp(fn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(fn,"PS2DOOM.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"PSMS.ELF") == 0) {
+			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"PVCS.ELF") == 0) {
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(fn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[14]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(fn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[15]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[16]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[17]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[18]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[19]);
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+				strcpy(fn,targets[20]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[21]);
 			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
-				strcpy(fn,targets[20]);				
-			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
-				strcpy(fn,targets[21]);				
-			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
 				strcpy(fn,targets[22]);				
+			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
+				strcpy(fn,targets[23]);				
+			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+				strcpy(fn,targets[24]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
-				strcpy(fn,targets[23]);	
+				strcpy(fn,targets[25]);	
 			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
