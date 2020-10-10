@@ -12,8 +12,8 @@
 #include "strings.h"
 
 int http_mirror = 0;
-int dbsize = 54;
-char CRC32DB[54][128] = {""};
+int dbsize = 56; //lines in VTSPS2-HBDL.TXT
+char CRC32DB[56][128] = {""};
 char remotecrc[9];
 char localcrc[9];
 	
@@ -987,42 +987,44 @@ int main(int argc, char *argv[])
 				strcpy(fn,targets[6]);
 			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
+			} else if (strcmp(fn,"LBFN.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"PGEN.ELF") == 0) {
+			} else if (strcmp(fn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"PS2DOOM.ELF") == 0) {
+			} else if (strcmp(fn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
+			} else if (strcmp(fn,"PS2DOOM.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(fn,"PSMS.ELF") == 0) {
+			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[14]);
-			} else if (strcmp(fn,"PVCS.ELF") == 0) {
+			} else if (strcmp(fn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[15]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(fn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[16]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[17]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[18]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[19]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[20]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
 				strcpy(fn,targets[21]);
+			} else if (strcmp(fn,"SMS.ELF") == 0) {
+				strcpy(fn,targets[22]);
 			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
-				strcpy(fn,targets[22]);				
-			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[23]);				
-			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[24]);				
+			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+				strcpy(fn,targets[25]);				
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
-				strcpy(fn,targets[25]);	
+				strcpy(fn,targets[26]);	
 			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);	
 			}
