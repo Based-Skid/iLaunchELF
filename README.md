@@ -1,8 +1,8 @@
-<img src="https://i.gyazo.com/ede5d055481f932dabc4e98720ddf9f6.png">
+<img src="https://camo.githubusercontent.com/3141f0e2205d68cb7f8320d2351f6cc45a30c224/68747470733a2f2f692e6779617a6f2e636f6d2f62316234653736666264323634663462616666623030386339636533643534632e706e67">
 <img src="https://i.gyazo.com/fa654b72bde450f4d6cfd9129b24669c.png">
-<img src="https://i.gyazo.com/c3c64095e42aa5c0a6a672fde085a1e5.png">
+<img src="https://camo.githubusercontent.com/ac06a67a1f21ce5c1eaa25b67e5692b44ac63d12/68747470733a2f2f692e6779617a6f2e636f6d2f64326236336331633965383238313432336466666562383930363937373562352e706e67">
 
-VTSPS2-HBDL v0.28
+VTSPS2-HBDL v0.30
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -27,6 +27,19 @@ Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
 <pre>
 Changelog:
+v0.30 2020-10-13 12:49AM
+Now POSIX compliant
+No longer using fio/fileXio calls
+Updated wLaunchELF to v4.43A Commit 970ca992
+Removed some verbosity from Download()
+
+v0.29 2020-10-09 11:02PM
+Added LBFN v0.07.19 WIP by Nika Mod by HWC
+Updated ESR to R10F DVD Direct
+Updated OPL to 1562-Beta CI-compile #85: Commit 41f7cf0
+Updated RetroArch to v1.9.0
+Now supports 27 HomeBrews
+
 v0.28 2020-06-09 1:26AM
 Now downloads HomeBrew List upon start.
 Added DOSBox, PS2DOOM
