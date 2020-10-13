@@ -3,7 +3,7 @@
 #include <kernel.h>
 #include <sifrpc.h>
 #include <loadfile.h>
-#include <fileio.h>
+//#include <fileio.h>
 #include <libmc.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,11 +15,12 @@
 #include "malloc.h"
 #include <libcdvd.h>
 #include <iopheap.h>
-#include <io_common.h>
+//#include <io_common.h>
+#include <fcntl.h>
 #include <syscallnr.h>
 #include <unistd.h>
-#include <fileXio.h>
-#include <fileXio_rpc.h>
+//#include <fileXio.h>
+//#include <fileXio_rpc.h>
 #include "checksum.h"
 
 // IP Shit.

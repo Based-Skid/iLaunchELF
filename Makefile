@@ -1,4 +1,4 @@
-VERSION = 0.25
+VERSION = 0.30
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
@@ -7,7 +7,7 @@ EE_BIN_STRIPPED = $(NAME)-stripped.elf
 # C File Objects
 EE_OBJS = $(NAME).o ps2ipc.o
 # SW Module Objects
-EE_OBJS += freesio2.o iomanX.o fileXio.o freepad.o mcman.o mcsrv.o
+EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
 EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
@@ -36,7 +36,7 @@ $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	@echo "==================="
 	@echo "=== Compressing ==="
 	@echo "==================="
-	~/ps2homebrew/ps2-packer/ps2-packer -v $< $@
+	ps2-packer -v $< $@
 	rm -f *.o *.s
 
 clean:

@@ -46,8 +46,8 @@ typedef struct {
 } elf_pheader_t;
 
 int getFileSize(int fd) {
-	int size = fileXioLseek(fd, 0, SEEK_END);
-	fileXioLseek(fd, 0, SEEK_SET);
+	int size = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
 	return size;
 }
 
@@ -135,13 +135,14 @@ void menu_Text(void)
 		z++;
 	}
 	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
-		int fnsize = (strlen(CRC32DB[x]) - 9);
+		int fnsize = (strlen(CRC32DB[x]) - 12);
 		sprintf(remotefn,"");
 		substring(CRC32DB[x],remotefn,1,fnsize);
 		//scr_printf("DEBUG: %d %d",strlen(fn),strlen(remotefn));
-		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+2)) {
+		//scr_printf("DEBUG: %s %d %s %d",fn,strlen(fn), remotefn, strlen(remotefn));
+		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
 			//strcpy(remotefn,fn);
-			substring(CRC32DB[x],remotecrc,(strlen(fn)+2),9);
+			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
 			scr_printf("Local CRC32: ");
 			if (strcmp(localcrc,"00000001") == 0) {
 				scr_printf("unchecked");
@@ -183,7 +184,7 @@ void ResetIOP()
 	while(!SifIopSync()){}   //Wait for IOP to finish rebooting.
 	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD.
 	SifLoadFileInit();       //Initialize LOADFILE RPC.
-	fioInit();               //Initialize FILEIO RPC.
+	//fioInit();               //Initialize FILEIO RPC.
 
 	// SBV Patches Are Not part of a Normal IOP Reset.
 	sbv_patch_enable_lmb(); //SBV Patches
@@ -250,11 +251,11 @@ void LoadModules(void)
 		scr_printf("Failed to Load iomanx sw module");
 	}
 
-	ret = SifExecModuleBuffer(&fileXio, size_fileXio, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load freesio2 sw module");
-	}
+	//ret = SifExecModuleBuffer(&fileXio, size_fileXio, 0, NULL, NULL);
+	//if (ret < 0)
+	//{
+	//	scr_printf("Failed to Load freesio2 sw module");
+	//}
 
 
 	ret = SifExecModuleBuffer(&freepad, size_freepad, 0, NULL, NULL);
@@ -476,75 +477,86 @@ void pad_wait_button(u32 button)
 char* file_crc32(char device[], char path[], char fn[])
 {
 	//scr_printf("DEBUG: file_crc32() called...\n");
-	FILE *fp;
-	size_t len;
-	char tmp[32] = "";
-	char f_crc32[16] = "";
+	//FILE *fp;
+	//size_t len;
+	static char tmp[32] = "";
+	static char f_crc32[16] = "";
 	char full_path[256] = "";
-  //Build full_path string
-  strcpy(full_path,device);
-  strcat(full_path,path);
-  strcat(full_path,fn);
-  //4MB file buffer.
-  char buf[5600000], *file = full_path;
-  //Close the file
-  //fclose(fp);
-  //scr_printf("File Closed: %d\n", fp);
-  if (NULL == (fp = fopen(file, "rb")))
-  {
-        printf("Error! Unable to open %s for reading\n", file);
-        sprintf(localcrc,"00000000");
-        return NULL;
-  }
-  //read file, store length in len, file contents in buf
-  len = fread(buf, sizeof(char), sizeof(buf), fp);
-  //scr_printf("%d bytes read\n", len);
-  //Close the file
-  //fclose(fp);
-  sleep(1);
-  //Use sprintf to store crc_32() return value in tmp
-  //  
-  //If file is larger than buffer, update_crc_32() will
-  //need to be looped to get large file CRC32
-  sprintf(tmp,"%lX",crc_32(buf, len));
-  //We only need the last 8 bytes of crc_32 return value
-  //Except .. not anymore apparently?
-  substring(tmp,f_crc32,9,8);
-  //Display CRC32
-  if (strlen(tmp) > 8) {
-  	scr_printf("%s",f_crc32);
-  	return f_crc32;
-  } else {
-  	scr_printf("%s",tmp);
-  	return tmp;
-  }
+	//Build full_path string
+	strcpy(full_path,device);
+	strcat(full_path,path);
+	strcat(full_path,fn);
+	//5.6MB file buffer.
+	char buf[5600000], *file = full_path;
+	//Close the file
+	//close(fp);
+	//scr_printf("File Closed: %d\n", fp);
+	FILE *fp = fopen(file,"r");
+	if (!fp)
+	{
+	      printf("Error! Unable to open %s for reading\n", file);
+	      sprintf(localcrc,"00000000");
+	      return NULL;
+	}
+	//read file, store length in len, file contents in buf
+	fseek(fp,0,SEEK_END);
+	long len = ftell(fp);
+	fseek(fp,0,SEEK_SET);
+	while((fread(buf, 1, len, fp)) > 0){
+		scr_printf("%lu bytes read\n", len);
+	}
+	//Close the file
+	fclose(fp);
+	sleep(1);
+	//Use sprintf to store crc_32() return value in tmp
+	//  
+	//If file is larger than buffer, update_crc_32() will
+	//need to be looped to get large file CRC32
+	sprintf(tmp,"%lx",crc_32(buf, len));
+	//We only need the last 8 bytes of crc_32 return value
+	//Except .. not anymore apparently?
+	substring(tmp,f_crc32,9,8);
+	//Display CRC32
+	if (strlen(tmp) > 8) {
+  		scr_printf("%s",f_crc32);
+	  	return f_crc32;
+	} else {
+	 	scr_printf("%s",tmp);
+  		return tmp;
+	}
 }
 
 int Download(char *urll, char *full_path)
 {
-	int size, urld, target, ret = 0;
+	int size = 0;
+	int urld = 0;
+	int target = 0;
+	//int ret = 0;
 	char buf[5600000];
 	//FILE *urld;
 	//FILE *target;
-	fioClose(urld);
-	fileXioClose(target);
-	urld = fioOpen(urll, O_RDONLY);
-	scr_printf("* URL Opened... %d\n", urld);
-	target = fileXioOpen(full_path, O_RDWR | O_CREAT);
+	close(urld);
+	close(target);
+	if ((urld = open(urll,O_RDONLY)) !=-1) {
+		//scr_printf("* URL Opened... %d\n", urld);
+	} else {
+		scr_printf("! URL Open Failed... %d\n",urld);
+	}
+	//scr_printf("DEBUG: %s\n", full_path);
+	target = open(full_path, O_RDWR | O_CREAT);
 	//scr_printf("* Local File Opened... %d\n", target);
-	//fioClose(target);
-	if(urld >= 0) {
-		size = fioLseek(urld, 0, SEEK_END);
-		//fileXioLseek(urll, 0, SEEK_SET);
-		fioRead(urld, buf, size);
-		sleep(2);
-		scr_printf("* Downloaded Size... %d\n", size);
-		ret = fileXioWrite(target,buf,size);
-		scr_printf("* Local File Written! %d\n", ret);
-		sleep(2);
-		fioClose(urld);
+	//fclose(target);
+	if(urld != -1) {
+		size = lseek(urld, 0, SEEK_END);
+		read(urld, buf, size);
+		sleep(1);
+		//scr_printf("* Downloaded Size... %d\n", size);
+		write(target,buf,size);
+		//scr_printf("* Local File Written... (%d bytes)\n", size);
+		sleep(1);
+		close(urld);
 		//scr_printf("* URL Closed... %d\n", urld);
-		fileXioClose(target);
+		close(target);
 		//scr_printf("* Local File Closed... %d\n", target);
 		//sprintf(localcrc,file_crc32(device,path,fn));
 		//if (strcmp(localcrc,remotecrc) != 0) {
@@ -565,7 +577,8 @@ void DownloadList(char device[], char path[], char fn[]){
 	int y = 0;
 	int z = 0;
 	int ret = 0;
-	int fd,file_size;
+	int fd = 0;
+	int file_size= 0;
 	char full_path[256];
 	//patches.ppi
 	
@@ -630,7 +643,7 @@ void DownloadList(char device[], char path[], char fn[]){
 	}
 	
 	for (z=0;z<argc;z=z+2) {
-		fileXioClose(fd);
+		close(fd);
 		sprintf(full_path,"");
 		strcpy(full_path,device);
 		strcat(full_path,path);
@@ -646,14 +659,14 @@ void DownloadList(char device[], char path[], char fn[]){
 		} else {
 			//scr_printf("* File Size: %d bytes\n", ret);
 			sleep(2);
-			fd = fileXioOpen(full_path, O_RDONLY);
+			fd = open(full_path, O_RDONLY);
 			file_size = getFileSize(fd);			
 			if (file_size >= 1) {
 				scr_printf("* %s Exists!\n", full_path);
 			} else {
 				scr_printf("* %s Does Not Exist!\n", full_path);
 			}
-			fileXioClose(fd);
+			close(fd);
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			//file_crc32(device,path,fn);	
 		}
@@ -700,7 +713,8 @@ void DoTask(int task)
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
-	int fd,file_size;
+	int fd = 0;
+	int file_size = 0;
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
 	char half_path[256];
@@ -737,7 +751,7 @@ void DoTask(int task)
 			//remove trailing / for MkDir
 			sleep(1);
 			substring(full_path,make_path,1,strlen(full_path)-1);
-			fileXioMkdir(make_path,0777);
+			mkdir(make_path,0777);
 			sleep(1);
 			strcat(full_path,fn);  				
 			argc = 1;
@@ -765,7 +779,7 @@ void DoTask(int task)
 	  } else if (strstr("DOSBOX.ELF",fn)) {
 	  	DownloadList(device,path,"DOSBOX.ELF");
 	  } else {
-			  fileXioClose(fd);
+			  close(fd);
 			  //char buf[4000000], *file = full_path;
 			  //strcpy(url,exec_args[0]);
 				scr_printf("* Downloading...\n");
@@ -778,26 +792,26 @@ void DoTask(int task)
 				} else {
 					scr_printf("* File Size: %d bytes\n", ret);
 					sleep(2);
-					fd = fileXioOpen(full_path, O_RDONLY);
+					fd = open(full_path, O_RDONLY);
 					file_size = getFileSize(fd);			
 					if (file_size >= 1) {
 						scr_printf("* %s Exists!\n", full_path);
 					} else {
 						scr_printf("* %s Does Not Exist!\n", full_path);
 					}
-					fileXioClose(fd);
+					close(fd);
 					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 					//file_crc32(device,path,fn);
 				}
 			}
 		}
 	if (checking == 1) {
-		fileXioClose(fd);
+		close(fd);
 		strcpy(full_path,device);
 		strcat(full_path,path);
 		strcat(full_path,fn);
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		fd = fileXioOpen(full_path, O_RDONLY);
+		fd = open(full_path, O_RDONLY);
 		//scr_printf("* Local File Opened... %d \n", fd);
 		file_size = getFileSize(fd);
 		//scr_printf("* File Size... %d \n", file_size);
@@ -808,7 +822,7 @@ void DoTask(int task)
 			sprintf(localcrc,"00000000");
 			return;
 		}
-		fileXioClose(fd);
+		close(fd);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		sprintf(localcrc,file_crc32(device,path,fn));
@@ -864,34 +878,106 @@ void initialize(void)
 	}
 }
 
+char *set_hbdl_path(){
+	static char hbdl_path[256];
+	//uncomment for release
+	getcwd(hbdl_path,256);
+	//sprintf(hbdl_path,"mc0:/APPS/"); //hardcoded.
+	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
+	//scr_printf("Debug: %s\n",hbdl_path);
+	return hbdl_path;
+}
+
+/* This function is public domain -- Will Hartung 4/9/09 */
+/* Modifications, public domain as well, by Antti Haapala, 11/10/17
+   - Switched to getc on 5/23/19 */
+// if typedef doesn't exist (msvc, blah)
+//typedef intptr_t ssize_t;
+
+ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
+    size_t pos;
+    int c;
+
+    if (lineptr == NULL || stream == NULL || n == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    c = getc(stream);
+    if (c == EOF) {
+        return -1;
+    }
+
+    if (*lineptr == NULL) {
+        *lineptr = malloc(128);
+        if (*lineptr == NULL) {
+            return -1;
+        }
+        *n = 128;
+    }
+
+    pos = 0;
+    while(c != EOF) {
+        if (pos + 1 >= *n) {
+            size_t new_size = *n + (*n >> 2);
+            if (new_size < 128) {
+                new_size = 128;
+            }
+            char *new_ptr = realloc(*lineptr, new_size);
+            if (new_ptr == NULL) {
+                return -1;
+            }
+            *n = new_size;
+            *lineptr = new_ptr;
+        }
+
+        ((unsigned char *)(*lineptr))[pos ++] = c;
+        if (c == '\n') {
+            break;
+        }
+        c = getc(stream);
+    }
+
+    (*lineptr)[pos] = '\0';
+    return pos;
+}
+
 void readcrc() {
-  char line[dbsize][128]; //maxlines
-	//uncomment for release builds
-	char fname[15] = "VTSPS2-HBDL.TXT";
+	char line[dbsize][128]; //maxlines
+	char fname[15] = "VTSPS2-HBDL.TXT";//uncomment for release builds
 	//hardcoded path during dev. cwd is 'host' in PCSX2
 	//char fname[25] = "mc0:/APPS/VTSPS2-HBDL.TXT";
-  FILE *fptr = NULL;
-  char hbdl_path[256];
-	getcwd(hbdl_path,256);
-	strcat(hbdl_path,fname);
-  int i = 0;
-  int tot = 0;
-	scanf("%s",fname);	
-    fptr = fopen(hbdl_path, "r");
-    while(fgets(line[i], 128, fptr)) 
-	{
-        line[i][strlen(line[i]) - 1] = '\0';
-        i++;
-    }
-    tot = i;
-    for(i = 0; i < tot; ++i)
-    {
-        //printf(" %s\n", line[i]);
-        sprintf(CRC32DB[i]," %s\n", line[i]);
-    }
-    //printf("\n\nDebug: %s %s %s\n", CRC32DB[1], CRC32DB[2], CRC32DB[20]);
-    fclose(fptr);
+	char hbdl_path[256];
+	getcwd(hbdl_path,256); 		   //uncomment for release builds
+	strcat(hbdl_path,fname);	   //uncomment for release builds
+	set_hbdl_path();
+	FILE *fptr = fopen(hbdl_path,"r"); //fname dev, hbdl_path rls
+	int i = 0;
+	int tot = 0;
+	char *tmp = NULL;	
+	size_t len = 0;
+	ssize_t read;
+	if (fptr>=0){
+		while((read = getline(&tmp,&len,fptr)) != -1) 
+		{
+			strcpy(line[i],tmp);
+			//scr_printf("DEBUG: %s\n", line[i]);
+		        i++;
+		}
+		
+		tot = dbsize;
+		
+		for(i = 0; i < tot; ++i)
+		{
+	        	//printf(" %s\n", line[i]);
+		        sprintf(CRC32DB[i]," %s\n", line[i]);
+		}
+		fclose(fptr);
+		} else {
+			scr_printf("readcrc() error");
+		}
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -908,12 +994,8 @@ int main(int argc, char *argv[])
 	menu_header();
 	strcpy(url,"http://hbdl.vts-tech.org/");
 	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
-	char hbdl_path[] = "";
-	//uncomment below for release
-	getcwd(hbdl_path,256);
-	//sprintf(hbdl_path,"mc0:/APPS/");//hardcoded.
-	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
-	//scr_printf("Debug: %s",hbdl_path);
+	char *hbdl_path = set_hbdl_path();
+	sleep(1);
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
@@ -921,7 +1003,7 @@ int main(int argc, char *argv[])
 	strcpy(path,paths[0]);	
 	strcpy(fn,targets[0]);
 	sprintf(localcrc,"00000001");
-	sleep(2);
+	sleep(1);
 	readcrc(); //populates CRC32DB[]
 	menu_Text();
 		while (1)
