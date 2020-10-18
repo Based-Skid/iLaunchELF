@@ -470,7 +470,7 @@ char* file_crc32(char device[], char path[], char fn[])
   char f_crc32[16] = "";
   uint32_t t_crc32 = 0xffffffffL;
   char full_path[256] = "";
-  int chunks_curr = 1;
+  //int chunks_curr = 1;
   int bytes_read;
   //Build full_path string
   strcpy(full_path,device);
