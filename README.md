@@ -1,8 +1,8 @@
-<img src="https://camo.githubusercontent.com/3141f0e2205d68cb7f8320d2351f6cc45a30c224/68747470733a2f2f692e6779617a6f2e636f6d2f62316234653736666264323634663462616666623030386339636533643534632e706e67">
-<img src="https://i.gyazo.com/fa654b72bde450f4d6cfd9129b24669c.png">
-<img src="https://camo.githubusercontent.com/ac06a67a1f21ce5c1eaa25b67e5692b44ac63d12/68747470733a2f2f692e6779617a6f2e636f6d2f64326236336331633965383238313432336466666562383930363937373562352e706e67">
+<img src="https://i.gyazo.com/9787d618dd7191cdfd8160f9d0c0d619.png">
+<img src="https://i.gyazo.com/a84c48fa84df9e41d6d8e5a46c2d54a1.png">
+<img src="https://i.gyazo.com/12ec4eceef16fc46ce1417a6d3bb028b.png">
 
-VTSPS2-HBDL v0.30
+VTSPS2-HBDL v0.31
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -27,6 +27,10 @@ Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
 <pre>
 Changelog:
+v0.31 2020-10-17 11:59PM
+file_crc32() updates
+Code cleanup
+
 v0.30 2020-10-13 12:49AM
 Now POSIX compliant
 No longer using fio/fileXio calls
