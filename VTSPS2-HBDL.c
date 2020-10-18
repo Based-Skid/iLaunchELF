@@ -16,7 +16,7 @@ int dbsize = 56; //lines in VTSPS2-HBDL.TXT
 char CRC32DB[56][128] = {""};
 char remotecrc[9];
 char localcrc[9];
-	
+
 typedef struct {
 	u8	ident[16];
 	u16	type;
@@ -53,7 +53,6 @@ int getFileSize(int fd) {
 
 void substring(char s[], char sub[], int p, int l) {
    int c = 0;
-   
    while (c < l) {
       sub[c] = s[p+c-1];
       c++;
@@ -105,19 +104,19 @@ void menu_Text(void)
 	if (strlen(fn) > strlen(action)) {
 		spc_cnt = (strlen(fn) - strlen(action));
 	} else {
-		spc_cnt = (strlen(action) - strlen(fn));	
+		spc_cnt = (strlen(action) - strlen(fn));
 	}
-	
+
 	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
 		strcat(spc_pad," ");
 	}
-	
+
 	if (strlen(fn) > strlen(action)) {
 		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
-	} else {	
+	} else {
 		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
 	}
-	
+
 	while(z<=x) {
 		int fnsize = (strlen(fn));
 		char hbfn[] = "";
@@ -158,21 +157,21 @@ void menu_Text(void)
 			//sprintf(localcrc,file_crc32(device,path,fn));
 			scr_printf("%s",localcrc);
 			}
-			scr_printf(" Remote CRC32:%s\n", remotecrc);
+			scr_printf(" Remote CRC32:%s \n", remotecrc);
 		}
 		//scr_printf("D2: %s",CRC32DB[x][-8]);
 		x=x+1;
-	}	
+	}
 	//scr_printf("Test CRC: %s\n",CRC32DB[18]);
 	//sleep(10);
 	scr_printf(" \n");
-	scr_printf("-Press UP to Set [D]evice.\n");
-	scr_printf("-Press DOWN to Set [M]ode.\n");
-	scr_printf("-Press LEFT to Set [P]ath.\n");
-	scr_printf("-Press RIGHT to Set [T]arget.\n");
-	scr_printf("-Press SELECT to Set Mirror.\n");
-	scr_printf("-Press START to Exit.\n");
-	scr_printf("-Press any other key to perform selected action\n");
+	scr_printf("-Press UP to Set [D]evice. \n");
+	scr_printf("-Press DOWN to Set [M]ode. \n");
+	scr_printf("-Press LEFT to Set [P]ath. \n");
+	scr_printf("-Press RIGHT to Set [T]arget. \n");
+	scr_printf("-Press SELECT to Set Mirror. \n");
+	scr_printf("-Press START to Exit. \n");
+	scr_printf("-Press any other key to perform selected action \n");
 	scr_printf(" \n");
 }
 
@@ -336,7 +335,7 @@ void LoadModules(void)
 	{
 		scr_printf(" Could not load usbhdfsd.irx! %d\n", ret);
 		SleepThread();
-	}	
+	}
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -476,54 +475,122 @@ void pad_wait_button(u32 button)
 
 char* file_crc32(char device[], char path[], char fn[])
 {
-	//scr_printf("DEBUG: file_crc32() called...\n");
-	//FILE *fp;
-	//size_t len;
-	static char tmp[32] = "";
-	static char f_crc32[16] = "";
-	char full_path[256] = "";
-	//Build full_path string
-	strcpy(full_path,device);
-	strcat(full_path,path);
-	strcat(full_path,fn);
-	//5.6MB file buffer.
-	char buf[5600000], *file = full_path;
-	//Close the file
-	//close(fp);
-	//scr_printf("File Closed: %d\n", fp);
-	FILE *fp = fopen(file,"r");
-	if (!fp)
-	{
-	      printf("Error! Unable to open %s for reading\n", file);
-	      sprintf(localcrc,"00000000");
-	      return NULL;
-	}
-	//read file, store length in len, file contents in buf
-	fseek(fp,0,SEEK_END);
-	long len = ftell(fp);
-	fseek(fp,0,SEEK_SET);
+  char tmp[32] = "";
+  char f_crc32[16] = "";
+  uint32_t t_crc32 = 0xffffffffL;
+  char full_path[256] = "";
+  int chunks_curr = 1;
+  int bytes_read;
+  //Build full_path string
+  strcpy(full_path,device);
+  strcat(full_path,path);
+  strcat(full_path,fn);
+  //scr_printf("DEBUG (full_path): %s\n", full_path);
+  FILE *fp = fopen(full_path, "rb");
+  sleep(1);
+  if (!fp)
+  {
+        scr_printf("ERROR: Unable to open %s for reading \n", full_path);
+	return("ERROR: Unable to open file for reading \n");
+  }
+  //read file, store length in len
+  fseek(fp,0,SEEK_END);
+  long len = ftell(fp);
+  long fsize = len;
+  fseek(fp,0,SEEK_SET);
+  scr_printf("Filesize: %lu bytes \n", fsize);
+  //4MB File Buffer. If less than that read entire into buf
+  if (len <= 4194304) {
+	char buf[len];
 	while((fread(buf, 1, len, fp)) > 0){
-		scr_printf("%lu bytes read\n", len);
+		scr_printf("%lu bytes read \n", len);
 	}
 	//Close the file
 	fclose(fp);
 	sleep(1);
 	//Use sprintf to store crc_32() return value in tmp
-	//  
 	//If file is larger than buffer, update_crc_32() will
 	//need to be looped to get large file CRC32
-	sprintf(tmp,"%lx",crc_32(buf, len));
-	//We only need the last 8 bytes of crc_32 return value
-	//Except .. not anymore apparently?
-	substring(tmp,f_crc32,9,8);
-	//Display CRC32
-	if (strlen(tmp) > 8) {
-  		scr_printf("%s",f_crc32);
-	  	return f_crc32;
-	} else {
-	 	scr_printf("%s",tmp);
-  		return tmp;
+	sprintf(tmp,"%lX", crc_32(buf, len));
+  //4MB File Buffer. If more than that read byte by byte into ch
+  //Calling update_crc_32 and passing the old CRC32 and new byte each time.
+  } else {
+  	//int chunks_left = len;
+	char buf[1];
+	int ch;
+	//scr_printf("Chunks Left: %d\n ", chunks_left);
+	ch=fgetc(fp);
+	t_crc32 = update_crc_32(t_crc32,(unsigned char) ch);
+	sprintf(tmp,"%lX", t_crc32);
+	//scr_printf("DEBUG: Initial Buffer read, CRC: %lx \n",tmp);
+	bytes_read = sizeof(buf);
+	while((ch=fgetc(fp)) != EOF){
+		t_crc32 = update_crc_32(t_crc32, (unsigned char) ch);
+		//if ((chunks_left - chunks_curr) <=4){
+		//	scr_printf("DEBUG: Current/Initial CRC: %lx/%lx \n", t_crc32,tmp);
+		//}
+		//sprintf(tmp,"%lx",t_crc32);
+		bytes_read++;
+		chunks_curr++;
+		//scr_printf("%d bytes read \n", bytes_read);
 	}
+	//Close the file.
+	fclose(fp);
+	sleep(1);
+	//crc lib requires this operation be preformed on final value
+	t_crc32 ^= 0xffffffffL;
+	//Copy the final CRC32 to tmp
+	sprintf(tmp,"%lX",t_crc32);
+  }
+
+  //scr_printf("Debug: %s\n", tmp);
+  //We only need the last 8 bytes of crc_32 return value
+  //Sometimes it is twice as long preceded by 0xffffffff
+  //copy processed value to f_crc32
+  //scr_printf("Debug (tmp): %lx \n", tmp);
+  if (strlen(tmp)>=9){
+    substring(tmp,f_crc32,9,8);
+  } else if (strlen(tmp)<=7) {
+	    if (strlen(tmp) == 7) {
+		sprintf(f_crc32,"0%s",tmp);
+	    } else if (strlen(tmp) == 6) {
+		sprintf(f_crc32,"00%s",tmp);
+	    } else if (strlen(tmp) == 5) {
+		sprintf(f_crc32,"000%s",tmp);
+	    } else if (strlen(tmp) == 4) {
+		sprintf(f_crc32,"0000%s",tmp);
+	    } else if (strlen(tmp) == 3) {
+		sprintf(f_crc32,"00000%s",tmp);
+	    } else if (strlen(tmp) == 2) {
+		sprintf(f_crc32,"000000%s",tmp);
+	    } else if (strlen(tmp) == 1) {
+		sprintf(f_crc32,"0000000%s",tmp);
+	    }
+    //substring(tmp,f_crc32,0,8);
+  } else {
+    substring(tmp,f_crc32,1,8);
+  }
+  //Display CRC32
+  scr_printf("CRC32: %s \n",f_crc32);
+  return f_crc32;
+}
+
+void str_crc32(char str[])
+{
+  size_t len;
+  char tmp[32] = "";
+  char f_crc32[16] = "";
+  char full_str[8000000] = "";
+  char buf[8000000] = "";
+  strncpy(full_str,str,strlen(str));
+  strcpy(buf,full_str);
+  len = strlen(full_str);
+  scr_printf("%d bytes read \n", len);
+  //scr_printf("The checksum of %s is:\n\n", file);
+  sleep(1);
+  sprintf(tmp,"%lX", crc_32(buf, strlen(full_str)));
+  substring(tmp,f_crc32,9,8);
+  scr_printf("CRC32: %s \n",f_crc32);
 }
 
 int Download(char *urll, char *full_path)
@@ -547,7 +614,7 @@ int Download(char *urll, char *full_path)
 	//scr_printf("* Local File Opened... %d\n", target);
 	//fclose(target);
 	if(urld != -1) {
-		size = lseek(urld, 0, SEEK_END);
+		size = getFileSize(urld);
 		read(urld, buf, size);
 		sleep(1);
 		//scr_printf("* Downloaded Size... %d\n", size);
@@ -581,7 +648,7 @@ void DownloadList(char device[], char path[], char fn[]){
 	int file_size= 0;
 	char full_path[256];
 	//patches.ppi
-	
+
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
 		scr_printf("* Mirror 1 Selected... \n");
@@ -641,7 +708,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(exec_args[2],"patches.ppi");
 		strcpy(exec_args[3],"patches.ppi");
 	}
-	
+
 	for (z=0;z<argc;z=z+2) {
 		close(fd);
 		sprintf(full_path,"");
@@ -660,7 +727,7 @@ void DownloadList(char device[], char path[], char fn[]){
 			//scr_printf("* File Size: %d bytes\n", ret);
 			sleep(2);
 			fd = open(full_path, O_RDONLY);
-			file_size = getFileSize(fd);			
+			file_size = getFileSize(fd);
 			if (file_size >= 1) {
 				scr_printf("* %s Exists!\n", full_path);
 			} else {
@@ -668,27 +735,27 @@ void DownloadList(char device[], char path[], char fn[]){
 			}
 			close(fd);
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-			//file_crc32(device,path,fn);	
+			//file_crc32(device,path,fn);
 		}
 	}
 }
 
-//** Function LoadElf() from main.c MPLUS-LOADER3.ELF
-//** http://lukasz.dk/2008/04/22/datel-memory-plus-64-mb/
+//Function LoadElf() from main.c MPLUS-LOADER3.ELF
+//http://lukasz.dk/2008/04/22/datel-memory-plus-64-mb/
 //slightly modified
 void LoadElf(const char *elf, char* path)
 {
 	char* args[1];
-	t_ExecData exec;	
+	t_ExecData exec;
 
 	SifLoadElf(elf, &exec);
 
 	#ifdef DEBUG
 		//scr_printf("Trying to load ELF: %s\n", elf);
-	#endif	
+	#endif
 
 	if(exec.epc > 0)
-	{	
+	{
 		FlushCache(0);
 		FlushCache(2);
 
@@ -707,6 +774,7 @@ void LoadElf(const char *elf, char* path)
 		}
 	}
 }
+
 void DoTask(int task)
 {
 	int ret,launching,downloading,checking;
@@ -733,7 +801,7 @@ void DoTask(int task)
 			checking=1;
 			strcpy(full_path,device);
 			strcat(full_path,path);
-			strcat(full_path,fn);  					
+			strcat(full_path,fn);
 		}
 		else if (task == 2)
 		{
@@ -753,9 +821,9 @@ void DoTask(int task)
 			substring(full_path,make_path,1,strlen(full_path)-1);
 			mkdir(make_path,0777);
 			sleep(1);
-			strcat(full_path,fn);  				
+			strcat(full_path,fn);
 			argc = 1;
-			sleep(2);							
+			sleep(2);
 		}
 		if (task == 3)
 		{
@@ -766,7 +834,7 @@ void DoTask(int task)
 			strcat(full_path,fn);
 			strcpy(exec_args[0],full_path);
 			argc = 1;
-		}		
+		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
 	scr_clear();
@@ -782,22 +850,22 @@ void DoTask(int task)
 			  close(fd);
 			  //char buf[4000000], *file = full_path;
 			  //strcpy(url,exec_args[0]);
-				scr_printf("* Downloading...\n");
-				scr_printf("* URL: %s\n", exec_args[0]);
-				scr_printf("* Path: %s\n", full_path);
+				scr_printf("* Downloading... \n");
+				scr_printf("* URL: %s \n", exec_args[0]);
+				scr_printf("* Path: %s \n", full_path);
 				ret = Download(exec_args[0],full_path);
 				sleep(4);
 				if(ret <= 0) {
-					scr_printf("* Error! Could not open the file\n");
+					scr_printf("* Error! Could not open the file \n");
 				} else {
-					scr_printf("* File Size: %d bytes\n", ret);
+					scr_printf("* File Size: %d bytes \n", ret);
 					sleep(2);
 					fd = open(full_path, O_RDONLY);
-					file_size = getFileSize(fd);			
+					file_size = getFileSize(fd);
 					if (file_size >= 1) {
-						scr_printf("* %s Exists!\n", full_path);
+						scr_printf("* %s Exists! \n", full_path);
 					} else {
-						scr_printf("* %s Does Not Exist!\n", full_path);
+						scr_printf("* %s Does Not Exist! \n", full_path);
 					}
 					close(fd);
 					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
@@ -827,22 +895,16 @@ void DoTask(int task)
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		sprintf(localcrc,file_crc32(device,path,fn));
 		//scr_printf("CRC32:%s\n",localcrc);
-		sleep(2);		
+		sleep(2);
 	}
 	if (launching == 1) {
 		// Display Path The ELF Is Being Loaded From
-		scr_printf("* Launching Application from %s", arg0);
+		scr_printf("* Launching Application from %s \n", arg0);
 		sleep(2);
-	//padPortClose(0, 0);
-	//padEnd();
-	//NetManDeinit();
-	//SifExitRpc();
-	//FlushCache(0);
-	//FlushCache(2);
-	LoadElf(full_path, half_path);
+		LoadElf(full_path, half_path);
 	}
-	scr_printf("\n* Operations complete. Returning to Main Menu...\n");
-	sleep(4);	
+	scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
+	sleep(2);
 	menu_Text();
 }
 
@@ -888,9 +950,10 @@ char *set_hbdl_path(){
 	return hbdl_path;
 }
 
-/* This function is public domain -- Will Hartung 4/9/09 */
-/* Modifications, public domain as well, by Antti Haapala, 11/10/17
-   - Switched to getc on 5/23/19 */
+// This function is public domain -- Will Hartung 4/9/09 */
+// Modifications, public domain as well, by Antti Haapala, 11/10/17
+// - Switched to getc on 5/23/19 */
+
 // if typedef doesn't exist (msvc, blah)
 //typedef intptr_t ssize_t;
 
@@ -954,23 +1017,22 @@ void readcrc() {
 	FILE *fptr = fopen(hbdl_path,"r"); //fname dev, hbdl_path rls
 	int i = 0;
 	int tot = 0;
-	char *tmp = NULL;	
+	char *tmp = NULL;
 	size_t len = 0;
 	ssize_t read;
 	if (fptr>=0){
-		while((read = getline(&tmp,&len,fptr)) != -1) 
+		while((read = getline(&tmp,&len,fptr)) != -1)
 		{
 			strcpy(line[i],tmp);
 			//scr_printf("DEBUG: %s\n", line[i]);
 		        i++;
 		}
-		
 		tot = dbsize;
-		
 		for(i = 0; i < tot; ++i)
 		{
-	        	//printf(" %s\n", line[i]);
-		        sprintf(CRC32DB[i]," %s\n", line[i]);
+	        //printf(" %s\n", line[i]);
+	        //substring(line[i],line[i],1,(strlen(line[i])-1));
+	        sprintf(CRC32DB[i]," %s\n", line[i]);
 		}
 		fclose(fptr);
 		} else {
@@ -989,18 +1051,18 @@ int main(int argc, char *argv[])
 	scr_clear();
 	menu_header();
 	//sleep(1);
-	scr_printf("Modules Loaded. Obtaining an IP Address ...\n");
+	scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	menu_header();
 	strcpy(url,"http://hbdl.vts-tech.org/");
-	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ...\n");
+	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
 	char *hbdl_path = set_hbdl_path();
 	sleep(1);
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
-	strcpy(path,paths[0]);	
+	strcpy(path,paths[0]);
 	strcpy(fn,targets[0]);
 	sprintf(localcrc,"00000001");
 	sleep(1);
@@ -1012,14 +1074,13 @@ int main(int argc, char *argv[])
 		checkPadConnected();
 		//read pad 0
 		buttonStatts(0, 0);
-		
 		if(new_pad & PAD_UP) {
 			if (strcmp(device,"mc0:/") == 0) {
 				strcpy(device,"mc1:/");
 			} else if (strcmp(device,"mc1:/") == 0) {
 				strcpy(device,"mass:/");
 			} else {
-				strcpy(device,"mc0:/");			
+				strcpy(device,"mc0:/");
 			}
 		menu_Text();
 		} else if(new_pad & PAD_DOWN)	{
@@ -1061,11 +1122,11 @@ int main(int argc, char *argv[])
 				strcpy(fn,targets[2]);
 			} else if (strcmp(fn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			}	else if (strcmp(fn,"ESR.ELF") == 0) {
+			} else if (strcmp(fn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			}	else if (strcmp(fn,"GSM.ELF") == 0) {
+			} else if (strcmp(fn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			}	else if (strcmp(fn,"HDL.ELF") == 0) {
+			} else if (strcmp(fn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[6]);
 			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[7]);
@@ -1100,15 +1161,15 @@ int main(int argc, char *argv[])
 			} else if (strcmp(fn,"SMS.ELF") == 0) {
 				strcpy(fn,targets[22]);
 			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
-				strcpy(fn,targets[23]);				
+				strcpy(fn,targets[23]);
 			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
-				strcpy(fn,targets[24]);				
+				strcpy(fn,targets[24]);
 			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
-				strcpy(fn,targets[25]);				
+				strcpy(fn,targets[25]);
 			} else if (strcmp(fn,"WLE.ELF") == 0) {
-				strcpy(fn,targets[26]);	
+				strcpy(fn,targets[26]);
 			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
-				strcpy(fn,targets[0]);	
+				strcpy(fn,targets[0]);
 			}
 		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
@@ -1120,11 +1181,10 @@ int main(int argc, char *argv[])
 				if (http_mirror == 0) {
 					http_mirror = 1;
 					//strcpy(url,mirror1);
-					
 				} else if (http_mirror == 1) {
 				 	http_mirror = 0;
 				 	//strcpy(url,mirror0);
-				}		
+				}
 			menu_Text();
 		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
 		 	if (strcmp(action,"CHECK") == 0) {
@@ -1136,7 +1196,7 @@ int main(int argc, char *argv[])
 		} else if (strcmp(action,"LAUNCH") == 0) {
 				DoTask(3);
 				menu_Text();
-		}		
+		}
 	}
 }
 }
