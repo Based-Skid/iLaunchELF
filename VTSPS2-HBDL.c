@@ -137,8 +137,6 @@ void menu_Text(void)
 		int fnsize = (strlen(CRC32DB[x]) - 12);
 		sprintf(remotefn,"");
 		substring(CRC32DB[x],remotefn,1,fnsize);
-		//scr_printf("DEBUG: %d %d",strlen(fn),strlen(remotefn));
-		//scr_printf("DEBUG: %s %d %s %d",fn,strlen(fn), remotefn, strlen(remotefn));
 		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
 			//strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
@@ -154,16 +152,12 @@ void menu_Text(void)
 			} else if (strlen(localcrc) == 5) {
 				scr_printf("000%s",localcrc);
 			} else {
-			//sprintf(localcrc,file_crc32(device,path,fn));
 			scr_printf("%s",localcrc);
 			}
 			scr_printf(" Remote CRC32:%s \n", remotecrc);
 		}
-		//scr_printf("D2: %s",CRC32DB[x][-8]);
 		x=x+1;
 	}
-	//scr_printf("Test CRC: %s\n",CRC32DB[18]);
-	//sleep(10);
 	scr_printf(" \n");
 	scr_printf("-Press UP to Set [D]evice. \n");
 	scr_printf("-Press DOWN to Set [M]ode. \n");
@@ -183,15 +177,12 @@ void ResetIOP()
 	while(!SifIopSync()){}   //Wait for IOP to finish rebooting.
 	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD.
 	SifLoadFileInit();       //Initialize LOADFILE RPC.
-	//fioInit();               //Initialize FILEIO RPC.
-
 	// SBV Patches Are Not part of a Normal IOP Reset.
 	sbv_patch_enable_lmb(); //SBV Patches
 	sbv_patch_disable_prefix_check(); //SBV Patch Load Executable IRX And ELF Files From User-Writable Storage
 	//sbv_patch_user_mem_clear(0x00100000); // You Can Specify a Starting Address for the Wipe
 	//sbv_patch_user_mem_clear(0x02000000); // Disable Clear Memory With LoadExecPS2() when 0x02000000 is passed as an arg
 }
-
 
 void gotoOSDSYS(int sc)
 {
@@ -319,7 +310,7 @@ void LoadModules(void)
 	ret = SifExecModuleBuffer(&ps2http, size_ps2http, 0, NULL, NULL);
 	if (ret < 0)
 	{
-    scr_printf(" Could not load ps2http.IRX! %d\n", ret);
+		scr_printf(" Could not load ps2http.IRX! %d\n", ret);
 		gotoOSDSYS(5);
 	}
 
@@ -338,9 +329,9 @@ void LoadModules(void)
 	}
 }
 
-/////////////////////////////////////////////////////////////////////
-//waitPadReady
-/////////////////////////////////////////////////////////////////////
+////////////////
+//waitPadReady//
+////////////////
 static int waitPadReady(int port, int slot)
 {
 	int state;
@@ -363,9 +354,9 @@ static int waitPadReady(int port, int slot)
 	return 0;
 }
 
-/////////////////////////////////////////////////////////////////////
-//initalizePad
-/////////////////////////////////////////////////////////////////////
+////////////////
+//initalizePad//
+////////////////
 static int initializePad(int port, int slot)
 {
 
@@ -426,9 +417,9 @@ static int initializePad(int port, int slot)
 	return 1;
 }
 
-/////////////////////////////////////////////////////////////////////
-//buttonStatts
-/////////////////////////////////////////////////////////////////////
+////////////////
+//buttonStatts//
+////////////////
 static void buttonStatts(int port, int slot)
 {
 	int ret;
@@ -442,9 +433,9 @@ static void buttonStatts(int port, int slot)
 	}
 }
 
-/////////////////////////////////////////////////////////////////////
-//checkPadConnected
-/////////////////////////////////////////////////////////////////////
+/////////////////////
+//checkPadConnected//
+/////////////////////
 void checkPadConnected(void)
 {
 	int ret, i;
@@ -461,9 +452,9 @@ void checkPadConnected(void)
 	}
 }
 
-/////////////////////////////////////////////////////////////////////
-//pad_wat_button
-/////////////////////////////////////////////////////////////////////
+//////////////////
+//pad_wat_button//
+//////////////////
 void pad_wait_button(u32 button)
 {
 	while (1)
@@ -485,7 +476,6 @@ char* file_crc32(char device[], char path[], char fn[])
   strcpy(full_path,device);
   strcat(full_path,path);
   strcat(full_path,fn);
-  //scr_printf("DEBUG (full_path): %s\n", full_path);
   FILE *fp = fopen(full_path, "rb");
   sleep(1);
   if (!fp)
@@ -515,24 +505,16 @@ char* file_crc32(char device[], char path[], char fn[])
   //4MB File Buffer. If more than that read byte by byte into ch
   //Calling update_crc_32 and passing the old CRC32 and new byte each time.
   } else {
-  	//int chunks_left = len;
 	char buf[1];
 	int ch;
-	//scr_printf("Chunks Left: %d\n ", chunks_left);
 	ch=fgetc(fp);
 	t_crc32 = update_crc_32(t_crc32,(unsigned char) ch);
 	sprintf(tmp,"%lX", t_crc32);
-	//scr_printf("DEBUG: Initial Buffer read, CRC: %lx \n",tmp);
 	bytes_read = sizeof(buf);
 	while((ch=fgetc(fp)) != EOF){
 		t_crc32 = update_crc_32(t_crc32, (unsigned char) ch);
-		//if ((chunks_left - chunks_curr) <=4){
-		//	scr_printf("DEBUG: Current/Initial CRC: %lx/%lx \n", t_crc32,tmp);
-		//}
-		//sprintf(tmp,"%lx",t_crc32);
 		bytes_read++;
-		chunks_curr++;
-		//scr_printf("%d bytes read \n", bytes_read);
+		//chunks_curr++;
 	}
 	//Close the file.
 	fclose(fp);
@@ -571,26 +553,8 @@ char* file_crc32(char device[], char path[], char fn[])
     substring(tmp,f_crc32,1,8);
   }
   //Display CRC32
-  scr_printf("CRC32: %s \n",f_crc32);
+  //scr_printf("CRC32: %s \n",f_crc32);
   return f_crc32;
-}
-
-void str_crc32(char str[])
-{
-  size_t len;
-  char tmp[32] = "";
-  char f_crc32[16] = "";
-  char full_str[8000000] = "";
-  char buf[8000000] = "";
-  strncpy(full_str,str,strlen(str));
-  strcpy(buf,full_str);
-  len = strlen(full_str);
-  scr_printf("%d bytes read \n", len);
-  //scr_printf("The checksum of %s is:\n\n", file);
-  sleep(1);
-  sprintf(tmp,"%lX", crc_32(buf, strlen(full_str)));
-  substring(tmp,f_crc32,9,8);
-  scr_printf("CRC32: %s \n",f_crc32);
 }
 
 int Download(char *urll, char *full_path)
@@ -894,7 +858,7 @@ void DoTask(int task)
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		sprintf(localcrc,file_crc32(device,path,fn));
-		//scr_printf("CRC32:%s\n",localcrc);
+		scr_printf("CRC32: %s\n",localcrc);
 		sleep(2);
 	}
 	if (launching == 1) {
