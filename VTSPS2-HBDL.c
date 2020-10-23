@@ -58,19 +58,15 @@ void drawScreen(void){
 	gsKit_queue_exec(gsGlobal);
 	gsKit_finish();
 	gsKit_sync_flip(gsGlobal);
-	gsKit_clear(gsGlobal, Black);
 	gsKit_TexManager_nextFrame(gsGlobal);
 	//gsKit_setactive(gsGlobal);
 }
 
 void menu_header(void)
 {
+	gsKit_clear(gsGlobal, Black);
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 10, 1, 0.32f, YellowFont, appName);
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 25, 1, 0.32f, YellowFont, appAuthor);
-	//scr_printf(appName);
-	//scr_printf(appVer);
-	//scr_printf(appAuthor);
-	//scr_printf(appNotice);
 }
 
 void menu_Text(void)
@@ -108,6 +104,7 @@ void menu_Text(void)
 	if (strlen(fn) >= 13) {
 		//strncpy(fn,"",1);
 		strcpy(fn,"AURA.ELF");
+		strcpy(ELF_NO_EXT,"AURA");
 		strcpy(path,"APPS/");
 	}
 	char spc_pad[8] = "";
@@ -226,6 +223,7 @@ int Download(char *urll, char *full_path)
 	int target = 0;
 	//int ret = 0;
 	char buf[5600000];
+	char str[256] = "";
 	//FILE *urld;
 	//FILE *target;
 	close(urld);
@@ -233,7 +231,8 @@ int Download(char *urll, char *full_path)
 	if ((urld = open(urll,O_RDONLY)) !=-1) {
 		//scr_printf("* URL Opened... %d\n", urld);
 	} else {
-		scr_printf("! URL Open Failed... %d\n",urld);
+		sprintf(str,"! URL Open Failed... %d\n",urld);
+		
 	}
 	//scr_printf("DEBUG: %s\n", full_path);
 	target = open(full_path, O_RDWR | O_CREAT);
@@ -273,6 +272,7 @@ void DownloadList(char device[], char path[], char fn[]){
 	int fd = 0;
 	int file_size= 0;
 	char full_path[256];
+	char str[256] = "";
 	//patches.ppi
 
 	if (http_mirror == 0) {
@@ -378,6 +378,7 @@ void DoTask(int task)
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
 	char half_path[256];
+	char str[256] = "";
 	extern char url[];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
@@ -442,24 +443,35 @@ void DoTask(int task)
 			  close(fd);
 			  //char buf[4000000], *file = full_path;
 			  //strcpy(url,exec_args[0]);
-				scr_printf("* Downloading... \n");
-				scr_printf("* URL: %s \n", exec_args[0]);
-				scr_printf("* Path: %s \n", full_path);
+				//scr_printf("* Downloading... \n");
+				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, WhiteFont, "* Downloading ...");
+				drawScreen();
+				sprintf(str,"* URL: %s \n", exec_args[0]);
+				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, WhiteFont, str);
+				drawScreen();
+				sprintf(str,"* Path: %s \n", full_path);
+				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
+				drawScreen();
 				ret = Download(exec_args[0],full_path);
-				sleep(4);
+				sleep(2);
 				if(ret <= 0) {
-					scr_printf("* Error! Could not open the file \n");
+					printf("* Error! Could not open the file \n");
 				} else {
-					scr_printf("* File Size: %d bytes \n", ret);
+					sprintf(str,"* File Size: %d bytes \n", ret);
+					gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, WhiteFont, str);
+					drawScreen();
 					sleep(2);
 					fd = open(full_path, O_RDONLY);
 					file_size = getFileSize(fd);
 					if (file_size >= 1) {
-						scr_printf("* %s Exists! \n", full_path);
+						sprintf(str,"* %s Exists! \n", full_path);
+						gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, WhiteFont, str);
 					} else {
-						scr_printf("* %s Does Not Exist! \n", full_path);
+						sprintf(str,"* %s Does Not Exist! \n", full_path);
+						gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, RedFont, str);
 					}
 					close(fd);
+					drawScreen();
 					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 					//file_crc32(device,path,fn);
 				}
@@ -486,7 +498,9 @@ void DoTask(int task)
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		strcpy(localcrc,file_crc32(device,path,fn));
-		//scr_printf("CRC32: %s\n",localcrc);
+		sprintf(str,"CRC32: %s\n",localcrc);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);
+		drawScreen();
 		sleep(2);
 	}
 	if (launching == 1) {
@@ -542,13 +556,14 @@ void readcrc() {
 		}
 		fclose(fptr);
 		} else {
-			scr_printf("readcrc() error");
+			printf("readcrc() error");
 		}
 }
 
 
 int main(int argc, char *argv[])
 {
+	extern char fn[16];
 	// initialize
 	initialize();
 
@@ -662,12 +677,10 @@ int main(int argc, char *argv[])
 			//sleep(2);
 			if (strcmp(path,"APPS/") == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				sleep(1);
 				sprintf(path,"APP_%s/",ELF_NO_EXT);
 				strcpy(PATH_APP,path);
 			} else if (strcmp(path,PATH_APP) == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				sleep(1);
 				sprintf(path,"%s/",ELF_NO_EXT);
 				strcpy(PATH_ELF,path);
 			} else if (strcmp(path,PATH_ELF) == 0) {
