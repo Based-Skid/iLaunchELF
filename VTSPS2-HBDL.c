@@ -11,11 +11,19 @@
 #include "VTSPS2-HBDL.h"
 #include "strings.h"
 
+//0.32
 int http_mirror = 0;
 int dbsize = 56; //lines in VTSPS2-HBDL.TXT
 char CRC32DB[56][128] = {""};
 char remotecrc[9];
 char localcrc[9];
+char font_path[256];
+
+GSGLOBAL *gsGlobal;
+//GSFONT *gsFont;
+GSFONTM *gsFontM;
+
+u64 White, Black, WhiteFont, RedFont, GreenFont, TealFont, YellowFont;
 
 typedef struct {
 	u8	ident[16];
@@ -45,49 +53,52 @@ typedef struct {
 	u32	align;
 } elf_pheader_t;
 
-int getFileSize(int fd) {
-	int size = lseek(fd, 0, SEEK_END);
-	lseek(fd, 0, SEEK_SET);
-	return size;
-}
-
-void substring(char s[], char sub[], int p, int l) {
-   int c = 0;
-   while (c < l) {
-      sub[c] = s[p+c-1];
-      c++;
-   }
-   sub[c] = '\0';
+void drawScreen(void){
+	gsKit_set_finish(gsGlobal);
+	gsKit_queue_exec(gsGlobal);
+	gsKit_finish();
+	gsKit_sync_flip(gsGlobal);
+	gsKit_clear(gsGlobal, Black);
+	gsKit_TexManager_nextFrame(gsGlobal);
+	//gsKit_setactive(gsGlobal);
 }
 
 void menu_header(void)
 {
-	scr_printf(" \n");
-	scr_printf(appName);
-	scr_printf(appVer);
-	scr_printf(appAuthor);
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 10, 1, 0.32f, YellowFont, appName);
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 25, 1, 0.32f, YellowFont, appAuthor);
+	//scr_printf(appName);
+	//scr_printf(appVer);
+	//scr_printf(appAuthor);
 	//scr_printf(appNotice);
 }
 
 void menu_Text(void)
 {
-	scr_clear();
+	//scr_clear();
 	menu_header();
 	extern char vtsip[15];
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
 	char hbsize[7];
+	char str[256] = "";
 	int x = (dbsize / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
 	int z = 0;
+	//sleep(4);
+	strcpy(str,"");
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
-		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
+		//scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
+		sprintf(str,"IP Address: %s Mirror: %s\n",vtsip,mirror0);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, str);
 	} else if (http_mirror == 1) {
 		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
+		//scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
+		sprintf(str,"IP Address: %s Mirror: %s\n",vtsip,mirror1);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, str);
 	}
-	scr_printf(" \n");
+	//scr_printf(" \n");
 	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
 		strcpy(action,"CHECK");
 	}
@@ -95,28 +106,47 @@ void menu_Text(void)
 		strcpy(device,"mc0:/");
 	}
 	if (strlen(fn) >= 13) {
+		//strncpy(fn,"",1);
 		strcpy(fn,"AURA.ELF");
 		strcpy(path,"APPS/");
 	}
-	char spc_pad[] = "";
+	char spc_pad[8] = "";
+	char spc_pad2[8] = "";
 	int spc_cnt = 0;
-
+	int spc_gs = 0;
 	if (strlen(fn) > strlen(action)) {
 		spc_cnt = (strlen(fn) - strlen(action));
 	} else {
 		spc_cnt = (strlen(action) - strlen(fn));
 	}
-
+	spc_gs = spc_cnt;
+	strncpy(spc_pad,"",1);
+	strncpy(spc_pad2,"",1);
 	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
 		strcat(spc_pad," ");
+		if (spc_cnt <= (spc_gs/2)-1){
+			strcat(spc_pad2," ");
+		}
 	}
-
+	//if (spc_pad2 == ""){
+	//	strcpy(spc_pad2, "  ");
+	//} else if (spc_pad2 == " "){
+	//	strcpy(spc_pad2,"");
+	//}
+	
+	if (strlen(spc_pad) == 8){
+		strncpy(spc_pad," ",2);
+	}
+	strncpy(str,"",2);
 	if (strlen(fn) > strlen(action)) {
-		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
+		//scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
+		sprintf(str,"[M]: %s%s[D]: %s [P1]: %s ",action,spc_pad,device,path);
 	} else {
-		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
+		//scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
+		sprintf(str,"[M]: %s [D]: %s [P2]: %s ",action,device,path);
 	}
-
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 95, 1, 0.32f, TealFont, str);
+	strncpy(str,"",1);
 	while(z<=x) {
 		int fnsize = (strlen(fn));
 		char hbfn[] = "";
@@ -127,434 +157,66 @@ void menu_Text(void)
 		if (strstr(hbfn,fn)) {
 			substring(CRC32DB[z],hbsize,(14+fnsize),6);
 			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
-			scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
+			//scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
+			if (spc_gs>=1){
+				sprintf(str,"[T]: %s%s[S]:%s [V]:%s",fn, spc_pad2, hbsize, hbver);
+			} else {
+				sprintf(str,"[T]: %s [S]:%s [V]:%s",fn, hbsize, hbver);
+			}
+			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 107, 1, 0.32f, TealFont, str);
 			//scr_printf("DEBUG: %d %d",strlen(hbsize),hbsize);
 		}
 		//scr_printf("D2: %s",CRC32DB[x][-8]);
 		z++;
 	}
-	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
+	strcpy(str,"");
+	while(x<=dbsize) { //total lines in VTSPS2-HBDL.TXT
 		int fnsize = (strlen(CRC32DB[x]) - 12);
 		sprintf(remotefn,"");
 		substring(CRC32DB[x],remotefn,1,fnsize);
 		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
 			//strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
-			scr_printf("Local CRC32: ");
+			//scr_printf("Local CRC32: ");
+			sprintf(str,"Local CRC32: ");		
 			if (strcmp(localcrc,"00000001") == 0) {
-				scr_printf("unchecked");
+				//scr_printf("unchecked");
+				strcat(str,"unchecked");
 			} else if (strcmp(localcrc,"00000000") == 0) {
-				scr_printf("00000000");
+				//scr_printf("00000000");
+				strcat(str,"00000000");
 			} else if (strlen(localcrc) == 7) {
-				scr_printf("0%s",localcrc);
+				//scr_printf("0%s",localcrc);
+				sprintf(localcrc,"0%s",localcrc);
+				strcat(str,localcrc);
 			} else if (strlen(localcrc) == 6) {
-				scr_printf("00%s",localcrc);
+				//scr_printf("00%s",localcrc);
+				sprintf(localcrc,"00%s",localcrc);
+				strcat(str,localcrc);
 			} else if (strlen(localcrc) == 5) {
-				scr_printf("000%s",localcrc);
+				//scr_printf("000%s",localcrc);
+				sprintf(localcrc,"000%s",localcrc);
+				strcat(str,localcrc);
 			} else {
-			scr_printf("%s",localcrc);
+			//scr_printf("%s",localcrc);
+			strcat(str,localcrc);
 			}
-			scr_printf(" Remote CRC32:%s \n", remotecrc);
+			//scr_printf(" Remote CRC32:%s \n", remotecrc);
+			strcat(str," Remote CRC32:");
+			strcat(str,remotecrc);
 		}
 		x=x+1;
 	}
-	scr_printf(" \n");
-	scr_printf("-Press UP to Set [D]evice. \n");
-	scr_printf("-Press DOWN to Set [M]ode. \n");
-	scr_printf("-Press LEFT to Set [P]ath. \n");
-	scr_printf("-Press RIGHT to Set [T]arget. \n");
-	scr_printf("-Press SELECT to Set Mirror. \n");
-	scr_printf("-Press START to Exit. \n");
-	scr_printf("-Press any other key to perform selected action \n");
-	scr_printf(" \n");
-}
-
-void ResetIOP()
-{
-
-	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD. Although seemingly unimportant, this will update the addresses on the EE, which can prevent a crash from happening around the IOP reboot.
-	SifIopReset("", 0);      //Reboot IOP with default modules (empty command line)
-	while(!SifIopSync()){}   //Wait for IOP to finish rebooting.
-	SifInitRpc(0);           //Initialize SIFRPC and SIFCMD.
-	SifLoadFileInit();       //Initialize LOADFILE RPC.
-	// SBV Patches Are Not part of a Normal IOP Reset.
-	sbv_patch_enable_lmb(); //SBV Patches
-	sbv_patch_disable_prefix_check(); //SBV Patch Load Executable IRX And ELF Files From User-Writable Storage
-	//sbv_patch_user_mem_clear(0x00100000); // You Can Specify a Starting Address for the Wipe
-	//sbv_patch_user_mem_clear(0x02000000); // Disable Clear Memory With LoadExecPS2() when 0x02000000 is passed as an arg
-}
-
-void gotoOSDSYS(int sc)
-{
-	if (sc != 0)
-	{
-		scr_printf(appFail);
-		if(sc ==1 || sc ==2 || sc ==3 || sc ==4 || sc ==5)
-		{
-			scr_printf(modloadfail);
-		}
-		if (sc == 1)
-		{
-			scr_printf("SIO2MAN\n");
-		}
-		if (sc == 2)
-		{
-			scr_printf("CDVDMAN\n");
-		}
-		if (sc == 3)
-		{
-			scr_printf("PADMAN\n");
-		}
-		if (sc == 4)
-		{
-			scr_printf("MCMAN\n");
-		}
-		if (sc == 5)
-		{
-			scr_printf("MCSERV\n");
-		}
-		if (sc == 6)
-		{
-			scr_printf("ERROR: Unknown\n");
-		}
-		//sleep(5);
-	}
-	ResetIOP();
-	scr_printf(osdmsg);
-	LoadExecPS2("rom0:OSDSYS", 0, NULL);
-}
-
-void LoadModules(void)
-{
-	int ret;
-
-	ret = SifExecModuleBuffer(&freesio2, size_freesio2, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load freesio2 sw module");
-		gotoOSDSYS(1);
-	}
-
-	ret = SifExecModuleBuffer(&iomanX, size_iomanX, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load iomanx sw module");
-	}
-
-	//ret = SifExecModuleBuffer(&fileXio, size_fileXio, 0, NULL, NULL);
-	//if (ret < 0)
-	//{
-	//	scr_printf("Failed to Load freesio2 sw module");
-	//}
-
-
-	ret = SifExecModuleBuffer(&freepad, size_freepad, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load freepad sw module");
-		gotoOSDSYS(3);
-	}
-
-	ret = SifExecModuleBuffer(&mcman, size_mcman, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load mcman sw module");
-		gotoOSDSYS(4);
-	}
-
-	ret = SifExecModuleBuffer(&mcserv, size_mcserv, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf("Failed to Load mcserv sw module");
-		gotoOSDSYS(5);
-
-	}
-
-	ret = SifExecModuleBuffer(&ps2dev9, size_ps2dev9, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load ps2dev9.IRX! %d\n", ret);
-		SleepThread();
-	}
-
-
-	ret = SifExecModuleBuffer(&netman, size_netman, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load netman.IRX! %d\n", ret);
-		SleepThread();
-	}
-
-	ret = SifExecModuleBuffer(&smap, size_smap, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load smap.IRX! %d\n", ret);
-		SleepThread();
-	}
-
-	ret = SifExecModuleBuffer(&ps2ipnm, size_ps2ipnm, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load ps2ip.IRX! %d\n", ret);
-		SleepThread();
-	}
-
-	ret = SifExecModuleBuffer(&ps2ips, size_ps2ips, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load ps2ips.IRX! %d\n", ret);
-		SleepThread();
-	}
-	ps2ip_init();
-
-	ret = SifExecModuleBuffer(&ps2http, size_ps2http, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load ps2http.IRX! %d\n", ret);
-		gotoOSDSYS(5);
-	}
-
-	ret = SifExecModuleBuffer(&usbd, size_usbd, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load usbd.irx! %d\n", ret);
-		SleepThread();
-	}
-
-	ret = SifExecModuleBuffer(&usbhdfsd, size_usbhdfsd, 0, NULL, NULL);
-	if (ret < 0)
-	{
-		scr_printf(" Could not load usbhdfsd.irx! %d\n", ret);
-		SleepThread();
-	}
-}
-
-////////////////
-//waitPadReady//
-////////////////
-static int waitPadReady(int port, int slot)
-{
-	int state;
-	int lastState;
-	char stateString[16];
-
-	state = padGetState(port, slot);
-	lastState = -1;
-	while ((state != PAD_STATE_STABLE) && (state != PAD_STATE_FINDCTP1)) {
-		if (state != lastState) {
-			padStateInt2String(state, stateString);
-		}
-		lastState = state;
-		state = padGetState(port, slot);
-	}
-	// Were the pad ever 'out of sync'?
-	if (lastState != -1) {
-
-	}
-	return 0;
-}
-
-////////////////
-//initalizePad//
-////////////////
-static int initializePad(int port, int slot)
-{
-
-	int ret;
-	int modes;
-	int i;
-
-	waitPadReady(port, slot);
-	modes = padInfoMode(port, slot, PAD_MODETABLE, -1);
-	if (modes > 0) {
-		for (i = 0; i < modes; i++) {
-		}
-
-	}
-	if (modes == 0) {
-		return 1;
-	}
-
-	i = 0;
-	do {
-		if (padInfoMode(port, slot, PAD_MODETABLE, i) == PAD_TYPE_DUALSHOCK)
-			break;
-		i++;
-	} while (i < modes);
-	if (i >= modes) {
-		return 1;
-	}
-
-	ret = padInfoMode(port, slot, PAD_MODECUREXID, 0);
-	if (ret == 0) {
-		return 1;
-	}
-	padSetMainMode(port, slot, PAD_MMODE_DUALSHOCK, PAD_MMODE_LOCK);
-
-	waitPadReady(port, slot);
-	padInfoPressMode(port, slot);
-
-	waitPadReady(port, slot);
-	padEnterPressMode(port, slot);
-
-	waitPadReady(port, slot);
-	actuators = padInfoAct(port, slot, -1, 0);
-
-	if (actuators != 0) {
-		actAlign[0] = 0;
-		actAlign[1] = 1;
-		actAlign[2] = 0xff;
-		actAlign[3] = 0xff;
-		actAlign[4] = 0xff;
-		actAlign[5] = 0xff;
-
-		waitPadReady(port, slot);
-
-		padSetActAlign(port, slot, actAlign);
-	}
-	else {
-	}
-	return 1;
-}
-
-////////////////
-//buttonStatts//
-////////////////
-static void buttonStatts(int port, int slot)
-{
-	int ret;
-	ret = padRead(port, slot, &buttons);
-
-	if (ret != 0) {
-		paddata = 0xffff ^ buttons.btns;
-
-		new_pad = paddata & ~old_pad;
-		old_pad = paddata;
-	}
-}
-
-/////////////////////
-//checkPadConnected//
-/////////////////////
-void checkPadConnected(void)
-{
-	int ret, i;
-	ret = padGetState(0, 0);
-	while ((ret != PAD_STATE_STABLE) && (ret != PAD_STATE_FINDCTP1)) {
-		if (ret == PAD_STATE_DISCONN) {
-			#if defined DEBUG
-				scr_printf("Controller(%d, %d) is disconnected\n", 0, 0);
-			#endif
-		}
-		ret = padGetState(0, 0);
-	}
-	if (i == 1) {
-	}
-}
-
-//////////////////
-//pad_wat_button//
-//////////////////
-void pad_wait_button(u32 button)
-{
-	while (1)
-	{
-		buttonStatts(0, 0);
-		if (new_pad & button) return;
-	}
-}
-
-char* file_crc32(char device[], char path[], char fn[])
-{
-  char tmp[32] = "";
-  char f_crc32[16] = "";
-  uint32_t t_crc32 = 0xffffffffL;
-  char full_path[256] = "";
-  //int chunks_curr = 1;
-  int bytes_read;
-  //Build full_path string
-  strcpy(full_path,device);
-  strcat(full_path,path);
-  strcat(full_path,fn);
-  FILE *fp = fopen(full_path, "rb");
-  sleep(1);
-  if (!fp)
-  {
-        scr_printf("ERROR: Unable to open %s for reading \n", full_path);
-	return("ERROR: Unable to open file for reading \n");
-  }
-  //read file, store length in len
-  fseek(fp,0,SEEK_END);
-  long len = ftell(fp);
-  long fsize = len;
-  fseek(fp,0,SEEK_SET);
-  scr_printf("Filesize: %lu bytes \n", fsize);
-  //4MB File Buffer. If less than that read entire into buf
-  if (len <= 4194304) {
-	char buf[len];
-	while((fread(buf, 1, len, fp)) > 0){
-		scr_printf("%lu bytes read \n", len);
-	}
-	//Close the file
-	fclose(fp);
-	sleep(1);
-	//Use sprintf to store crc_32() return value in tmp
-	//If file is larger than buffer, update_crc_32() will
-	//need to be looped to get large file CRC32
-	sprintf(tmp,"%lX", crc_32(buf, len));
-  //4MB File Buffer. If more than that read byte by byte into ch
-  //Calling update_crc_32 and passing the old CRC32 and new byte each time.
-  } else {
-	char buf[1];
-	int ch;
-	ch=fgetc(fp);
-	t_crc32 = update_crc_32(t_crc32,(unsigned char) ch);
-	sprintf(tmp,"%lX", t_crc32);
-	bytes_read = sizeof(buf);
-	while((ch=fgetc(fp)) != EOF){
-		t_crc32 = update_crc_32(t_crc32, (unsigned char) ch);
-		bytes_read++;
-		//chunks_curr++;
-	}
-	//Close the file.
-	fclose(fp);
-	sleep(1);
-	//crc lib requires this operation be preformed on final value
-	t_crc32 ^= 0xffffffffL;
-	//Copy the final CRC32 to tmp
-	sprintf(tmp,"%lX",t_crc32);
-  }
-
-  //scr_printf("Debug: %s\n", tmp);
-  //We only need the last 8 bytes of crc_32 return value
-  //Sometimes it is twice as long preceded by 0xffffffff
-  //copy processed value to f_crc32
-  //scr_printf("Debug (tmp): %lx \n", tmp);
-  if (strlen(tmp)>=9){
-    substring(tmp,f_crc32,9,8);
-  } else if (strlen(tmp)<=7) {
-	    if (strlen(tmp) == 7) {
-		sprintf(f_crc32,"0%s",tmp);
-	    } else if (strlen(tmp) == 6) {
-		sprintf(f_crc32,"00%s",tmp);
-	    } else if (strlen(tmp) == 5) {
-		sprintf(f_crc32,"000%s",tmp);
-	    } else if (strlen(tmp) == 4) {
-		sprintf(f_crc32,"0000%s",tmp);
-	    } else if (strlen(tmp) == 3) {
-		sprintf(f_crc32,"00000%s",tmp);
-	    } else if (strlen(tmp) == 2) {
-		sprintf(f_crc32,"000000%s",tmp);
-	    } else if (strlen(tmp) == 1) {
-		sprintf(f_crc32,"0000000%s",tmp);
-	    }
-    //substring(tmp,f_crc32,0,8);
-  } else {
-    substring(tmp,f_crc32,1,8);
-  }
-  //Display CRC32
-  //scr_printf("CRC32: %s \n",f_crc32);
-  return f_crc32;
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);	
+	strcpy(str,"-Press UP to Set [D]evice. \n");
+	strcat(str,"-Press DOWN to Set [M]ode. \n");
+	strcat(str,"-Press LEFT to Set [P]ath. \n");
+	strcat(str,"-Press RIGHT to Set [T]arget. \n");
+	strcat(str,"-Press SELECT to Set Mirror. \n");
+	strcat(str,"-Press START to Exit. \n");
+	strcat(str,"-Press any other key to perform selected action \n");
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
+	drawScreen();
 }
 
 int Download(char *urll, char *full_path)
@@ -704,40 +366,6 @@ void DownloadList(char device[], char path[], char fn[]){
 	}
 }
 
-//Function LoadElf() from main.c MPLUS-LOADER3.ELF
-//http://lukasz.dk/2008/04/22/datel-memory-plus-64-mb/
-//slightly modified
-void LoadElf(const char *elf, char* path)
-{
-	char* args[1];
-	t_ExecData exec;
-
-	SifLoadElf(elf, &exec);
-
-	#ifdef DEBUG
-		//scr_printf("Trying to load ELF: %s\n", elf);
-	#endif
-
-	if(exec.epc > 0)
-	{
-		FlushCache(0);
-		FlushCache(2);
-
-		// Reset IOP, since not all ELF's do it and we've loaded additional IOP
-		// modules which need to be unloaded
-		ResetIOP();
-
-		if(path != 0)
-		{
-			args[0] = path;
-			ExecPS2((void*)exec.epc, (void*)exec.gp, 1, args);
-		}
-		else
-		{
-			ExecPS2((void*)exec.epc, (void*)exec.gp, 0, NULL);
-		}
-	}
-}
 
 void DoTask(int task)
 {
@@ -801,7 +429,7 @@ void DoTask(int task)
 		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
-	scr_clear();
+	//scr_clear();
 	menu_header();
 	if (downloading==1){
 	  if (strstr("PS2ESDL.ELF",fn)) {
@@ -857,8 +485,8 @@ void DoTask(int task)
 		close(fd);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		sprintf(localcrc,file_crc32(device,path,fn));
-		scr_printf("CRC32: %s\n",localcrc);
+		strcpy(localcrc,file_crc32(device,path,fn));
+		//scr_printf("CRC32: %s\n",localcrc);
 		sleep(2);
 	}
 	if (launching == 1) {
@@ -867,106 +495,20 @@ void DoTask(int task)
 		sleep(2);
 		LoadElf(full_path, half_path);
 	}
-	scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
-	sleep(2);
+	//scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
+	sleep(1);
 	menu_Text();
-}
-
-
-void initialize(void)
-{
-
-	int ret;
-	SifInitRpc(0);
-	scr_clear();
-	// init debug screen
-	init_scr();
-	scr_clear();
-	scr_printf("Loading... Please Wait. \n");
-	// load all modules
-	LoadModules();
-	// init pad
-	padInit(0);
-	if ((ret = padPortOpen(0, 0, padBuf)) == 0)
-	{
-		#if defined DEBUG
-			scr_printf("padOpenPort failed: %d\n", ret);
-		#endif
-		SleepThread();
-	}
-	if (!initializePad(0, 0))
-	{
-		#if defined DEBUG
-			scr_printf("pad initalization failed!\n");
-		#endif
-		SleepThread();
-
-	}
 }
 
 char *set_hbdl_path(){
 	static char hbdl_path[256];
+	static char cwd[256];
 	//uncomment for release
 	getcwd(hbdl_path,256);
 	//sprintf(hbdl_path,"mc0:/APPS/"); //hardcoded.
 	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
 	//scr_printf("Debug: %s\n",hbdl_path);
 	return hbdl_path;
-}
-
-// This function is public domain -- Will Hartung 4/9/09 */
-// Modifications, public domain as well, by Antti Haapala, 11/10/17
-// - Switched to getc on 5/23/19 */
-
-// if typedef doesn't exist (msvc, blah)
-//typedef intptr_t ssize_t;
-
-ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
-    size_t pos;
-    int c;
-
-    if (lineptr == NULL || stream == NULL || n == NULL) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    c = getc(stream);
-    if (c == EOF) {
-        return -1;
-    }
-
-    if (*lineptr == NULL) {
-        *lineptr = malloc(128);
-        if (*lineptr == NULL) {
-            return -1;
-        }
-        *n = 128;
-    }
-
-    pos = 0;
-    while(c != EOF) {
-        if (pos + 1 >= *n) {
-            size_t new_size = *n + (*n >> 2);
-            if (new_size < 128) {
-                new_size = 128;
-            }
-            char *new_ptr = realloc(*lineptr, new_size);
-            if (new_ptr == NULL) {
-                return -1;
-            }
-            *n = new_size;
-            *lineptr = new_ptr;
-        }
-
-        ((unsigned char *)(*lineptr))[pos ++] = c;
-        if (c == '\n') {
-            break;
-        }
-        c = getc(stream);
-    }
-
-    (*lineptr)[pos] = '\0';
-    return pos;
 }
 
 void readcrc() {
@@ -1007,21 +549,75 @@ void readcrc() {
 
 int main(int argc, char *argv[])
 {
-	// Initialize
-	SifInitRpc(0);
-	ResetIOP();
 	// initialize
 	initialize();
-	scr_clear();
+
+	Black = GS_SETREG_RGBAQ(0x00,0x00,0x00,0x00,0x00);
+	White = GS_SETREG_RGBAQ(0xFF,0xFF,0xFF,0x00,0x00);
+
+	WhiteFont = GS_SETREG_RGBAQ(0xFF,0xFF,0xFF,0x80,0x00);
+	RedFont = GS_SETREG_RGBAQ(0xFF,0x00,0x00,0x80,0x00);
+	GreenFont = GS_SETREG_RGBAQ(0x00,0xFF,0x00,0x80,0x00);
+	TealFont = GS_SETREG_RGBAQ(0x00,0xFF,0xFF,0x80,0x00);
+	YellowFont = GS_SETREG_RGBAQ(0xFF,0xFF,0x00,0x80,0x00);
+
+	gsGlobal = gsKit_init_global();
+	//getcwd(font_path,256);
+	//strcat(font_path,"/dejavu.bmp");
+	//if (strstr(font_path,"host:")){
+	//	strcpy(font_path,"mc0:/APPS/dejavu.bmp");
+	//}
+	//gsFont = gsKit_init_font(GSKIT_FTYPE_BMP_DAT, font_path);
+	gsFontM = gsKit_init_fontm();
+	
+	dmaKit_init(D_CTRL_RELE_OFF,D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC,
+		    D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
+
+	// Initialize the DMAC
+	dmaKit_chan_init(DMA_CHANNEL_GIF);
+
+	gsGlobal->PrimAlpha = GS_BLEND_FRONT2BACK;
+	gsGlobal->PSM = GS_PSM_CT16;
+	gsGlobal->PSMZ = GS_PSMZ_16;
+	gsGlobal->Width = 640;
+	// Buffer Init
+	gsGlobal->PSMZ = GS_PSMZ_16S;
+	gsGlobal->ZBuffering = GS_SETTING_OFF;
+	gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
+	gsGlobal->DoubleBuffering = GS_SETTING_ON;
+	gsGlobal->Dithering = GS_SETTING_ON;
+
+	// Do not draw pixels if they are fully transparent
+	//gsGlobal->Test->ATE  = GS_SETTING_ON;
+	gsGlobal->Test->ATST = 7; // NOTEQUAL to AREF passes
+	gsGlobal->Test->AREF = 0x00;
+	gsGlobal->Test->AFAIL = 0; // KEEP
+	gsFontM->Spacing = 0.95f;
+	//Enable transparency
+	//gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
+	int text_height,edge_size,rownumber,rowoffset;
+	text_height = (20.0f * gsFontM->Spacing * 0.15f);
+	edge_size = text_height;
+	gsKit_init_screen(gsGlobal);
+	gsKit_mode_switch(gsGlobal, GS_ONESHOT);	
+	//gsKit_set_test(gsGlobal, GS_ZTEST_OFF);
+	//gsKit_font_upload(gsGlobal, gsFont);
+	gsKit_fontm_upload(gsGlobal, gsFontM);
+	//scr_clear();
 	menu_header();
 	//sleep(1);
-	scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
+	//scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
+	//gsKit_fontm_print_scaled(gsGlobal, gsFontM, col, row, layer, scale, RedFont, str);
+	drawScreen();
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
+	gsKit_clear(gsGlobal, Black);
 	menu_header();
 	strcpy(url,"http://hbdl.vts-tech.org/");
-	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, "IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
+	drawScreen();
+	//scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
 	char *hbdl_path = set_hbdl_path();
-	sleep(1);
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
@@ -1029,10 +625,12 @@ int main(int argc, char *argv[])
 	strcpy(path,paths[0]);
 	strcpy(fn,targets[0]);
 	sprintf(localcrc,"00000001");
-	sleep(1);
+	//sleep(1);
 	readcrc(); //populates CRC32DB[]
+	gsKit_clear(gsGlobal, Black);
+	menu_header();
 	menu_Text();
-		while (1)
+	while (1)
 	{
 		//check to see if the pad is still connected
 		checkPadConnected();
@@ -1061,7 +659,7 @@ int main(int argc, char *argv[])
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-			sleep(2);
+			//sleep(2);
 			if (strcmp(path,"APPS/") == 0) {
 				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				sleep(1);
@@ -1135,7 +733,7 @@ int main(int argc, char *argv[])
 			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);
 			}
-		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		sprintf(localcrc,"00000001");
 		menu_Text();
@@ -1162,5 +760,6 @@ int main(int argc, char *argv[])
 				menu_Text();
 		}
 	}
+	//gsKit_vram_clear(gsGlobal);
 }
 }

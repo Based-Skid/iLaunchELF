@@ -11,8 +11,6 @@
 
 #include "VTSPS2-HBDL.h"
 
-
-
 static int ethApplyNetIFConfig(int mode)
 {
 	int result;
@@ -223,7 +221,7 @@ static void ethPrintLinkStatus(void)
 int dhcpmain(int argc, char *argv[])
 {
 	struct ip4_addr IP, NM, GW, DNS;
-	int EthernetLinkMode,ret;
+	int EthernetLinkMode;
 
 	//Initialize NETMAN
 	NetManInit();

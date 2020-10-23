@@ -3,6 +3,14 @@ NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
+GSKITSRC = /homebrew/gsKit
+
+include $(GSKITSRC)/ee/Rules.make
+
+LIBGSKIT = $(GSKIT)/lib/libgskit.a
+LIBDMAKIT = $(GSKIT)/lib/libdmakit.a
+LIBGSKIT_TOOLKIT = $(GSKIT)/lib/libgskit_toolkit.a
+
 ####
 # C File Objects
 EE_OBJS = $(NAME).o ps2ipc.o
@@ -11,12 +19,21 @@ EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
 EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
-EE_OBJS += poweroff.o crc32.o usbd.o usbhdfsd.o
+EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 # SBV Shit
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
 ####
-EE_LIBS = -lpadx -lmtap -ldebug -lmc -lc -lpatches -ldebug -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
+EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
+EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -Xlinker --end-group
+
+EE_INCS += -I$(GSKITSRC)/ee/gs/include -I$(GSKITSRC)/ee/dma/include
+EE_INCS += -I$(GSKITSRC)/ee/toolkit/include
+# linker flags
+EE_LIB_DIRS += -L$(GSKIT)/lib
+EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
+EE_LDFLAGS += $(EE_LIB_DIRS)
+
 
 
 all:
@@ -25,13 +42,13 @@ all:
 	@echo "======================================="
 	$(MAKE) $(EE_BIN_PACKED)
 
-$(EE_BIN_STRIPPED): $(EE_BIN)
+	$(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo "================="
 	@echo "=== Stripping ==="
 	@echo "================="
 	$(EE_STRIP) -o $@ $<
 	
-$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
+	$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 # Uncomment to compress ELF. Adjust path to match your environment
 	@echo "==================="
 	@echo "=== Compressing ==="
@@ -93,8 +110,14 @@ usbd.s:
 usbhdfsd.s:
 	bin2s $(PS2SDK)/iop/irx/usbhdfsd.irx usbhdfsd.s usbhdfsd
 
-crc32: crc32.c crc.h
-	$(CC) $(CFLAGS) -o $@ $<
+crc32.o: crc32.c checksum.h
+	ee-gcc -c $< -o $@
+	
+misc.o: misc.c
+	ee-gcc $(EE_INCS) -c $< -o $@
+	
+VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
+	ee-gcc $(EE_INCS) -c $< -o $@
 	
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
