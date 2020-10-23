@@ -137,10 +137,10 @@ void menu_Text(void)
 	strncpy(str,"",2);
 	if (strlen(fn) > strlen(action)) {
 		//scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
-		sprintf(str,"[M]: %s%s[D]: %s [P1]: %s ",action,spc_pad,device,path);
+		sprintf(str,"[M]: %s%s[D]: %s [P]: %s ",action,spc_pad,device,path);
 	} else {
 		//scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
-		sprintf(str,"[M]: %s [D]: %s [P2]: %s ",action,device,path);
+		sprintf(str,"[M]: %s [D]: %s [P]: %s ",action,device,path);
 	}
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 95, 1, 0.32f, TealFont, str);
 	strncpy(str,"",1);
@@ -257,7 +257,7 @@ int Download(char *urll, char *full_path)
 			//sleep(4);
 		//}
 	} else {
-		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
+		printf("Download Error! Debug: %d %d %d", urld, target, size);
 	}
 	return size;
 }
@@ -276,16 +276,20 @@ void DownloadList(char device[], char path[], char fn[]){
 	//patches.ppi
 
 	if (http_mirror == 0) {
-		sprintf(mirror0,"http://hbdl.vts-tech.org/");
-		scr_printf("* Mirror 1 Selected... \n");
+		strcpy(mirror0,"http://hbdl.vts-tech.org/");
+		strcpy(str,"* Mirror 1 Selected... \n");
 	} else if (http_mirror == 1) {
-		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		scr_printf("* Mirror 2 Selected... \n");
+		strcpy(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+		strcpy(str,"* Mirror 2 Selected... \n");
 	}
-	scr_printf("* Building Download List... \n");
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, WhiteFont, str);
+	strcpy(str,"* Building Download List... \n");
+	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, WhiteFont, str);
+	drawScreen();
 	if (strstr("DOSBOX.ELF",fn)) {
 		argc = 4;
-		scr_printf("* DOSBox ... \n");
+		strcpy(str,"* DOSBox ... \n");
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -301,7 +305,8 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcpy(exec_args[3],"dosbox.conf");
 	} else if (strstr("PS2DOOM.ELF",fn)) {
 		argc = 6;
-		scr_printf("* PS2Doom ... \n");
+		strcpy(str,"* PS2Doom ... \n");
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -319,7 +324,8 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcpy(exec_args[5],"doom1.wad");
 	} else if (strstr("PS2ESDL.ELF",fn)) {
 		argc = 4;
-		scr_printf("* PS2ESDL ... \n");
+		strcpy(str,"* PS2ESDL ... \n");
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -334,7 +340,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(exec_args[2],"patches.ppi");
 		strcpy(exec_args[3],"patches.ppi");
 	}
-
+	drawScreen();
 	for (z=0;z<argc;z=z+2) {
 		close(fd);
 		sprintf(full_path,"");
@@ -342,20 +348,24 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(full_path,path);
 		strcat(full_path,exec_args[z+1]);
 		//strcpy(url,exec_args[0]);
-		scr_printf("* Downloading...\n");
-		scr_printf("* URL: %s\n", exec_args[z]);
-		scr_printf("* Path: %s\n", full_path);
+		strcpy(str,"* Downloading...\n");
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, WhiteFont, str);
+		sprintf(str,"* URL: %s\n", exec_args[z]);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, WhiteFont, str);
+		sprintf(str,"* Path: %s\n", full_path);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 231, 1, 0.32f, WhiteFont, str);
+		drawScreen();
 		ret = Download(exec_args[z],full_path);
 		sleep(4);
 		if(ret <= 0) {
-			scr_printf("* Error! Could not open the file\n");
+			printf("* Error! Could not open the file\n");
 		} else {
 			//scr_printf("* File Size: %d bytes\n", ret);
-			sleep(2);
 			fd = open(full_path, O_RDONLY);
 			file_size = getFileSize(fd);
 			if (file_size >= 1) {
-				scr_printf("* %s Exists!\n", full_path);
+				sprintf(str,"* %s Exists!\n", full_path);
+				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 248, 1, 0.32f, WhiteFont, str);
 			} else {
 				scr_printf("* %s Does Not Exist!\n", full_path);
 			}
@@ -363,6 +373,7 @@ void DownloadList(char device[], char path[], char fn[]){
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			//file_crc32(device,path,fn);
 		}
+		drawScreen();
 	}
 }
 
@@ -484,24 +495,30 @@ void DoTask(int task)
 		strcat(full_path,fn);
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		fd = open(full_path, O_RDONLY);
-		//scr_printf("* Local File Opened... %d \n", fd);
+		sprintf(str,"* Local File Opened... %d \n", fd);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);
 		file_size = getFileSize(fd);
-		//scr_printf("* File Size... %d \n", file_size);
+		sprintf(str,"* File Size... %d \n", file_size);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, GreenFont, str);
 		if (file_size >= 1) {
-			//scr_printf("* %s Exists!\n", full_path);
+			sprintf(str,"* Calculating CRC32 %s \n", full_path);
+			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, GreenFont, str);
 		} else {
-			//scr_printf("! %s Does Not Exist!\n", full_path);
+			sprintf(str,"! %s Does Not Exist!\n", full_path);
+			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, RedFont, str);
 			sprintf(localcrc,"00000000");
 			return;
 		}
 		close(fd);
+		drawScreen();
+		sleep(2);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		strcpy(localcrc,file_crc32(device,path,fn));
-		sprintf(str,"CRC32: %s\n",localcrc);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);
+		sprintf(str,"Local CRC32: %s\n",localcrc);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, GreenFont, str);
 		drawScreen();
-		sleep(2);
+		
 	}
 	if (launching == 1) {
 		// Display Path The ELF Is Being Loaded From
