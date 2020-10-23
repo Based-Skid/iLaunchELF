@@ -1,4 +1,4 @@
-VERSION = 0.30
+VERSION = 0.32
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
@@ -40,21 +40,7 @@ all:
 	@echo "======================================="
 	@echo "=== Building $(NAME) v$(VERSION) ==="
 	@echo "======================================="
-	$(MAKE) $(EE_BIN_PACKED)
-
-	$(EE_BIN_STRIPPED): $(EE_BIN)
-	@echo "================="
-	@echo "=== Stripping ==="
-	@echo "================="
-	$(EE_STRIP) -o $@ $<
-	
-	$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
-# Uncomment to compress ELF. Adjust path to match your environment
-	@echo "==================="
-	@echo "=== Compressing ==="
-	@echo "==================="
-	ps2-packer -v $< $@
-	rm -f *.o *.s
+	$(MAKE) $(EE_BIN)
 
 clean:
 	rm -f *.elf *.o *.s
@@ -120,4 +106,4 @@ VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
 	ee-gcc $(EE_INCS) -c $< -o $@
 	
 include $(PS2SDK)/samples/Makefile.pref
-include $(PS2SDK)/samples/Makefile.eeglobal
+include Makefile.eeglobal

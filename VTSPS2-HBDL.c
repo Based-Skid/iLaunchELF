@@ -67,6 +67,7 @@ void menu_header(void)
 	gsKit_clear(gsGlobal, Black);
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 10, 1, 0.32f, YellowFont, appName);
 	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 25, 1, 0.32f, YellowFont, appAuthor);
+	drawScreen();
 }
 
 void menu_Text(void)
@@ -618,7 +619,8 @@ int main(int argc, char *argv[])
 	// Buffer Init
 	gsGlobal->PSMZ = GS_PSMZ_16S;
 	gsGlobal->ZBuffering = GS_SETTING_OFF;
-	gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
+	//Enable transparency
+	//gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
 	gsGlobal->DoubleBuffering = GS_SETTING_ON;
 	gsGlobal->Dithering = GS_SETTING_ON;
 
@@ -628,14 +630,13 @@ int main(int argc, char *argv[])
 	gsGlobal->Test->AREF = 0x00;
 	gsGlobal->Test->AFAIL = 0; // KEEP
 	gsFontM->Spacing = 0.95f;
-	//Enable transparency
-	//gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
+
 	int text_height,edge_size,rownumber,rowoffset;
 	text_height = (20.0f * gsFontM->Spacing * 0.15f);
 	edge_size = text_height;
 	gsKit_init_screen(gsGlobal);
 	gsKit_mode_switch(gsGlobal, GS_ONESHOT);	
-	//gsKit_set_test(gsGlobal, GS_ZTEST_OFF);
+	gsKit_set_test(gsGlobal, GS_ZTEST_OFF);
 	//gsKit_font_upload(gsGlobal, gsFont);
 	gsKit_fontm_upload(gsGlobal, gsFontM);
 	//scr_clear();
@@ -793,6 +794,5 @@ int main(int argc, char *argv[])
 				menu_Text();
 		}
 	}
-	//gsKit_vram_clear(gsGlobal);
 }
 }
