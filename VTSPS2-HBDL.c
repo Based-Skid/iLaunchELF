@@ -244,7 +244,9 @@ int Download(char *urll, char *full_path)
 		sleep(1);
 		//scr_printf("* Downloaded Size... %d\n", size);
 		write(target,buf,size);
-		//scr_printf("* Local File Written... (%d bytes)\n", size);
+		sprintf(str,"* Local File Written... (%d bytes)\n", size);
+		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 248, 1, 0.32f, GreenFont, str);
+		drawScreen();
 		sleep(1);
 		close(urld);
 		//scr_printf("* URL Closed... %d\n", urld);
@@ -348,6 +350,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(full_path,path);
 		strcat(full_path,exec_args[z+1]);
 		//strcpy(url,exec_args[0]);
+		menu_header();
 		strcpy(str,"* Downloading...\n");
 		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, WhiteFont, str);
 		sprintf(str,"* URL: %s\n", exec_args[z]);
