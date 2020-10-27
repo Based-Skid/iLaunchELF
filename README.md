@@ -32,7 +32,7 @@ Changelog:
 v0.32 2020-10-27 10:51AM
 Fixed bug changing folders
 Removed delays changing folders
-Makefile changes, surpress a few warnings
+Makefile changes, suppress a few warnings
 Code cleanup
 
 v0.31 2020-10-17 11:59PM

@@ -1,6 +1,6 @@
 //Strings
 char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-char *appVer = " v0.32 2020-10-27 (Commit: ???????)\n";
+char *appVer = " v0.32 2020-10-27 (Commit: 6a48736)\n";
 char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \n \n";
 char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 //char *osdmsg = "Exiting to OSDSYS\n";
