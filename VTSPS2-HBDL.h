@@ -1,12 +1,9 @@
-#include <gsKit.h>
-#include <dmaKit.h>
-#include <malloc.h>
-#include <gsToolkit.h>
 #include <tamtypes.h>
 #include <errno.h>
 #include <kernel.h>
 #include <sifrpc.h>
 #include <loadfile.h>
+//#include <fileio.h>
 #include <libmc.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,9 +15,12 @@
 #include "malloc.h"
 #include <libcdvd.h>
 #include <iopheap.h>
+//#include <io_common.h>
 #include <fcntl.h>
 #include <syscallnr.h>
 #include <unistd.h>
+//#include <fileXio.h>
+//#include <fileXio_rpc.h>
 #include "checksum.h"
 
 // IP Shit.
@@ -30,17 +30,19 @@
 // SBV
 #include <sbv_patches.h>
 
+
 //ps2ip.c
 int dhcpmain();
 
 //VTSPS2-CRC32.c
+void substring(char s[], char sub[], int p, int l);
 char* file_crc32(char device[], char path[], char fn[]);
 
 //misc.c
-void substring(char s[], char sub[], int p, int l);
 int getFileSize(int fd);
 void LoadElf(const char *elf, char* path);
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+void ResetIOP();
 
 //pad.c
 void buttonStatts(int port, int slot);
@@ -116,3 +118,4 @@ int LoadIRX();
 
 
 #define TYPE_XMC
+

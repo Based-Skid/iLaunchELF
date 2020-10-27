@@ -11,19 +11,11 @@
 #include "VTSPS2-HBDL.h"
 #include "strings.h"
 
-//0.32
 int http_mirror = 0;
 int dbsize = 56; //lines in VTSPS2-HBDL.TXT
 char CRC32DB[56][128] = {""};
 char remotecrc[9];
 char localcrc[9];
-char font_path[256];
-
-GSGLOBAL *gsGlobal;
-//GSFONT *gsFont;
-GSFONTM *gsFontM;
-
-u64 White, Black, WhiteFont, RedFont, GreenFont, TealFont, YellowFont;
 
 typedef struct {
 	u8	ident[16];
@@ -53,49 +45,34 @@ typedef struct {
 	u32	align;
 } elf_pheader_t;
 
-void drawScreen(void){
-	gsKit_set_finish(gsGlobal);
-	gsKit_queue_exec(gsGlobal);
-	gsKit_finish();
-	gsKit_sync_flip(gsGlobal);
-	gsKit_TexManager_nextFrame(gsGlobal);
-	//gsKit_setactive(gsGlobal);
-}
-
 void menu_header(void)
 {
-	gsKit_clear(gsGlobal, Black);
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 10, 1, 0.32f, YellowFont, appName);
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 25, 1, 0.32f, YellowFont, appAuthor);
-	drawScreen();
+	scr_printf(" \n");
+	scr_printf(appName);
+	scr_printf(appVer);
+	scr_printf(appAuthor);
+	//scr_printf(appNotice);
 }
 
 void menu_Text(void)
 {
-	//scr_clear();
+	scr_clear();
 	menu_header();
 	extern char vtsip[15];
 	extern char mirror0[];
 	extern char mirror1[];
 	char remotefn[15];
 	char hbsize[7];
-	char str[256] = "";
 	int x = (dbsize / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
 	int z = 0;
-	//sleep(4);
-	strcpy(str,"");
 	if (http_mirror == 0) {
 		sprintf(mirror0,"http://hbdl.vts-tech.org/");
-		//scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
-		sprintf(str,"IP Address: %s Mirror: %s\n",vtsip,mirror0);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, str);
+		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
 	} else if (http_mirror == 1) {
 		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		//scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
-		sprintf(str,"IP Address: %s Mirror: %s\n",vtsip,mirror1);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, str);
+		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
 	}
-	//scr_printf(" \n");
+	scr_printf(" \n");
 	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
 		strcpy(action,"CHECK");
 	}
@@ -103,48 +80,29 @@ void menu_Text(void)
 		strcpy(device,"mc0:/");
 	}
 	if (strlen(fn) >= 13) {
-		//strncpy(fn,"",1);
 		strcpy(fn,"AURA.ELF");
 		strcpy(ELF_NO_EXT,"AURA");
 		strcpy(path,"APPS/");
 	}
-	char spc_pad[8] = "";
-	char spc_pad2[8] = "";
+	char spc_pad[] = "";
 	int spc_cnt = 0;
-	int spc_gs = 0;
+
 	if (strlen(fn) > strlen(action)) {
 		spc_cnt = (strlen(fn) - strlen(action));
 	} else {
 		spc_cnt = (strlen(action) - strlen(fn));
 	}
-	spc_gs = spc_cnt;
-	strncpy(spc_pad,"",1);
-	strncpy(spc_pad2,"",1);
+
 	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
 		strcat(spc_pad," ");
-		if (spc_cnt <= (spc_gs/2)-1){
-			strcat(spc_pad2," ");
-		}
 	}
-	//if (spc_pad2 == ""){
-	//	strcpy(spc_pad2, "  ");
-	//} else if (spc_pad2 == " "){
-	//	strcpy(spc_pad2,"");
-	//}
-	
-	if (strlen(spc_pad) == 8){
-		strncpy(spc_pad," ",2);
-	}
-	strncpy(str,"",2);
+
 	if (strlen(fn) > strlen(action)) {
-		//scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
-		sprintf(str,"[M]: %s%s[D]: %s [P]: %s ",action,spc_pad,device,path);
+		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
 	} else {
-		//scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
-		sprintf(str,"[M]: %s [D]: %s [P]: %s ",action,device,path);
+		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
 	}
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 95, 1, 0.32f, TealFont, str);
-	strncpy(str,"",1);
+
 	while(z<=x) {
 		int fnsize = (strlen(fn));
 		char hbfn[] = "";
@@ -155,66 +113,46 @@ void menu_Text(void)
 		if (strstr(hbfn,fn)) {
 			substring(CRC32DB[z],hbsize,(14+fnsize),6);
 			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
-			//scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
-			if (spc_gs>=1){
-				sprintf(str,"[T]: %s%s[S]:%s [V]:%s",fn, spc_pad2, hbsize, hbver);
-			} else {
-				sprintf(str,"[T]: %s [S]:%s [V]:%s",fn, hbsize, hbver);
-			}
-			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 107, 1, 0.32f, TealFont, str);
+			scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
 			//scr_printf("DEBUG: %d %d",strlen(hbsize),hbsize);
 		}
 		//scr_printf("D2: %s",CRC32DB[x][-8]);
 		z++;
 	}
-	strcpy(str,"");
-	while(x<=dbsize) { //total lines in VTSPS2-HBDL.TXT
+	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
 		int fnsize = (strlen(CRC32DB[x]) - 12);
 		sprintf(remotefn,"");
 		substring(CRC32DB[x],remotefn,1,fnsize);
 		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
 			//strcpy(remotefn,fn);
 			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
-			//scr_printf("Local CRC32: ");
-			sprintf(str,"Local CRC32: ");		
+			scr_printf("Local CRC32: ");
 			if (strcmp(localcrc,"00000001") == 0) {
-				//scr_printf("unchecked");
-				strcat(str,"unchecked");
+				scr_printf("unchecked");
 			} else if (strcmp(localcrc,"00000000") == 0) {
-				//scr_printf("00000000");
-				strcat(str,"00000000");
+				scr_printf("00000000");
 			} else if (strlen(localcrc) == 7) {
-				//scr_printf("0%s",localcrc);
-				sprintf(localcrc,"0%s",localcrc);
-				strcat(str,localcrc);
+				scr_printf("0%s",localcrc);
 			} else if (strlen(localcrc) == 6) {
-				//scr_printf("00%s",localcrc);
-				sprintf(localcrc,"00%s",localcrc);
-				strcat(str,localcrc);
+				scr_printf("00%s",localcrc);
 			} else if (strlen(localcrc) == 5) {
-				//scr_printf("000%s",localcrc);
-				sprintf(localcrc,"000%s",localcrc);
-				strcat(str,localcrc);
+				scr_printf("000%s",localcrc);
 			} else {
-			//scr_printf("%s",localcrc);
-			strcat(str,localcrc);
+			scr_printf("%s",localcrc);
 			}
-			//scr_printf(" Remote CRC32:%s \n", remotecrc);
-			strcat(str," Remote CRC32:");
-			strcat(str,remotecrc);
+			scr_printf(" Remote CRC32:%s \n", remotecrc);
 		}
 		x=x+1;
 	}
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);	
-	strcpy(str,"-Press UP to Set [D]evice. \n");
-	strcat(str,"-Press DOWN to Set [M]ode. \n");
-	strcat(str,"-Press LEFT to Set [P]ath. \n");
-	strcat(str,"-Press RIGHT to Set [T]arget. \n");
-	strcat(str,"-Press SELECT to Set Mirror. \n");
-	strcat(str,"-Press START to Exit. \n");
-	strcat(str,"-Press any other key to perform selected action \n");
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
-	drawScreen();
+	scr_printf(" \n");
+	scr_printf("-Press UP to Set [D]evice. \n");
+	scr_printf("-Press DOWN to Set [M]ode. \n");
+	scr_printf("-Press LEFT to Set [P]ath. \n");
+	scr_printf("-Press RIGHT to Set [T]arget. \n");
+	scr_printf("-Press SELECT to Set Mirror. \n");
+	scr_printf("-Press START to Exit. \n");
+	scr_printf("-Press any other key to perform selected action \n");
+	scr_printf(" \n");
 }
 
 int Download(char *urll, char *full_path)
@@ -224,7 +162,6 @@ int Download(char *urll, char *full_path)
 	int target = 0;
 	//int ret = 0;
 	char buf[5600000];
-	char str[256] = "";
 	//FILE *urld;
 	//FILE *target;
 	close(urld);
@@ -232,8 +169,7 @@ int Download(char *urll, char *full_path)
 	if ((urld = open(urll,O_RDONLY)) !=-1) {
 		//scr_printf("* URL Opened... %d\n", urld);
 	} else {
-		sprintf(str,"! URL Open Failed... %d\n",urld);
-		
+		scr_printf("! URL Open Failed... %d\n",urld);
 	}
 	//scr_printf("DEBUG: %s\n", full_path);
 	target = open(full_path, O_RDWR | O_CREAT);
@@ -245,9 +181,7 @@ int Download(char *urll, char *full_path)
 		sleep(1);
 		//scr_printf("* Downloaded Size... %d\n", size);
 		write(target,buf,size);
-		sprintf(str,"* Local File Written... (%d bytes)\n", size);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 248, 1, 0.32f, GreenFont, str);
-		drawScreen();
+		//scr_printf("* Local File Written... (%d bytes)\n", size);
 		sleep(1);
 		close(urld);
 		//scr_printf("* URL Closed... %d\n", urld);
@@ -260,7 +194,7 @@ int Download(char *urll, char *full_path)
 			//sleep(4);
 		//}
 	} else {
-		printf("Download Error! Debug: %d %d %d", urld, target, size);
+		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
 	}
 	return size;
 }
@@ -275,24 +209,19 @@ void DownloadList(char device[], char path[], char fn[]){
 	int fd = 0;
 	int file_size= 0;
 	char full_path[256];
-	char str[256] = "";
 	//patches.ppi
 
 	if (http_mirror == 0) {
-		strcpy(mirror0,"http://hbdl.vts-tech.org/");
-		strcpy(str,"* Mirror 1 Selected... \n");
+		sprintf(mirror0,"http://hbdl.vts-tech.org/");
+		scr_printf("* Mirror 1 Selected... \n");
 	} else if (http_mirror == 1) {
-		strcpy(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		strcpy(str,"* Mirror 2 Selected... \n");
+		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+		scr_printf("* Mirror 2 Selected... \n");
 	}
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, WhiteFont, str);
-	strcpy(str,"* Building Download List... \n");
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, WhiteFont, str);
-	drawScreen();
+	scr_printf("* Building Download List... \n");
 	if (strstr("DOSBOX.ELF",fn)) {
 		argc = 4;
-		strcpy(str,"* DOSBox ... \n");
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
+		scr_printf("* DOSBox ... \n");
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -308,8 +237,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcpy(exec_args[3],"dosbox.conf");
 	} else if (strstr("PS2DOOM.ELF",fn)) {
 		argc = 6;
-		strcpy(str,"* PS2Doom ... \n");
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
+		scr_printf("* PS2Doom ... \n");
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -327,8 +255,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcpy(exec_args[5],"doom1.wad");
 	} else if (strstr("PS2ESDL.ELF",fn)) {
 		argc = 4;
-		strcpy(str,"* PS2ESDL ... \n");
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
+		scr_printf("* PS2ESDL ... \n");
 		if (http_mirror == 0) {
 			for (y=0;y<=argc;y=y+1) {
 				strcpy(exec_args[y],mirror0);
@@ -343,7 +270,7 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(exec_args[2],"patches.ppi");
 		strcpy(exec_args[3],"patches.ppi");
 	}
-	drawScreen();
+
 	for (z=0;z<argc;z=z+2) {
 		close(fd);
 		sprintf(full_path,"");
@@ -351,25 +278,20 @@ void DownloadList(char device[], char path[], char fn[]){
 		strcat(full_path,path);
 		strcat(full_path,exec_args[z+1]);
 		//strcpy(url,exec_args[0]);
-		menu_header();
-		strcpy(str,"* Downloading...\n");
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, WhiteFont, str);
-		sprintf(str,"* URL: %s\n", exec_args[z]);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, WhiteFont, str);
-		sprintf(str,"* Path: %s\n", full_path);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 231, 1, 0.32f, WhiteFont, str);
-		drawScreen();
+		scr_printf("* Downloading...\n");
+		scr_printf("* URL: %s\n", exec_args[z]);
+		scr_printf("* Path: %s\n", full_path);
 		ret = Download(exec_args[z],full_path);
 		sleep(4);
 		if(ret <= 0) {
-			printf("* Error! Could not open the file\n");
+			scr_printf("* Error! Could not open the file\n");
 		} else {
 			//scr_printf("* File Size: %d bytes\n", ret);
+			sleep(2);
 			fd = open(full_path, O_RDONLY);
 			file_size = getFileSize(fd);
 			if (file_size >= 1) {
-				sprintf(str,"* %s Exists!\n", full_path);
-				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 248, 1, 0.32f, WhiteFont, str);
+				scr_printf("* %s Exists!\n", full_path);
 			} else {
 				scr_printf("* %s Does Not Exist!\n", full_path);
 			}
@@ -377,10 +299,8 @@ void DownloadList(char device[], char path[], char fn[]){
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			//file_crc32(device,path,fn);
 		}
-		drawScreen();
 	}
 }
-
 
 void DoTask(int task)
 {
@@ -393,7 +313,6 @@ void DoTask(int task)
 	//extern char device[128], path[128], fn[128];
 	char full_path[256];
 	char half_path[256];
-	char str[256] = "";
 	extern char url[];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
@@ -445,7 +364,7 @@ void DoTask(int task)
 		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
 	//Clear Screen To Make This Look tidy!
-	//scr_clear();
+	scr_clear();
 	menu_header();
 	if (downloading==1){
 	  if (strstr("PS2ESDL.ELF",fn)) {
@@ -458,35 +377,24 @@ void DoTask(int task)
 			  close(fd);
 			  //char buf[4000000], *file = full_path;
 			  //strcpy(url,exec_args[0]);
-				//scr_printf("* Downloading... \n");
-				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, WhiteFont, "* Downloading ...");
-				drawScreen();
-				sprintf(str,"* URL: %s \n", exec_args[0]);
-				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, WhiteFont, str);
-				drawScreen();
-				sprintf(str,"* Path: %s \n", full_path);
-				gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, WhiteFont, str);
-				drawScreen();
+				scr_printf("* Downloading... \n");
+				scr_printf("* URL: %s \n", exec_args[0]);
+				scr_printf("* Path: %s \n", full_path);
 				ret = Download(exec_args[0],full_path);
-				sleep(2);
+				sleep(4);
 				if(ret <= 0) {
-					printf("* Error! Could not open the file \n");
+					scr_printf("* Error! Could not open the file \n");
 				} else {
-					sprintf(str,"* File Size: %d bytes \n", ret);
-					gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, WhiteFont, str);
-					drawScreen();
+					scr_printf("* File Size: %d bytes \n", ret);
 					sleep(2);
 					fd = open(full_path, O_RDONLY);
 					file_size = getFileSize(fd);
 					if (file_size >= 1) {
-						sprintf(str,"* %s Exists! \n", full_path);
-						gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, WhiteFont, str);
+						scr_printf("* %s Exists! \n", full_path);
 					} else {
-						sprintf(str,"* %s Does Not Exist! \n", full_path);
-						gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 214, 1, 0.32f, RedFont, str);
+						scr_printf("* %s Does Not Exist! \n", full_path);
 					}
 					close(fd);
-					drawScreen();
 					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 					//file_crc32(device,path,fn);
 				}
@@ -499,30 +407,22 @@ void DoTask(int task)
 		strcat(full_path,fn);
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
 		fd = open(full_path, O_RDONLY);
-		sprintf(str,"* Local File Opened... %d \n", fd);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 146, 1, 0.32f, GreenFont, str);
+		//scr_printf("* Local File Opened... %d \n", fd);
 		file_size = getFileSize(fd);
-		sprintf(str,"* File Size... %d \n", file_size);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 163, 1, 0.32f, GreenFont, str);
+		//scr_printf("* File Size... %d \n", file_size);
 		if (file_size >= 1) {
-			sprintf(str,"* Calculating CRC32 %s \n", full_path);
-			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, GreenFont, str);
+			//scr_printf("* %s Exists!\n", full_path);
 		} else {
-			sprintf(str,"! %s Does Not Exist!\n", full_path);
-			gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 180, 1, 0.32f, RedFont, str);
+			//scr_printf("! %s Does Not Exist!\n", full_path);
 			sprintf(localcrc,"00000000");
 			return;
 		}
 		close(fd);
-		drawScreen();
-		sleep(2);
 		//scr_printf("CRC32: ");
 		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		strcpy(localcrc,file_crc32(device,path,fn));
-		sprintf(str,"Local CRC32: %s\n",localcrc);
-		gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 197, 1, 0.32f, GreenFont, str);
-		drawScreen();
-		
+		sprintf(localcrc,file_crc32(device,path,fn));
+		scr_printf("CRC32: %s\n",localcrc);
+		sleep(2);
 	}
 	if (launching == 1) {
 		// Display Path The ELF Is Being Loaded From
@@ -530,14 +430,13 @@ void DoTask(int task)
 		sleep(2);
 		LoadElf(full_path, half_path);
 	}
-	//scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
-	sleep(1);
+	scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
+	sleep(2);
 	menu_Text();
 }
 
 char *set_hbdl_path(){
 	static char hbdl_path[256];
-	static char cwd[256];
 	//uncomment for release
 	getcwd(hbdl_path,256);
 	//sprintf(hbdl_path,"mc0:/APPS/"); //hardcoded.
@@ -577,7 +476,7 @@ void readcrc() {
 		}
 		fclose(fptr);
 		} else {
-			printf("readcrc() error");
+			scr_printf("readcrc() error");
 		}
 }
 
@@ -585,75 +484,21 @@ void readcrc() {
 int main(int argc, char *argv[])
 {
 	extern char fn[16];
+	// Initialize
+	SifInitRpc(0);
+	ResetIOP();
 	// initialize
 	initialize();
-
-	Black = GS_SETREG_RGBAQ(0x00,0x00,0x00,0x00,0x00);
-	White = GS_SETREG_RGBAQ(0xFF,0xFF,0xFF,0x00,0x00);
-
-	WhiteFont = GS_SETREG_RGBAQ(0xFF,0xFF,0xFF,0x80,0x00);
-	RedFont = GS_SETREG_RGBAQ(0xFF,0x00,0x00,0x80,0x00);
-	GreenFont = GS_SETREG_RGBAQ(0x00,0xFF,0x00,0x80,0x00);
-	TealFont = GS_SETREG_RGBAQ(0x00,0xFF,0xFF,0x80,0x00);
-	YellowFont = GS_SETREG_RGBAQ(0xFF,0xFF,0x00,0x80,0x00);
-
-	gsGlobal = gsKit_init_global();
-	//getcwd(font_path,256);
-	//strcat(font_path,"/dejavu.bmp");
-	//if (strstr(font_path,"host:")){
-	//	strcpy(font_path,"mc0:/APPS/dejavu.bmp");
-	//}
-	//gsFont = gsKit_init_font(GSKIT_FTYPE_BMP_DAT, font_path);
-	gsFontM = gsKit_init_fontm();
-	
-	dmaKit_init(D_CTRL_RELE_OFF,D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC,
-		    D_CTRL_STD_OFF, D_CTRL_RCYC_8, 1 << DMA_CHANNEL_GIF);
-
-	// Initialize the DMAC
-	dmaKit_chan_init(DMA_CHANNEL_GIF);
-
-	gsGlobal->PrimAlpha = GS_BLEND_FRONT2BACK;
-	gsGlobal->PSM = GS_PSM_CT16;
-	gsGlobal->PSMZ = GS_PSMZ_16;
-	gsGlobal->Width = 640;
-	// Buffer Init
-	gsGlobal->PSMZ = GS_PSMZ_16S;
-	gsGlobal->ZBuffering = GS_SETTING_OFF;
-	//Enable transparency
-	//gsGlobal->PrimAlphaEnable = GS_SETTING_ON;
-	gsGlobal->DoubleBuffering = GS_SETTING_ON;
-	gsGlobal->Dithering = GS_SETTING_ON;
-
-	// Do not draw pixels if they are fully transparent
-	//gsGlobal->Test->ATE  = GS_SETTING_ON;
-	gsGlobal->Test->ATST = 7; // NOTEQUAL to AREF passes
-	gsGlobal->Test->AREF = 0x00;
-	gsGlobal->Test->AFAIL = 0; // KEEP
-	gsFontM->Spacing = 0.95f;
-
-	int text_height,edge_size,rownumber,rowoffset;
-	text_height = (20.0f * gsFontM->Spacing * 0.15f);
-	edge_size = text_height;
-	gsKit_init_screen(gsGlobal);
-	gsKit_mode_switch(gsGlobal, GS_ONESHOT);	
-	gsKit_set_test(gsGlobal, GS_ZTEST_OFF);
-	//gsKit_font_upload(gsGlobal, gsFont);
-	gsKit_fontm_upload(gsGlobal, gsFontM);
-	//scr_clear();
+	scr_clear();
 	menu_header();
 	//sleep(1);
-	//scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
-	//gsKit_fontm_print_scaled(gsGlobal, gsFontM, col, row, layer, scale, RedFont, str);
-	drawScreen();
+	scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
-	gsKit_clear(gsGlobal, Black);
 	menu_header();
 	strcpy(url,"http://hbdl.vts-tech.org/");
-	gsKit_fontm_print_scaled(gsGlobal, gsFontM, 10, 61, 1, 0.32f, TealFont, "IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
-	drawScreen();
-	//scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
+	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
 	char *hbdl_path = set_hbdl_path();
+	sleep(1);
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
@@ -661,12 +506,10 @@ int main(int argc, char *argv[])
 	strcpy(path,paths[0]);
 	strcpy(fn,targets[0]);
 	sprintf(localcrc,"00000001");
-	//sleep(1);
+	sleep(1);
 	readcrc(); //populates CRC32DB[]
-	gsKit_clear(gsGlobal, Black);
-	menu_header();
 	menu_Text();
-	while (1)
+		while (1)
 	{
 		//check to see if the pad is still connected
 		checkPadConnected();
@@ -696,19 +539,22 @@ int main(int argc, char *argv[])
 		} else if(new_pad & PAD_LEFT)	{
 			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 			//sleep(2);
+			substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 			if (strcmp(path,"APPS/") == 0) {
-				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				//sleep(1);
 				sprintf(path,"APP_%s/",ELF_NO_EXT);
 				strcpy(PATH_APP,path);
 			} else if (strcmp(path,PATH_APP) == 0) {
-				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				//sleep(1);
 				sprintf(path,"%s/",ELF_NO_EXT);
 				strcpy(PATH_ELF,path);
 			} else if (strcmp(path,PATH_ELF) == 0) {
-				substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				strcpy(path,"APPS/");
 			}
-		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
@@ -767,7 +613,7 @@ int main(int argc, char *argv[])
 			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);
 			}
-		printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		sprintf(localcrc,"00000001");
 		menu_Text();
