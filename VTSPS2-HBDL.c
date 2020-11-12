@@ -12,8 +12,8 @@
 #include "strings.h"
 
 int http_mirror = 0;
-int dbsize = 56; //lines in VTSPS2-HBDL.TXT
-char CRC32DB[56][128] = {""};
+int dbsize = 61; //lines in VTSPS2-HBDL.TXT
+char CRC32DB[61][128] = {""};
 char remotecrc[9];
 char localcrc[9];
 
