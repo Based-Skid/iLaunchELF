@@ -1,6 +1,6 @@
 //Strings
 char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-char *appVer = " v0.33 2020-11-12 (Commit: d864608)\n";
+char *appVer = " v0.33 2020-11-12 (Commit: 768ebfa)\n";
 char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \n \n";
 char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 //char *osdmsg = "Exiting to OSDSYS\n";
@@ -21,9 +21,9 @@ char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 //char *txtL3Btn = "-Press L3 to Start WLE.ELF.\n";
 
 char *devices[] = {"mc0:/", "mc1:/", "mass:/"};
-char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/"};
+char *paths[] = {"APPS/", "APP_$ELF/", "$ELF/", "BOOT/"};
 char *actions[] = {"CHECK", "DOWNLOAD", "LAUNCH"};
-char *targets[]= {"AURA.ELF", "DOSBOX.ELF", "EJECT.ELF", "ESR.ELF", "GSM.ELF", "HDL.ELF", "INFOGB.ELF", "LBFN.ELF", "NEOCD.ELF", "OPL.ELF", "PGEN.ELF", "PS2DOOM.ELF", "PS2ESDL.ELF", "PS2SX.ELF", "PSMS.ELF", "PVCS.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNES9X.ELF", "SNESSTN.ELF", "TESTMODE.ELF", "WLE.ELF", "ZONELDR.ELF"};
+char *targets[]= {"AURA.ELF", "DOSBOX.ELF", "EJECT.ELF", "ESR.ELF", "FRUITY.ELF", "GSM.ELF", "HDL.ELF", "HERMES.ELF", "INFOGB.ELF", "LBFN.ELF", "NEOCD.ELF", "OPL.ELF", "PGEN.ELF", "PS2DOOM.ELF", "PS2ESDL.ELF", "PS2SX.ELF", "PSMS.ELF", "PVCS.ELF", "RA_2048.ELF", "RA_FCEU.ELF", "RA_MGBA.ELF", "RA_PICO.ELF", "RA_QNES.ELF", "SMS.ELF", "SNES9X.ELF", "SNESSTN.ELF", "TESTMODE.ELF", "WLE.ELF", "XUMP.ELF", "ZONELDR.ELF"};
 char ELF_NO_EXT[] = "";
 char PATH_ELF[] = "";
 char PATH_APP[] = "";

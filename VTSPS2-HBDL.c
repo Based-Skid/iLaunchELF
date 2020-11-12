@@ -191,12 +191,15 @@ int Download(char *urll, char *full_path)
 		//scr_printf("* URL Closed... %d\n", urld);
 		close(target);
 		//scr_printf("* Local File Closed... %d\n", target);
-		//sprintf(localcrc,file_crc32(device,path,fn));
-		//if (strcmp(localcrc,remotecrc) != 0) {
+		sprintf(localcrc,file_crc32(device,path,fn));
+		if (strstr(localcrc,remotecrc) != 0) {
 			//Warns even when they do match, need to try another way.
-			//scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
-			//sleep(4);
-		//}
+			scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
+			sleep(4);
+		} else { 
+			scr_printf("\nCRC32 Verified! %s\n", localcrc);
+			sleep(2);
+		}
 	} else {
 		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
 	}
@@ -300,8 +303,6 @@ void DownloadList(char device[], char path[], char fn[]){
 				scr_printf("* %s Does Not Exist!\n", full_path);
 			}
 			close(fd);
-			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-			//file_crc32(device,path,fn);
 		}
 	}
 }
@@ -367,7 +368,6 @@ void DoTask(int task)
 			argc = 1;
 		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
-	//Clear Screen To Make This Look tidy!
 	scr_clear();
 	menu_header();
 	if (downloading==1){
@@ -379,8 +379,6 @@ void DoTask(int task)
 	  	DownloadList(device,path,"DOSBOX.ELF");
 	  } else {
 			  close(fd);
-			  //char buf[4000000], *file = full_path;
-			  //strcpy(url,exec_args[0]);
 				scr_printf("* Downloading... \n");
 				scr_printf("* URL: %s \n", exec_args[0]);
 				scr_printf("* Path: %s \n", full_path);
@@ -399,8 +397,6 @@ void DoTask(int task)
 						scr_printf("* %s Does Not Exist! \n", full_path);
 					}
 					close(fd);
-					//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-					//file_crc32(device,path,fn);
 				}
 			}
 		}
@@ -468,14 +464,11 @@ void readcrc() {
 		while((read = getline(&tmp,&len,fptr)) != -1)
 		{
 			strcpy(line[i],tmp);
-			//scr_printf("DEBUG: %s\n", line[i]);
 		        i++;
 		}
 		tot = dbsize;
 		for(i = 0; i < tot; ++i)
 		{
-	        //printf(" %s\n", line[i]);
-	        //substring(line[i],line[i],1,(strlen(line[i])-1));
 	        sprintf(CRC32DB[i]," %s\n", line[i]);
 		}
 		fclose(fptr);
@@ -491,11 +484,9 @@ int main(int argc, char *argv[])
 	// Initialize
 	SifInitRpc(0);
 	ResetIOP();
-	// initialize
 	initialize();
 	scr_clear();
 	menu_header();
-	//sleep(1);
 	scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	menu_header();
@@ -504,7 +495,6 @@ int main(int argc, char *argv[])
 	char *hbdl_path = set_hbdl_path();
 	sleep(1);
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
-	//file_crc32("mc0:/","APPS/","VTSPS2-HBDL.TXT");
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);
@@ -573,50 +563,56 @@ int main(int argc, char *argv[])
 				strcpy(fn,targets[3]);
 			} else if (strcmp(ofn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(ofn,"GSM.ELF") == 0) {
+			} else if (strcmp(ofn,"FRUITY.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(ofn,"HDL.ELF") == 0) {
+			} else if (strcmp(ofn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(ofn,"INFOGB.ELF") == 0) {
+			} else if (strcmp(ofn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(ofn,"LBFN.ELF") == 0) {
+			} else if (strcmp(ofn,"HERMES.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(ofn,"NEOCD.ELF") == 0) {
+			} else if (strcmp(ofn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(ofn,"OPL.ELF") == 0) {
+			} else if (strcmp(ofn,"LBFN.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(ofn,"PGEN.ELF") == 0) {
+			} else if (strcmp(ofn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(ofn,"PS2DOOM.ELF") == 0) {
+			} else if (strcmp(ofn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(ofn,"PS2ESDL.ELF") == 0) {
+			} else if (strcmp(ofn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(ofn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2DOOM.ELF") == 0) {
 				strcpy(fn,targets[14]);
-			} else if (strcmp(ofn,"PSMS.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[15]);
-			} else if (strcmp(ofn,"PVCS.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[16]);
-			} else if (strcmp(ofn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(ofn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[17]);
-			} else if (strcmp(ofn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(ofn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[18]);
-			} else if (strcmp(ofn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[19]);
-			} else if (strcmp(ofn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[20]);
-			} else if (strcmp(ofn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[21]);
-			} else if (strcmp(ofn,"SMS.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[22]);
-			} else if (strcmp(ofn,"SNES9X.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_QNES.ELF") == 0) {
 				strcpy(fn,targets[23]);
-			} else if (strcmp(ofn,"SNESSTN.ELF") == 0) {
+			} else if (strcmp(ofn,"SMS.ELF") == 0) {
 				strcpy(fn,targets[24]);
-			} else if (strcmp(ofn,"TESTMODE.ELF") == 0) {
+			} else if (strcmp(ofn,"SNES9X.ELF") == 0) {
 				strcpy(fn,targets[25]);
-			} else if (strcmp(ofn,"WLE.ELF") == 0) {
+			} else if (strcmp(ofn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[26]);
+			} else if (strcmp(ofn,"TESTMODE.ELF") == 0) {
+				strcpy(fn,targets[27]);
+			} else if (strcmp(ofn,"WLE.ELF") == 0) {
+				strcpy(fn,targets[28]);
+			} else if (strcmp(ofn,"XUMP.ELF") == 0) {
+				strcpy(fn,targets[29]);
 			} else if (strcmp(ofn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);
 			}
