@@ -1,6 +1,6 @@
 //Strings
 char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-char *appVer = " v0.32 2020-10-27 (Commit: 6a48736)\n";
+char *appVer = " v0.33 2020-11-12 (Commit: ???????)\n";
 char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \n \n";
 char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 //char *osdmsg = "Exiting to OSDSYS\n";
@@ -28,7 +28,7 @@ char ELF_NO_EXT[] = "";
 char PATH_ELF[] = "";
 char PATH_APP[] = "";
 char make_path[] = "";
-char action[32], device[32], path[256], fn[16];
+char action[32], device[32], path[256], fn[16], ofn[16];
 char url[] = "";
 char mirror0[] = "http://hbdl.vts-tech.org/";
 char mirror1[] = "http://www.hwc.nat.cu/ps2-vault/ps2hbdl/";

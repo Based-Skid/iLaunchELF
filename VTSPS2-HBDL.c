@@ -73,6 +73,7 @@ void menu_Text(void)
 		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
 	}
 	scr_printf(" \n");
+	//*Sanity Checks
 	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
 		strcpy(action,"CHECK");
 	}
@@ -81,51 +82,53 @@ void menu_Text(void)
 	}
 	if (strlen(fn) >= 13) {
 		strcpy(fn,"AURA.ELF");
+		strcpy(ofn,"AURA.ELF");
 		strcpy(ELF_NO_EXT,"AURA");
 		strcpy(path,"APPS/");
 	}
+	//*
 	char spc_pad[] = "";
 	int spc_cnt = 0;
-
-	if (strlen(fn) > strlen(action)) {
-		spc_cnt = (strlen(fn) - strlen(action));
+	
+	if (strlen(ofn) > strlen(action)) {
+		spc_cnt = (strlen(ofn) - strlen(action));
 	} else {
-		spc_cnt = (strlen(action) - strlen(fn));
+		spc_cnt = (strlen(action) - strlen(ofn));
 	}
 
 	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
 		strcat(spc_pad," ");
 	}
 
-	if (strlen(fn) > strlen(action)) {
+	if (strlen(ofn) > strlen(action)) {
 		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
 	} else {
 		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
 	}
 
 	while(z<=x) {
-		int fnsize = (strlen(fn));
+		int fnsize = (strlen(ofn));
 		char hbfn[] = "";
 		char hbver[] = "";
 		substring(CRC32DB[z],hbfn,14,fnsize);
 		sprintf(hbsize,"");
 		//scr_printf("DEBUG: %s %d \n",hbfn, fnsize);
-		if (strstr(hbfn,fn)) {
+		if (strstr(hbfn,ofn)) {
 			substring(CRC32DB[z],hbsize,(14+fnsize),6);
 			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
 			scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
 			//scr_printf("DEBUG: %d %d",strlen(hbsize),hbsize);
 		}
-		//scr_printf("D2: %s",CRC32DB[x][-8]);
+		//scr_printf("D2: %s",CRC32DB[z][-8]);
 		z++;
 	}
 	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
 		int fnsize = (strlen(CRC32DB[x]) - 12);
 		sprintf(remotefn,"");
 		substring(CRC32DB[x],remotefn,1,fnsize);
-		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
+		if (strstr(remotefn,ofn) && strlen(remotefn) == (strlen(ofn)+1)) {
 			//strcpy(remotefn,fn);
-			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
+			substring(CRC32DB[x],remotecrc,(strlen(ofn)+3),9);
 			scr_printf("Local CRC32: ");
 			if (strcmp(localcrc,"00000001") == 0) {
 				scr_printf("unchecked");
@@ -149,6 +152,7 @@ void menu_Text(void)
 	scr_printf("-Press DOWN to Set [M]ode. \n");
 	scr_printf("-Press LEFT to Set [P]ath. \n");
 	scr_printf("-Press RIGHT to Set [T]arget. \n");
+	scr_printf("-Press L1 to toggle BOOT.ELF as target. \n");
 	scr_printf("-Press SELECT to Set Mirror. \n");
 	scr_printf("-Press START to Exit. \n");
 	scr_printf("-Press any other key to perform selected action \n");
@@ -338,7 +342,7 @@ void DoTask(int task)
 			} else if (http_mirror == 1) {
 				strcpy(url,mirror1);
 			}
-			strcat(url,fn);
+			strcat(url,ofn);
 			strcpy(exec_args[0], url);
 			strcpy(full_path,device);
 			sleep(1);
@@ -483,7 +487,7 @@ void readcrc() {
 
 int main(int argc, char *argv[])
 {
-	extern char fn[16];
+	extern char fn[16], ofn[16];
 	// Initialize
 	SifInitRpc(0);
 	ResetIOP();
@@ -505,6 +509,7 @@ int main(int argc, char *argv[])
 	strcpy(device,devices[0]);
 	strcpy(path,paths[0]);
 	strcpy(fn,targets[0]);
+	strcpy(ofn,fn);
 	sprintf(localcrc,"00000001");
 	sleep(1);
 	readcrc(); //populates CRC32DB[]
@@ -552,71 +557,81 @@ int main(int argc, char *argv[])
 				strcpy(PATH_ELF,path);
 			} else if (strcmp(path,PATH_ELF) == 0) {
 				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				strcpy(path,"APPS/");
+				strcpy(path,"BOOT/");
+			} else if (strcmp(path,"BOOT/") == 0) {
+				strcpy(path,"APPS/");				
 			}
 		printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
-			if (strcmp(fn,"AURA.ELF") == 0) {
+			if (strcmp(ofn,"AURA.ELF") == 0) {
 				strcpy(fn,targets[1]);
-			} else if (strcmp(fn,"DOSBOX.ELF") == 0) {
+			} else if (strcmp(ofn,"DOSBOX.ELF") == 0) {
 				strcpy(fn,targets[2]);
-			} else if (strcmp(fn,"EJECT.ELF") == 0) {
+			} else if (strcmp(ofn,"EJECT.ELF") == 0) {
 				strcpy(fn,targets[3]);
-			} else if (strcmp(fn,"ESR.ELF") == 0) {
+			} else if (strcmp(ofn,"ESR.ELF") == 0) {
 				strcpy(fn,targets[4]);
-			} else if (strcmp(fn,"GSM.ELF") == 0) {
+			} else if (strcmp(ofn,"GSM.ELF") == 0) {
 				strcpy(fn,targets[5]);
-			} else if (strcmp(fn,"HDL.ELF") == 0) {
+			} else if (strcmp(ofn,"HDL.ELF") == 0) {
 				strcpy(fn,targets[6]);
-			} else if (strcmp(fn,"INFOGB.ELF") == 0) {
+			} else if (strcmp(ofn,"INFOGB.ELF") == 0) {
 				strcpy(fn,targets[7]);
-			} else if (strcmp(fn,"LBFN.ELF") == 0) {
+			} else if (strcmp(ofn,"LBFN.ELF") == 0) {
 				strcpy(fn,targets[8]);
-			} else if (strcmp(fn,"NEOCD.ELF") == 0) {
+			} else if (strcmp(ofn,"NEOCD.ELF") == 0) {
 				strcpy(fn,targets[9]);
-			} else if (strcmp(fn,"OPL.ELF") == 0) {
+			} else if (strcmp(ofn,"OPL.ELF") == 0) {
 				strcpy(fn,targets[10]);
-			} else if (strcmp(fn,"PGEN.ELF") == 0) {
+			} else if (strcmp(ofn,"PGEN.ELF") == 0) {
 				strcpy(fn,targets[11]);
-			} else if (strcmp(fn,"PS2DOOM.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2DOOM.ELF") == 0) {
 				strcpy(fn,targets[12]);
-			} else if (strcmp(fn,"PS2ESDL.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2ESDL.ELF") == 0) {
 				strcpy(fn,targets[13]);
-			} else if (strcmp(fn,"PS2SX.ELF") == 0) {
+			} else if (strcmp(ofn,"PS2SX.ELF") == 0) {
 				strcpy(fn,targets[14]);
-			} else if (strcmp(fn,"PSMS.ELF") == 0) {
+			} else if (strcmp(ofn,"PSMS.ELF") == 0) {
 				strcpy(fn,targets[15]);
-			} else if (strcmp(fn,"PVCS.ELF") == 0) {
+			} else if (strcmp(ofn,"PVCS.ELF") == 0) {
 				strcpy(fn,targets[16]);
-			} else if (strcmp(fn,"RA_2048.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_2048.ELF") == 0) {
 				strcpy(fn,targets[17]);
-			} else if (strcmp(fn,"RA_FCEU.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_FCEU.ELF") == 0) {
 				strcpy(fn,targets[18]);
-			} else if (strcmp(fn,"RA_MGBA.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_MGBA.ELF") == 0) {
 				strcpy(fn,targets[19]);
-			} else if (strcmp(fn,"RA_PICO.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_PICO.ELF") == 0) {
 				strcpy(fn,targets[20]);
-			} else if (strcmp(fn,"RA_QNES.ELF") == 0) {
+			} else if (strcmp(ofn,"RA_QNES.ELF") == 0) {
 				strcpy(fn,targets[21]);
-			} else if (strcmp(fn,"SMS.ELF") == 0) {
+			} else if (strcmp(ofn,"SMS.ELF") == 0) {
 				strcpy(fn,targets[22]);
-			} else if (strcmp(fn,"SNES9X.ELF") == 0) {
+			} else if (strcmp(ofn,"SNES9X.ELF") == 0) {
 				strcpy(fn,targets[23]);
-			} else if (strcmp(fn,"SNESSTN.ELF") == 0) {
+			} else if (strcmp(ofn,"SNESSTN.ELF") == 0) {
 				strcpy(fn,targets[24]);
-			} else if (strcmp(fn,"TESTMODE.ELF") == 0) {
+			} else if (strcmp(ofn,"TESTMODE.ELF") == 0) {
 				strcpy(fn,targets[25]);
-			} else if (strcmp(fn,"WLE.ELF") == 0) {
+			} else if (strcmp(ofn,"WLE.ELF") == 0) {
 				strcpy(fn,targets[26]);
-			} else if (strcmp(fn,"ZONELDR.ELF") == 0) {
+			} else if (strcmp(ofn,"ZONELDR.ELF") == 0) {
 				strcpy(fn,targets[0]);
 			}
+		strcpy(ofn,fn);
 		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		sprintf(localcrc,"00000001");
 		menu_Text();
+		}	else if (new_pad & PAD_L1)	{
+			if (strcmp(fn,ofn) == 0) {
+				strcpy(fn,"BOOT.ELF");
+			} else {
+				strcpy(fn,ofn);
+			}
+			menu_Text();
 		}	else if (new_pad & PAD_START)	{
 		 	return 0;
 		}	else if (new_pad & PAD_SELECT) {
@@ -628,7 +643,7 @@ int main(int argc, char *argv[])
 				 	//strcpy(url,mirror0);
 				}
 			menu_Text();
-		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_L1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
+		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
 		 	if (strcmp(action,"CHECK") == 0) {
 		 		DoTask(1);
 		 		menu_Text();
