@@ -1,5 +1,5 @@
-<img src="https://i.gyazo.com/7be4cb8a0ea94af83ba2ada21fcedece.png">
-<img src="https://i.gyazo.com/c5e8608b3921b9d762aac419a6eee40e.png">
+<img src="https://i.gyazo.com/65895b309e9840b5632de2824e85883e.png">
+<img src="https://i.gyazo.com/576e4174866ba9a703ae0319ef20d886.png">
 <img src="https://i.gyazo.com/a3c463f8f91ee56d344a321d9453993e.png">
 <img src="https://i.gyazo.com/12ec4eceef16fc46ce1417a6d3bb028b.png">
 
@@ -29,10 +29,13 @@ Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 <pre>
 Changelog:
 
-v0.33 2020-11-12 3:44AM
+v0.33 2020-11-12 7:15PM
 Added BOOT.ELF as a filename option
 Added /BOOT/ as a folder option
 Press L1 to toggle filename
+Now verifies CRC32 automatically on Download
+Added XUMP, Hermes and Fruity Homebrews by RetroGuru (Ported by nop90)
+Now supports 30 HomeBrews
 
 v0.32 2020-10-27 10:51AM
 Fixed bug changing folders
