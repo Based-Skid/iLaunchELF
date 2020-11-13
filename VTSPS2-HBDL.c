@@ -80,11 +80,10 @@ void menu_Text(void)
 	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0) && (strcmp(device,"mass:/") != 0)) {
 		strcpy(device,"mc0:/");
 	}
-	if (strlen(fn) >= 13) {
-		strcpy(fn,"AURA.ELF");
-		strcpy(ofn,"AURA.ELF");
-		strcpy(ELF_NO_EXT,"AURA");
-		strcpy(path,"APPS/");
+	if ((strlen(fn) >= 13) || (strlen(fn) == 0) || (strlen(path) == 1))  {
+		strcpy(fn,ofn);
+		substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));		
+		sprintf(path,"APP_%s/",ELF_NO_EXT);
 	}
 	//*
 	char spc_pad[] = "";
@@ -480,7 +479,7 @@ void readcrc() {
 
 int main(int argc, char *argv[])
 {
-	extern char fn[16], ofn[16];
+	extern char fn[16], ofn[16], path[256], ELF_NO_EXT[], PATH_APP[], PATH_ELF[];
 	// Initialize
 	SifInitRpc(0);
 	ResetIOP();
@@ -497,14 +496,15 @@ int main(int argc, char *argv[])
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
 	strcpy(action,actions[0]);
 	strcpy(device,devices[0]);
-	strcpy(path,paths[0]);
-	strcpy(fn,targets[0]);
-	strcpy(ofn,fn);
+	strcpy(fn,"AURA.ELF");
+	strcpy(ofn,"AURA.ELF");
+	strcpy(ELF_NO_EXT,"AURA");
+	strcpy(path,"APPS/");	
 	sprintf(localcrc,"00000001");
 	sleep(1);
 	readcrc(); //populates CRC32DB[]
 	menu_Text();
-		while (1)
+	while (1)
 	{
 		//check to see if the pad is still connected
 		checkPadConnected();
@@ -532,9 +532,11 @@ int main(int argc, char *argv[])
 		//sleep(2);
 		menu_Text();
 		} else if(new_pad & PAD_LEFT)	{
-			//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+			//scr_printf("DEBUG: [a] %s [d] %s [p] %s [t] %s\n", action, device, path, fn);
 			//sleep(2);
 			substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+			sprintf(PATH_ELF,"%s/",ELF_NO_EXT);
+			sprintf(PATH_APP,"APP_%s/",ELF_NO_EXT);
 			if (strcmp(path,"APPS/") == 0) {
 				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				//sleep(1);
@@ -545,13 +547,15 @@ int main(int argc, char *argv[])
 				//sleep(1);
 				sprintf(path,"%s/",ELF_NO_EXT);
 				strcpy(PATH_ELF,path);
-			} else if (strcmp(path,PATH_ELF) == 0) {
+			} else if ((strcmp(path,PATH_ELF) == 0) && (strcmp(fn,"BOOT.ELF") != 0)) {
 				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 				strcpy(path,"BOOT/");
 			} else if (strcmp(path,"BOOT/") == 0) {
 				strcpy(path,"APPS/");				
+			} else {
+				strcpy(path,"APPS/");				
 			}
-		printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
+		//printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
 		//sleep(2);
 		menu_Text();
 		}	else if(new_pad & PAD_RIGHT) {
