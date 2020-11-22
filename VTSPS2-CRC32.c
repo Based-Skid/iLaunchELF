@@ -1,4 +1,6 @@
-#include "VTSPS2-HBDL.h"
+#include <stdio.h>
+
+#include "checksum.h"
 
 void substring(char s[], char sub[], int p, int l)
 {
@@ -10,23 +12,21 @@ void substring(char s[], char sub[], int p, int l)
    sub[c] = '\0';
 }
 
-char* file_crc32(char device[], char path[], char fn[])
+static char f_crc32[16];
+
+char *file_crc32(char device[], char path[], char fn[])
 {
-  char tmp[32] = "";
-  char f_crc32[16] = "";
+  char tmp[32];
   uint32_t t_crc32 = 0xffffffffL;
-  char full_path[256] = "";
+  char full_path[256];
   //int chunks_curr = 1;
   int bytes_read;
   //Build full_path string
-  strcpy(full_path,device);
-  strcat(full_path,path);
-  strcat(full_path,fn);
+	snprintf(full_path, sizeof(full_path), "%s%s%s", device, path, fn);
   FILE *fp = fopen(full_path, "rb");
-  sleep(1);
   if (!fp)
   {
-        scr_printf("ERROR: Unable to open %s for reading \n", full_path);
+        printf("ERROR: Unable to open %s for reading \n", full_path);
 	return("ERROR: Unable to open file for reading \n");
   }
   //read file, store length in len
@@ -34,16 +34,16 @@ char* file_crc32(char device[], char path[], char fn[])
   long len = ftell(fp);
   long fsize = len;
   fseek(fp,0,SEEK_SET);
-  scr_printf("Filesize: %lu bytes \n", fsize);
+  printf("Filesize: %lu bytes \n", fsize);
   //4MB File Buffer. If less than that read entire into buf
   if (len <= 4194304) {
 	char buf[len];
 	while((fread(buf, 1, len, fp)) > 0){
-		scr_printf("%lu bytes read \n", len);
+		printf("%lu bytes read \n", len);
 	}
 	//Close the file
 	fclose(fp);
-	sleep(1);
+
 	//Use sprintf to store crc_32() return value in tmp
 	//If file is larger than buffer, update_crc_32() will
 	//need to be looped to get large file CRC32
@@ -64,7 +64,7 @@ char* file_crc32(char device[], char path[], char fn[])
 	}
 	//Close the file.
 	fclose(fp);
-	sleep(1);
+
 	//crc lib requires this operation be preformed on final value
 	t_crc32 ^= 0xffffffffL;
 	//Copy the final CRC32 to tmp

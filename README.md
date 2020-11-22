@@ -1,9 +1,8 @@
-<img src="https://i.gyazo.com/65895b309e9840b5632de2824e85883e.png">
-<img src="https://i.gyazo.com/576e4174866ba9a703ae0319ef20d886.png">
-<img src="https://i.gyazo.com/a3c463f8f91ee56d344a321d9453993e.png">
+<img src="https://i.gyazo.com/aebd1da8cfced14df53fb02520668080.png">
+<img src="https://i.gyazo.com/a84c48fa84df9e41d6d8e5a46c2d54a1.png">
 <img src="https://i.gyazo.com/12ec4eceef16fc46ce1417a6d3bb028b.png">
 
-VTSPS2-HBDL v0.33
+VTSPS2-HBDL v0.31
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -28,21 +27,6 @@ Big Thanks to fjtrujy for their PS2 Port of RetroArch<br>
 
 <pre>
 Changelog:
-
-v0.33 2020-11-12 7:15PM
-Added BOOT.ELF as a filename option
-Added /BOOT/ as a folder option
-Press L1 to toggle filename
-Now verifies CRC32 automatically on Download
-Added XUMP, Hermes and Fruity Homebrews by RetroGuru (Ported by nop90)
-Now supports 30 HomeBrews
-
-v0.32 2020-10-27 10:51AM
-Fixed bug changing folders
-Removed delays changing folders
-Makefile changes, suppress a few warnings
-Code cleanup
-
 v0.31 2020-10-17 11:59PM
 file_crc32() updates
 Code cleanup

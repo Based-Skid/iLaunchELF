@@ -1,15 +1,43 @@
-#include "VTSPS2-HBDL.h"
+#include <kernel.h>
+#include <stdio.h>
+#include <tamtypes.h>
 
-////////////////
-//initalizePad//
-////////////////
+#include "libpad.h"
+#include "include/pad.h"
 
+/////////////////////////////////////////////////////////////////////
+//waitPadReady
+/////////////////////////////////////////////////////////////////////
+static int waitPadReady(int port, int slot)
+{
+	int state;
+	int lastState;
+	char stateString[16];
+
+	state = padGetState(port, slot);
+	lastState = -1;
+	while ((state != PAD_STATE_STABLE) && (state != PAD_STATE_FINDCTP1)) {
+		if (state != lastState) {
+			padStateInt2String(state, stateString);
+		}
+		lastState = state;
+		state = padGetState(port, slot);
+	}
+	// Were the pad ever 'out of sync'?
+	if (lastState != -1) {
+
+	}
+	return 0;
+}
+
+/////////////////////////////////////////////////////////////////////
+//initalizePad
+/////////////////////////////////////////////////////////////////////
 static int initializePad(int port, int slot)
 {
 
-	int ret;
-	int modes;
-	int i;
+	int actuators, modes, ret, i;
+	char actAlign[6];
 
 	waitPadReady(port, slot);
 	modes = padInfoMode(port, slot, PAD_MODETABLE, -1);
@@ -64,12 +92,15 @@ static int initializePad(int port, int slot)
 	return 1;
 }
 
-////////////////
-//buttonStatts//
-////////////////
-static void buttonStatts(int port, int slot)
+/////////////////////////////////////////////////////////////////////
+//buttonStatts
+/////////////////////////////////////////////////////////////////////
+void buttonStatts(int port, int slot)
 {
 	int ret;
+	u32 paddata;
+	struct padButtonStatus buttons;
+
 	ret = padRead(port, slot, &buttons);
 
 	if (ret != 0) {
@@ -80,9 +111,9 @@ static void buttonStatts(int port, int slot)
 	}
 }
 
-/////////////////////
-//checkPadConnected//
-/////////////////////
+/////////////////////////////////////////////////////////////////////
+//checkPadConnected
+/////////////////////////////////////////////////////////////////////
 void checkPadConnected(void)
 {
 	int ret, i;
@@ -99,39 +130,38 @@ void checkPadConnected(void)
 	}
 }
 
-///////////////////
-//pad_wait_button//
-///////////////////
-void pad_wait_button(u32 button)
+/////////////////////////////////////////////////////////////////////
+//pad_wat_button - unused?
+/////////////////////////////////////////////////////////////////////
+/*static void pad_wait_button(u32 button)
 {
 	while (1)
 	{
 		buttonStatts(0, 0);
 		if (new_pad & button) return;
 	}
-}
+}*/
 
-////////////////
-//waitPadReady//
-////////////////
-static int waitPadReady(int port, int slot)
+void pad_init(void)
 {
-	int state;
-	int lastState;
-	char stateString[16];
+	int ret;
 
-	state = padGetState(port, slot);
-	lastState = -1;
-	while ((state != PAD_STATE_STABLE) && (state != PAD_STATE_FINDCTP1)) {
-		if (state != lastState) {
-			padStateInt2String(state, stateString);
-		}
-		lastState = state;
-		state = padGetState(port, slot);
-	}
-	// Were the pad ever 'out of sync'?
-	if (lastState != -1) {
+	padInit(0);
 
+	port = 0; // 0 -> Connector 1, 1 -> Connector 2
+	slot = 0; // Always zero if not using multitap
+
+	printf("PortMax: %d\n", padGetPortMax());
+	printf("SlotMax: %d\n", padGetSlotMax(port));
+
+
+	if((ret = padPortOpen(port, slot, padBuf)) == 0) {
+		printf("padOpenPort failed: %d\n", ret);
+		SleepThread();
 	}
-	return 0;
+
+	if(!initializePad(port, slot)) {
+		printf("pad initalization failed!\n");
+		SleepThread();
+	}
 }

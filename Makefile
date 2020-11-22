@@ -1,26 +1,30 @@
-VERSION = 0.33
+VERSION = 0.32-GUI
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
-EE_BIN_PACKED = $(NAME)-packed.elf
+EE_BIN_PACKED = $(NAME)-GUI.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
+
 ####
 # C File Objects
-EE_OBJS = $(NAME).o ps2ipc.o
+EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
 EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
-EE_OBJS += poweroff.o crc32.o usbd.o usbhdfsd.o misc.o VTSPS2-CRC32.o
+EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 # SBV Shit
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
 ####
-EE_LIBS = -lpadx -lmtap -ldebug -lmc -lc -lpatches -ldebug -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
-# C compiler flags
-EE_CFLAGS := -D_EE -O2 -G0 -Wall -Wno-unused-variable -Wno-trigraphs -Wno-format $(EE_CFLAGS)
-# Assembler flags
-EE_ASFLAGS := -G0 $(EE_ASFLAGS)
+EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
+EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
+
+EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include -I$(GSKIT)/ee/toolkit/include
+# linker flags
+EE_LIB_DIRS += -L$(GSKIT)/lib
+EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
+EE_LDFLAGS += $(EE_LIB_DIRS)
 
 all:
 	@echo "======================================="
@@ -28,29 +32,9 @@ all:
 	@echo "======================================="
 	$(MAKE) $(EE_BIN_PACKED)
 
-$(EE_BIN_STRIPPED): $(EE_BIN)
-	@echo "================="
-	@echo "=== Stripping ==="
-	@echo "================="
-	$(EE_STRIP) -o $@ $<
-	
-$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
-# Uncomment to compress ELF. Adjust path to match your environment
-	@echo "==================="
-	@echo "=== Compressing ==="
-	@echo "==================="
-	ps2-packer -v $< $@
-	rm -f *.o *.s
-
 clean:
 	rm -f *.elf *.o *.s
 
-%.o: %.c
-	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
-
-%.o: %.s
-	$(EE_AS) $(EE_ASFLAGS) $< -o $@
-	
 #poweroff Module
 
 poweroff.s:
@@ -97,21 +81,39 @@ ps2http.s:
 #thx KrahJohlito
 usbd.s:
 	bin2s $(PS2SDK)/iop/irx/usbd.irx usbd.s usbd
-	
+
 usbhdfsd.s:
 	bin2s $(PS2SDK)/iop/irx/usbhdfsd.irx usbhdfsd.s usbhdfsd
 
+background_png.s: gfx/background.png
+	bin2s $< $@ background_png
+
+background2_png.s: gfx/background2.png
+	bin2s $< $@ background2_png
+
+logo_png.s: gfx/logo.png
+	bin2s $< $@ logo_png
+
 crc32.o: crc32.c checksum.h
 	ee-gcc -c $< -o $@
-	
+
 misc.o: misc.c
 	ee-gcc $(EE_INCS) -c $< -o $@
 
-pad.o: pad.c
-	ee-gcc $(EE_INCS) -c $< -o $@	
-	
-#VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
-#	ee-gcc $(EE_INCS) -c $< -o $@
-	
+VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
+	ee-gcc $(EE_INCS) -c $< -o $@
+
+run: $(EE_BIN)
+	ps2client execee host:$(EE_BIN)
+
+reset:
+	ps2client reset
+
+$(EE_BIN_STRIPPED): $(EE_BIN)
+	$(EE_STRIP) -o $@ $<
+
+$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
+	~/ps2-packer/ps2-packer -v $< $@
+
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
