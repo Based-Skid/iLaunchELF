@@ -67,8 +67,14 @@ static menu_list_t *menuAddItem(menu_list_t **menu, char *text, int id)
 
 static void menuDestroy(menu_list_t **menu)
 {
-	// destroy sub menu
+	int i;
 	menu_list_t *cur = *menu;
+
+	for (i = 0; i < NUM_APPS; i++) {
+		free(downloadableApps[i].size);
+		free(downloadableApps[i].version);
+		free(downloadableApps[i].rcrc);
+	}
 
 	while (cur) {
 		menu_list_t *td = cur;
@@ -83,9 +89,6 @@ static void menuDestroy(menu_list_t **menu)
 void menuInitMenu(void)
 {
 	int i;
-
-	if (menu)
-		menuDestroy(&menu);
 
 	for (i = 0; i < NUM_APPS; i++)
 		menuAddItem(&menu, downloadableApps[i].longName, i);
@@ -227,11 +230,11 @@ void menuHandleInput(void)
 		strcpy(fn, downloadableApps[id].elfName);
 
 		if (strcmp(action,"CHECK") == 0) {
-			DoTask(1);
+			DoTask(1, id);
 		} else if (strcmp(action,"DOWNLOAD") == 0) {
-			DoTask(2);
+			DoTask(2, id);
 		} else if (strcmp(action,"LAUNCH") == 0) {
-			DoTask(3);
+			DoTask(3, id);
 		}
 	}
 }

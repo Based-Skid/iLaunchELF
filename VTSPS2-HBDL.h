@@ -16,6 +16,6 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 void init(void);
 void deinit(int browser);
 
-void DoTask(int task);
+void DoTask(int task, int id);
 
 int http_mirror;

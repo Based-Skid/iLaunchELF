@@ -5,6 +5,7 @@
 
 #include "VTSPS2-HBDL.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <loadfile.h>
 #include <elf-loader.h>
@@ -20,7 +21,6 @@
 #define DBSIZE 61 //lines in VTSPS2-HBDL.TXT
 
 //0.32-GUI
-static char remotecrc[9];
 static char localcrc[9];
 static char CRC32DB[DBSIZE][128];
 char mirror[2][128];
@@ -166,54 +166,7 @@ static void DownloadList(char *device, char *path, char *fn)
 	}
 }
 
-void compareCRC(void)
-{
-	char remotefn[15];
-	char hbsize[7];
-	int x = (DBSIZE / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
-	int z = 0;
-
-	while(z <= x) {
-		int fnsize = (strlen(fn));
-		char hbfn[] = "";
-		char hbver[] = "";
-		substring(CRC32DB[z],hbfn,14,fnsize);
-
-		hbsize[0] = 0;
-		if (strstr(hbfn,fn)) {
-			substring(CRC32DB[z],hbsize,(14+fnsize),6);
-			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
-		}
-		z++;
-	}
-	while(x<=DBSIZE) {//total lines in VTSPS2-HBDL.TXT
-		int fnsize = (strlen(CRC32DB[x]) - 12);
-		remotefn[0] = 0;
-		substring(CRC32DB[x],remotefn,1,fnsize);
-		if (strstr(remotefn,fn) && strlen(remotefn) == (strlen(fn)+1)) {
-			//strcpy(remotefn,fn);
-			substring(CRC32DB[x],remotecrc,(strlen(fn)+3),9);
-			/*scr_printf("Local CRC32: ");
-			if (strcmp(localcrc,"00000001") == 0) {
-				scr_printf("unchecked");
-			} else if (strcmp(localcrc,"00000000") == 0) {
-				scr_printf("00000000");
-			} else if (strlen(localcrc) == 7) {
-				scr_printf("0%s",localcrc);
-			} else if (strlen(localcrc) == 6) {
-				scr_printf("00%s",localcrc);
-			} else if (strlen(localcrc) == 5) {
-				scr_printf("000%s",localcrc);
-			} else {
-			scr_printf("%s",localcrc);
-			}
-			scr_printf(" Remote CRC32:%s \n", remotecrc);*/
-		}
-		x++;
-	}
-}
-
-void DoTask(int task)
+void DoTask(int task, int id)
 {
 	int ret = 0, launching, downloading, checking;
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
@@ -319,10 +272,7 @@ void DoTask(int task)
 					}
 				}
 
-				if (!opsDone)
-					compareCRC();
-
-				if (strstr(localcrc, remotecrc) != 0)
+				if (strstr(localcrc, downloadableApps[id].rcrc) != 0)
 					drawFont(35, 185, 0.32f, RedFont, "Local and Remote CRC32 do not match!\n");
 				else {
 					sprintf(str, "CRC32 Verified! %s\n", localcrc);
@@ -404,8 +354,6 @@ static char hbdl_path[256];
 static char *set_hbdl_path(void)
 {
 	getcwd(hbdl_path, 256); //uncomment for release
-	//sprintf(hbdl_path,"mc0:APPS/"); //hardcoded.
-
 	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
 
 	return hbdl_path;
@@ -413,32 +361,56 @@ static char *set_hbdl_path(void)
 
 static void readcrc()
 {
-	char line[DBSIZE][128]; //maxlines
-	char hbdl_path[256];
 	//hardcoded path during dev. cwd is 'host' in PCSX2
 	//char fname[25] = "mc0:APPS/VTSPS2-HBDL.TXT";
 
-	char fname[16] = "VTSPS2-HBDL.TXT";	//uncomment for release builds
-	getcwd(hbdl_path, 256);				//uncomment for release builds
-	strcat(hbdl_path, fname);			//uncomment for release builds
+	char hbdl_path[256];
+	getcwd(hbdl_path, 256);							//uncomment for release builds
+	strcat(hbdl_path, "VTSPS2-HBDL.TXT");			//uncomment for release builds
 
-	set_hbdl_path();
-	FILE *fptr = fopen(hbdl_path, "r"); //fname dev, hbdl_path rls
 	int i = 0;
 	char *tmp = NULL;
 	size_t len = 0;
 	ssize_t read;
 
-	if (fptr >= 0) {
-		while((read = getline(&tmp, &len, fptr)) != -1)
-			strcpy(line[i++], tmp);
+	FILE *fp = fopen(hbdl_path, "r"); //fname dev, hbdl_path rls
+	if (fp >= 0) {
+		while((read = getline(&tmp, &len, fp)) != -1)
+			strcpy(CRC32DB[i++], tmp);
 
-		for(i = 0; i < DBSIZE; ++i)
-			sprintf(CRC32DB[i]," %s\n", line[i]);
-
-		fclose(fptr);
+		fclose(fp);
 	} else
 		printf("readcrc() error");
+
+	char hbsize[7];
+	char hbver[64];
+	char hbrcrc[16];
+	int j = NUM_APPS;
+
+	i = 1; // first line in DB is HDBL version, skip it
+	while(i <= j) {
+		int fnsize = (strlen(downloadableApps[i - 1].elfName));
+		int len = strlen(CRC32DB[i]);
+
+		substring(CRC32DB[i], hbsize, (fnsize + 14), 6);
+		downloadableApps[i - 1].size = (char *)malloc((6 + 1) * sizeof(char));
+		snprintf(downloadableApps[i - 1].size, 6 + 1, hbsize);
+
+		substring(CRC32DB[i], hbver, (fnsize + 21), len);
+		downloadableApps[i - 1].version = (char *)malloc((63 + 1) * sizeof(char));
+		snprintf(downloadableApps[i - 1].version, 63 + 1, hbver);
+
+		i++;
+	}
+
+	j = 0;
+	while(i < DBSIZE) {
+		substring(CRC32DB[i++], hbrcrc,(strlen(downloadableApps[j].elfName) + 2), 9);
+		downloadableApps[j].rcrc = (char *)malloc((15 + 1) * sizeof(char));
+		snprintf(downloadableApps[j].rcrc, 15 + 1, hbrcrc);
+
+		j++;
+	}
 }
 
 static void setDefaults(void)
@@ -450,6 +422,7 @@ static void setDefaults(void)
 
 	snprintf(mirror[0], sizeof(mirror[0]), "http://hbdl.vts-tech.org/");
 	snprintf(mirror[1], sizeof(mirror[1]), "http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+	sprintf(localcrc, "00000001");
 
 	http_mirror = 0;
 }
@@ -462,14 +435,10 @@ int main(int argc, char *argv[])
 	guiInit();
 
 	guiDrawLogo();
-
 	drawFont(70, 171, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
 	guiRender();
 
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
-
-	menuInitMenu();
-
 	guiClear();
 
 	guiDrawLogo();
@@ -479,8 +448,8 @@ int main(int argc, char *argv[])
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN", set_hbdl_path());
 
 	setDefaults();
-	sprintf(localcrc, "00000001");
 
+	menuInitMenu();
 	readcrc(); //populates CRC32DB[]
 	guiClear();
 

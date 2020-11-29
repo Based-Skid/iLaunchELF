@@ -11,6 +11,7 @@ typedef struct
 	char *longName;
 	char *version;
 	char *size;
+	char *rcrc;
 } targets_t;
 
 targets_t downloadableApps[NUM_APPS];
