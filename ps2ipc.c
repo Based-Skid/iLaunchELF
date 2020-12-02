@@ -9,9 +9,10 @@
 #
 */
 
-#include "VTSPS2-HBDL.h"
-
-
+#include <kernel.h>
+#include <netman.h>
+#include <ps2ips.h>
+#include <stdio.h>
 
 static int ethApplyNetIFConfig(int mode)
 {
@@ -120,7 +121,7 @@ static int ethApplyIPConfig(int use_dhcp, const struct ip4_addr *ip, const struc
 			//dns_setserver(0, dns);
 			result = ps2ip_setconfig(&ip_info);
 			if (!use_dhcp)
-			dns_setserver(0, dns);
+				dns_setserver(0, (struct ip4_addr *)dns);
 		}
 		else
 			result = 0;
@@ -129,7 +130,12 @@ static int ethApplyIPConfig(int use_dhcp, const struct ip4_addr *ip, const struc
 	return result;
 }
 
-char vtsip[15];
+static char ipAddress[16];
+
+char *getIpAddress(void)
+{
+	return ipAddress;
+}
 
 static void ethPrintIPConfig(void)
 {
@@ -170,7 +176,7 @@ static void ethPrintIPConfig(void)
 					netmask[0], netmask[1], netmask[2], netmask[3],
 					gateway[0], gateway[1], gateway[2], gateway[3],
 					dns[0], dns[1], dns[2], dns[3]);
-		sprintf(vtsip,"%d.%d.%d.%d",ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
+		sprintf(ipAddress,"%d.%d.%d.%d",ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
 	}
 	else
 	{
@@ -217,17 +223,13 @@ static void ethPrintLinkStatus(void)
 	printf("Flow Control\n");
 }
 
-
-	
-
 int dhcpmain(int argc, char *argv[])
 {
 	struct ip4_addr IP, NM, GW, DNS;
-	int EthernetLinkMode,ret;
+	int EthernetLinkMode;
 
 	//Initialize NETMAN
 	NetManInit();
-
 
 	//The network interface link mode/duplex can be set.
 	EthernetLinkMode = NETMAN_NETIF_ETH_LINK_MODE_AUTO;
@@ -277,8 +279,7 @@ int dhcpmain(int argc, char *argv[])
 	printf("Initialized:\n");
 	ethPrintLinkStatus();
 	ethPrintIPConfig();
-	sleep(5);
-	scr_clear();
+	//sleep(5);
 	//At this point, network support has been initialized and the PS2 can be pinged.
 	//SleepThread();
 

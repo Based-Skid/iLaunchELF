@@ -1,211 +1,60 @@
 /*
-                 VTSPS2-HBDL by VTSTech
+				VTSPS2-HBDL by VTSTech
 	Based on iLaunchELF by krHACKen & Based_Skid
-
-   ELF loading Portions of this Code are From Function LoadElf()
-   from main.c MPLUS-LOADER3.ELF
-
- */
-// All Includes and Declarations are in Main.h, additional C Files should include main.h
+*/
 
 #include "VTSPS2-HBDL.h"
-#include "strings.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <loadfile.h>
+#include <elf-loader.h>
 
-int http_mirror = 0;
-int dbsize = 61; //lines in VTSPS2-HBDL.TXT
-char CRC32DB[61][128] = {""};
-char remotecrc[9];
-char localcrc[9];
+#include <fcntl.h>
+#include <unistd.h>
 
-typedef struct {
-	u8	ident[16];
-	u16	type;
-	u16	machine;
-	u32	version;
-	u32	entry;
-	u32	phoff;
-	u32	shoff;
-	u32	flags;
-	u16	ehsize;
-	u16	phentsize;
-	u16	phnum;
-	u16	shentsize;
-	u16	shnum;
-	u16	shstrndx;
-} elf_header_t;
+#include "include/gui.h"
+#include "include/menu.h"
+#include "include/textures.h"
+#include "include/pad.h"
 
-typedef struct {
-	u32	type;
-	u32	offset;
-	void	*vaddr;
-	u32	paddr;
-	u32	filesz;
-	u32	memsz;
-	u32	flags;
-	u32	align;
-} elf_pheader_t;
+#define DBSIZE 61 //lines in VTSPS2-HBDL.TXT
 
-void menu_header(void)
+//0.32-GUI
+static char localcrc[9];
+static char CRC32DB[DBSIZE][128];
+char mirror[2][128];
+
+char action[32], device[32], path[256], fn[16]; //there are better ways to do this
+
+static int Download(char *urll, char *full_path)
 {
-	scr_printf(" \n");
-	scr_printf(appName);
-	scr_printf(appVer);
-	scr_printf(appAuthor);
-	//scr_printf(appNotice);
-}
-
-void menu_Text(void)
-{
-	scr_clear();
-	menu_header();
-	extern char vtsip[15];
-	extern char mirror0[];
-	extern char mirror1[];
-	char remotefn[15];
-	char hbsize[7];
-	int x = (dbsize / 2); //starting line # of CRC's from VTSPS2-HBDL.TXT
-	int z = 0;
-	if (http_mirror == 0) {
-		sprintf(mirror0,"http://hbdl.vts-tech.org/");
-		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror0);
-	} else if (http_mirror == 1) {
-		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		scr_printf("IP Address: %s Mirror: %s\n",vtsip,mirror1);
-	}
-	scr_printf(" \n");
-	//*Sanity Checks
-	if ((strcmp(action,"CHECK") != 0) && (strcmp(action,"DOWNLOAD") != 0) && (strcmp(action,"LAUNCH") != 0)) {
-		strcpy(action,"CHECK");
-	}
-	if ((strcmp(device,"mc0:/") != 0) && (strcmp(device,"mc1:/") != 0) && (strcmp(device,"mass:/") != 0)) {
-		strcpy(device,"mc0:/");
-	}
-	if ((strlen(fn) >= 13) || (strlen(fn) == 0) || (strlen(path) == 1))  {
-		strcpy(fn,ofn);
-		substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));		
-		sprintf(path,"APP_%s/",ELF_NO_EXT);
-	}
-	//*
-	char spc_pad[] = "";
-	int spc_cnt = 0;
-	
-	if (strlen(ofn) > strlen(action)) {
-		spc_cnt = (strlen(ofn) - strlen(action));
-	} else {
-		spc_cnt = (strlen(action) - strlen(ofn));
-	}
-
-	for (spc_cnt = spc_cnt;spc_cnt!=0;spc_cnt=spc_cnt-1 ) {
-		strcat(spc_pad," ");
-	}
-
-	if (strlen(ofn) > strlen(action)) {
-		scr_printf("[M]: %s%s [D]: %s [P]: %s \n[T]: %s ",action,spc_pad,device,path,fn);
-	} else {
-		scr_printf("[M]: %s [D]: %s [P]: %s \n[T]: %s%s ",action,device,path,fn,spc_pad);
-	}
-
-	while(z<=x) {
-		int fnsize = (strlen(ofn));
-		char hbfn[] = "";
-		char hbver[] = "";
-		substring(CRC32DB[z],hbfn,14,fnsize);
-		sprintf(hbsize,"");
-		//scr_printf("DEBUG: %s %d \n",hbfn, fnsize);
-		if (strstr(hbfn,ofn)) {
-			substring(CRC32DB[z],hbsize,(14+fnsize),6);
-			substring(CRC32DB[z],hbver,(21+fnsize),strlen(CRC32DB[z]));
-			scr_printf("[S]:%s [V]:%s \n", hbsize, hbver);
-			//scr_printf("DEBUG: %d %d",strlen(hbsize),hbsize);
-		}
-		//scr_printf("D2: %s",CRC32DB[z][-8]);
-		z++;
-	}
-	while(x<=dbsize) {//total lines in VTSPS2-HBDL.TXT
-		int fnsize = (strlen(CRC32DB[x]) - 12);
-		sprintf(remotefn,"");
-		substring(CRC32DB[x],remotefn,1,fnsize);
-		if (strstr(remotefn,ofn) && strlen(remotefn) == (strlen(ofn)+1)) {
-			//strcpy(remotefn,fn);
-			substring(CRC32DB[x],remotecrc,(strlen(ofn)+3),9);
-			scr_printf("Local CRC32: ");
-			if (strcmp(localcrc,"00000001") == 0) {
-				scr_printf("unchecked");
-			} else if (strcmp(localcrc,"00000000") == 0) {
-				scr_printf("00000000");
-			} else if (strlen(localcrc) == 7) {
-				scr_printf("0%s",localcrc);
-			} else if (strlen(localcrc) == 6) {
-				scr_printf("00%s",localcrc);
-			} else if (strlen(localcrc) == 5) {
-				scr_printf("000%s",localcrc);
-			} else {
-			scr_printf("%s",localcrc);
-			}
-			scr_printf(" Remote CRC32:%s \n", remotecrc);
-		}
-		x=x+1;
-	}
-	scr_printf(" \n");
-	scr_printf("-Press UP to Set [D]evice. \n");
-	scr_printf("-Press DOWN to Set [M]ode. \n");
-	scr_printf("-Press LEFT to Set [P]ath. \n");
-	scr_printf("-Press RIGHT to Set [T]arget. \n");
-	scr_printf("-Press L1 to toggle BOOT.ELF as target. \n");
-	scr_printf("-Press SELECT to Set Mirror. \n");
-	scr_printf("-Press START to Exit. \n");
-	scr_printf("-Press any other key to perform selected action \n");
-	scr_printf(" \n");
-}
-
-int Download(char *urll, char *full_path)
-{
+	int fd, target;
 	int size = 0;
-	int urld = 0;
-	int target = 0;
-	//int ret = 0;
 	char buf[5600000];
-	//FILE *urld;
-	//FILE *target;
-	close(urld);
-	close(target);
-	if ((urld = open(urll,O_RDONLY)) !=-1) {
-		//scr_printf("* URL Opened... %d\n", urld);
-	} else {
-		scr_printf("! URL Open Failed... %d\n",urld);
+
+	fd = open(urll, O_RDONLY);
+	if (fd >= 0) {
+		target = open(full_path, O_RDWR | O_CREAT);
+		if(target >= 0) {
+			size = lseek(fd, 0, SEEK_END);
+			lseek(fd, 0, SEEK_SET);
+
+			read(fd, buf, size);
+			write(target, buf, size);
+
+			sprintf(localcrc, file_crc32(device, path, fn));
+			close(fd);
+			close(target);
+		} else
+			printf("Download Error! Debug: %d %d %d", fd, target, size);
 	}
-	//scr_printf("DEBUG: %s\n", full_path);
-	target = open(full_path, O_RDWR | O_CREAT);
-	//scr_printf("* Local File Opened... %d\n", target);
-	//fclose(target);
-	if(urld != -1) {
-		size = getFileSize(urld);
-		read(urld, buf, size);
-		sleep(1);
-		//scr_printf("* Downloaded Size... %d\n", size);
-		write(target,buf,size);
-		//scr_printf("* Local File Written... (%d bytes)\n", size);
-		sleep(1);
-		close(urld);
-		//scr_printf("* URL Closed... %d\n", urld);
-		close(target);
-		//scr_printf("* Local File Closed... %d\n", target);
-		sprintf(localcrc,file_crc32(device,path,fn));
-		if (strstr(localcrc,remotecrc) != 0) {
-			//Warns even when they do match, need to try another way.
-			scr_printf("\nWarning Local and Remote CRC32 do not match!\n");
-			sleep(4);
-		} else { 
-			scr_printf("\nCRC32 Verified! %s\n", localcrc);
-			sleep(2);
-		}
-	} else {
-		scr_printf("Download Error! Debug: %d %d %d", urld, target, size);
-	}
+
 	return size;
 }
 
-void DownloadList(char device[], char path[], char fn[]){
+static void DownloadList(char *device, char *path, char *fn)
+{
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
@@ -213,447 +62,401 @@ void DownloadList(char device[], char path[], char fn[]){
 	int z = 0;
 	int ret = 0;
 	int fd = 0;
-	int file_size= 0;
+	int size = 0;
 	char full_path[256];
+	char str[256];
+	int terminate = 0;
+	int opsDone = 0;
 	//patches.ppi
 
-	if (http_mirror == 0) {
-		sprintf(mirror0,"http://hbdl.vts-tech.org/");
-		scr_printf("* Mirror 1 Selected... \n");
-	} else if (http_mirror == 1) {
-		sprintf(mirror1,"http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
-		scr_printf("* Mirror 2 Selected... \n");
-	}
-	scr_printf("* Building Download List... \n");
-	if (strstr("DOSBOX.ELF",fn)) {
-		argc = 4;
-		scr_printf("* DOSBox ... \n");
-		if (http_mirror == 0) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror0);
-			}
-		} else if (http_mirror == 1) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror1);
-			}
-		}
-		strcat(exec_args[0],fn);
-		strcpy(exec_args[1],fn);
-		strcat(exec_args[2],"dosbox.bin");
-		strcpy(exec_args[3],"dosbox.conf");
-	} else if (strstr("PS2DOOM.ELF",fn)) {
-		argc = 6;
-		scr_printf("* PS2Doom ... \n");
-		if (http_mirror == 0) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror0);
-			}
-		} else if (http_mirror == 1) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror1);
-			}
-		}
-		strcat(exec_args[0],fn);
-		strcpy(exec_args[1],fn);
-		strcat(exec_args[2],"ps2doom.bin");
-		strcpy(exec_args[3],"ps2doom.config");
-		strcat(exec_args[4],"doom1.wad");
-		strcpy(exec_args[5],"doom1.wad");
-	} else if (strstr("PS2ESDL.ELF",fn)) {
-		argc = 4;
-		scr_printf("* PS2ESDL ... \n");
-		if (http_mirror == 0) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror0);
-			}
-		} else if (http_mirror == 1) {
-			for (y=0;y<=argc;y=y+1) {
-				strcpy(exec_args[y],mirror1);
-			}
-		}
-		strcat(exec_args[0],fn);
-		strcpy(exec_args[1],fn);
-		strcat(exec_args[2],"patches.ppi");
-		strcpy(exec_args[3],"patches.ppi");
-	}
+	while (!terminate) {
+		guiDrawTerminal();
 
-	for (z=0;z<argc;z=z+2) {
-		close(fd);
-		sprintf(full_path,"");
-		strcpy(full_path,device);
-		strcat(full_path,path);
-		strcat(full_path,exec_args[z+1]);
-		//strcpy(url,exec_args[0]);
-		scr_printf("* Downloading...\n");
-		scr_printf("* URL: %s\n", exec_args[z]);
-		scr_printf("* Path: %s\n", full_path);
-		ret = Download(exec_args[z],full_path);
-		sleep(4);
-		if(ret <= 0) {
-			scr_printf("* Error! Could not open the file\n");
-		} else {
-			//scr_printf("* File Size: %d bytes\n", ret);
-			sleep(2);
-			fd = open(full_path, O_RDONLY);
-			file_size = getFileSize(fd);
-			if (file_size >= 1) {
-				scr_printf("* %s Exists!\n", full_path);
-			} else {
-				scr_printf("* %s Does Not Exist!\n", full_path);
+		if (http_mirror == 0)
+			strcpy(str,"* Mirror 1 Selected... \n");
+		else if (http_mirror == 1)
+			strcpy(str,"* Mirror 2 Selected... \n");
+
+		drawFont(35, 117, 0.32f, WhiteFont, str);
+		drawFont(35, 134, 0.32f, WhiteFont, "* Building Download List... \n");
+
+		if (strstr("DOSBOX.ELF",fn)) {
+			drawFont(35, 151, 0.32f, WhiteFont, "* DOSBox ... \n");
+
+			if (!opsDone) {
+				argc = 4;
+				for (y = 0; y <= argc; y++)
+					strcpy(exec_args[y], mirror[http_mirror]);
+
+				strcat(exec_args[0],fn);
+				strcpy(exec_args[1],fn);
+				strcat(exec_args[2],"dosbox.bin");
+				strcpy(exec_args[3],"dosbox.conf");
 			}
-			close(fd);
+		} else if (strstr("PS2DOOM.ELF",fn)) {
+			drawFont(35, 151, 0.32f, WhiteFont, "* PS2Doom ... \n");
+
+			if (!opsDone) {
+				argc = 6;
+				for (y = 0; y <= argc; y++)
+					strcpy(exec_args[y], mirror[http_mirror]);
+
+				strcat(exec_args[0],fn);
+				strcpy(exec_args[1],fn);
+				strcat(exec_args[2],"ps2doom.bin");
+				strcpy(exec_args[3],"ps2doom.config");
+				strcat(exec_args[4],"doom1.wad");
+				strcpy(exec_args[5],"doom1.wad");
+			}
+		} else if (strstr("PS2ESDL.ELF",fn)) {
+			drawFont(35, 151, 0.32f, WhiteFont, "* PS2ESDL ... \n");
+
+			if (!opsDone) {
+				argc = 4;
+				for (y = 0; y <= argc; y++)
+					strcpy(exec_args[y], mirror[http_mirror]);
+
+				strcat(exec_args[0],fn);
+				strcpy(exec_args[1],fn);
+				strcat(exec_args[2],"patches.ppi");
+				strcpy(exec_args[3],"patches.ppi");
+			}
 		}
+
+		int y = 151;
+		int spacing = 17;
+		for (z = 0; z < argc; z = z+2) {
+			memset(full_path, 0, sizeof(full_path));
+			snprintf(full_path, sizeof(full_path), "%s%s%s", device, path, exec_args[z+1]);
+			drawFont(35, y += spacing, 0.32f, WhiteFont, "* Downloading...\n");
+			sprintf(str,"* URL: %s\n", exec_args[z]);
+			drawFont(35, y += spacing, 0.32f, WhiteFont, str);
+			sprintf(str,"* Path: %s\n", full_path);
+			drawFont(35, y += spacing, 0.32f, WhiteFont, str);
+
+			if (!opsDone) {
+				ret = Download(exec_args[z], full_path);
+				if(ret <= 0) {
+					printf("* Error! Could not open the file\n");
+				} else {
+					fd = open(full_path, O_RDONLY);
+					size = lseek(fd, 0, SEEK_END);
+					lseek(fd, 0, SEEK_SET);
+					close(fd);
+				}
+			}
+
+			if (size >= 1) {
+				sprintf(str,"* %s Download Complete!\n", full_path);
+				drawFont(35, y += spacing, 0.32f, GreenFont, str);
+			} else {
+				sprintf(str,"* %s Download Failed!\n", full_path);
+				drawFont(35, y += spacing, 0.32f, RedFont, str);
+			}
+		}
+
+		drawFont(35, 380, 0.32f, WhiteFont, "Press X or O to continue.\n");
+
+		guiRender();
+		opsDone = 1;
+
+		buttonStatts(0, 0);
+		if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE))
+			terminate = 1;
 	}
 }
 
-void DoTask(int task)
+void DoTask(int task, int id)
 {
-	int ret,launching,downloading,checking;
+	int ret = 0, launching, downloading, checking;
 	char arg0[256], arg1[256], arg2[256], arg3[256], arg4[256], arg5[256], arg6[256], arg7[256], arg8[256];
 	char *exec_args[9] = { arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
 	int argc = 0;
 	int fd = 0;
-	int file_size = 0;
-	//extern char device[128], path[128], fn[128];
+	int size = 0;
 	char full_path[256];
-	char half_path[256];
-	extern char url[];
+	char str[256];
 	/*
 	exec_args[0] == the target ELF's URI. loader.elf will load that ELF.
 	exec_args[1] to exec_args[8] == arguments to be passed to the target ELF.
 	*/
-	launching=0;
-	downloading=0;
-	checking=0;
+
+	launching = 0;
+	downloading = 0;
+	checking = 0;
+
+	//read pad 0
+	buttonStatts(0, 0);
+
 	if (task != 0)
 	{
+		if (task != 3) {
+			guiClear();
+			guiDrawTerminal();
+		}
+
 		if (task == 1)
 		{
-			checking=1;
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcat(full_path,fn);
+			checking = 1;
+			snprintf(full_path, sizeof(full_path), "%s%s%s", device, path, fn);
+			drawFont(35, 100, 0.35f, WhiteFont, "Checking...\n");
+			guiRender();
 		}
 		else if (task == 2)
 		{
-			downloading=1;
-			if (http_mirror == 0) {
-				strcpy(url,mirror0);
-			} else if (http_mirror == 1) {
-				strcpy(url,mirror1);
-			}
-			strcat(url,ofn);
-			strcpy(exec_args[0], url);
-			strcpy(full_path,device);
-			sleep(1);
-			strcat(full_path,path);
+			downloading = 1;
+			drawFont(35, 100, 0.35f, WhiteFont, "Downloading...\n");
+			guiRender();
+
+			sprintf(exec_args[0], "%s%s", mirror[http_mirror], fn);
+			snprintf(full_path, sizeof(full_path), "%s%s", device, path);
+
 			//remove trailing / for MkDir
-			sleep(1);
-			substring(full_path,make_path,1,strlen(full_path)-1);
-			mkdir(make_path,0777);
-			sleep(1);
-			strcat(full_path,fn);
+			char make_path[256];
+			substring(full_path, make_path, 1, strlen(full_path) - 1);
+			mkdir(make_path, 0777);
+
+			strcat(full_path, fn);
 			argc = 1;
-			sleep(2);
 		}
 		if (task == 3)
 		{
-			launching=1;
-			strcpy(full_path,device);
-			strcat(full_path,path);
-			strcpy(half_path,full_path);
-			strcat(full_path,fn);
-			strcpy(exec_args[0],full_path);
+			launching = 1;
+			snprintf(full_path, sizeof(full_path), "%s%s%s", device, path, fn);
+			strcpy(exec_args[0], full_path);
 			argc = 1;
 		}
 	} else asm volatile("break\n"); // OUT OF BOUNDS, UNDEFINED ITEM!
-	scr_clear();
-	menu_header();
-	if (downloading==1){
-	  if (strstr("PS2ESDL.ELF",fn)) {
-	  	DownloadList(device,path,"PS2ESDL.ELF");
-	  } else if (strstr("PS2DOOM.ELF",fn)) {
-	  	DownloadList(device,path,"PS2DOOM.ELF");
-	  } else if (strstr("DOSBOX.ELF",fn)) {
-	  	DownloadList(device,path,"DOSBOX.ELF");
-	  } else {
-			  close(fd);
-				scr_printf("* Downloading... \n");
-				scr_printf("* URL: %s \n", exec_args[0]);
-				scr_printf("* Path: %s \n", full_path);
-				ret = Download(exec_args[0],full_path);
-				sleep(4);
-				if(ret <= 0) {
-					scr_printf("* Error! Could not open the file \n");
+
+	int terminate = 0;
+	int opsDone = 0;
+
+	if (downloading == 1) {
+		if (strstr("PS2ESDL.ELF",fn))
+			DownloadList(device,path,"PS2ESDL.ELF");
+		else if (strstr("PS2DOOM.ELF",fn))
+			DownloadList(device,path,"PS2DOOM.ELF");
+		else if (strstr("DOSBOX.ELF",fn))
+			DownloadList(device,path,"DOSBOX.ELF");
+		else {
+			while (!terminate) { //a bit crude but it works..good enough for now
+				guiDrawTerminal();
+
+				sprintf(str,"* URL: %s \n", exec_args[0]);
+				drawFont(35, 117, 0.32f, WhiteFont, str);
+
+				sprintf(str,"* Path: %s \n", full_path);
+				drawFont(35, 134, 0.32f, WhiteFont, str);
+
+				if (!opsDone)
+					ret = Download(exec_args[0],full_path);
+				if (ret <= 0) {
+					drawFont(35, 151, 0.32f, RedFont, "! Download Error!\n");
 				} else {
-					scr_printf("* File Size: %d bytes \n", ret);
-					sleep(2);
-					fd = open(full_path, O_RDONLY);
-					file_size = getFileSize(fd);
-					if (file_size >= 1) {
-						scr_printf("* %s Exists! \n", full_path);
-					} else {
-						scr_printf("* %s Does Not Exist! \n", full_path);
+					sprintf(str,"* File Size: %d bytes \n", ret);
+					drawFont(35, 151, 0.32f, WhiteFont, str);
+
+					if (!opsDone) {
+						fd = open(full_path, O_RDONLY);
+						size = lseek(fd, 0, SEEK_END);
+						lseek(fd, 0, SEEK_SET);
+						close(fd);
 					}
-					close(fd);
+
+					if (size >= 1) {
+						sprintf(str,"* %s Exists! \n", full_path);
+						drawFont(35, 168, 0.32f, WhiteFont, str);
+					} else {
+						sprintf(str,"* %s Does Not Exist! \n", full_path);
+						drawFont(35, 168, 0.32f, RedFont, str);
+					}
 				}
+
+				if (strstr(localcrc, downloadableApps[id].rcrc) != 0)
+					drawFont(35, 185, 0.32f, RedFont, "Local and Remote CRC32 do not match!\n");
+				else {
+					sprintf(str, "CRC32 Verified! %s\n", localcrc);
+					drawFont(35, 185, 0.32f, GreenFont, str);
+				}
+				drawFont(35, 380, 0.32f, WhiteFont, "Press X or O to continue.\n");
+
+				guiRender();
+				opsDone = 1;
+
+				buttonStatts(0, 0);
+				if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE))
+					terminate = 1;
 			}
 		}
+	}
+
 	if (checking == 1) {
-		close(fd);
-		strcpy(full_path,device);
-		strcat(full_path,path);
-		strcat(full_path,fn);
-		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		fd = open(full_path, O_RDONLY);
-		//scr_printf("* Local File Opened... %d \n", fd);
-		file_size = getFileSize(fd);
-		//scr_printf("* File Size... %d \n", file_size);
-		if (file_size >= 1) {
-			//scr_printf("* %s Exists!\n", full_path);
-		} else {
-			//scr_printf("! %s Does Not Exist!\n", full_path);
-			sprintf(localcrc,"00000000");
-			return;
+		while (!terminate) {
+			guiDrawTerminal();
+
+			if (!opsDone) {
+				snprintf(full_path, sizeof(full_path), "%s%s%s", device, path, fn);
+				fd = open(full_path, O_RDONLY);
+			}
+			if (fd < 0) {
+				sprintf(str,"! %s Does Not Exist!\n", full_path);
+				drawFont(35, 117, 0.32f, RedFont, str);
+			} else {
+				sprintf(str,"* Local File Opened... %d \n", fd);
+				drawFont(35, 117, 0.32f, GreenFont, str);
+			}
+
+			if (!opsDone) {
+				size = lseek(fd, 0, SEEK_END);
+				lseek(fd, 0, SEEK_SET);
+			}
+
+			if (size >= 1) {
+				sprintf(str,"* File Size... %d \n", size);
+				drawFont(35, 134, 0.32f, GreenFont, str);
+
+				sprintf(str,"* Calculating CRC32 %s \n", full_path);
+				drawFont(35, 151, 0.32f, GreenFont, str);
+			} else
+				sprintf(localcrc, "00000000");
+
+			if (!opsDone) {
+				strcpy(localcrc, file_crc32(device,path,fn));
+				close(fd);
+			}
+
+			sprintf(str,"Local CRC32: %s\n", localcrc);
+			drawFont(35, 168, 0.32f, GreenFont, str);
+			drawFont(35, 380, 0.32f, WhiteFont, "Press X or O to continue.\n");
+
+			guiRender();
+			opsDone = 1;
+
+			buttonStatts(0, 0);
+			if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE))
+				terminate = 1;
 		}
-		close(fd);
-		//scr_printf("CRC32: ");
-		//scr_printf("DEBUG: %s %s %s %s\n", full_path, device, path, fn);
-		sprintf(localcrc,file_crc32(device,path,fn));
-		scr_printf("CRC32: %s\n",localcrc);
-		sleep(2);
 	}
+
 	if (launching == 1) {
-		// Display Path The ELF Is Being Loaded From
-		scr_printf("* Launching Application from %s \n", arg0);
-		sleep(2);
-		LoadElf(full_path, half_path);
+		//check file exists then launch
+		fd = open(full_path, O_RDONLY);
+		if (fd >= 0) {
+			close(fd);
+			deinit(0);
+			LoadELFFromFile(full_path, argc, exec_args);
+		}
 	}
-	scr_printf(" \n* Operations complete. Returning to Main Menu... \n");
-	sleep(2);
-	menu_Text();
 }
 
-char *set_hbdl_path(){
-	static char hbdl_path[256];
-	//uncomment for release
-	getcwd(hbdl_path,256);
-	//sprintf(hbdl_path,"mc0:/APPS/"); //hardcoded.
+static char hbdl_path[256];
+
+static char *set_hbdl_path(void)
+{
+	getcwd(hbdl_path, 256); //uncomment for release
 	strcat(hbdl_path,"VTSPS2-HBDL.TXT");
-	//scr_printf("Debug: %s\n",hbdl_path);
+
 	return hbdl_path;
 }
 
-void readcrc() {
-	char line[dbsize][128]; //maxlines
-	char fname[15] = "VTSPS2-HBDL.TXT";//uncomment for release builds
+static void readcrc()
+{
 	//hardcoded path during dev. cwd is 'host' in PCSX2
-	//char fname[25] = "mc0:/APPS/VTSPS2-HBDL.TXT";
+	//char fname[25] = "mc0:APPS/VTSPS2-HBDL.TXT";
+
 	char hbdl_path[256];
-	getcwd(hbdl_path,256); 		   //uncomment for release builds
-	strcat(hbdl_path,fname);	   //uncomment for release builds
-	set_hbdl_path();
-	FILE *fptr = fopen(hbdl_path,"r"); //fname dev, hbdl_path rls
+	getcwd(hbdl_path, 256);							//uncomment for release builds
+	strcat(hbdl_path, "VTSPS2-HBDL.TXT");			//uncomment for release builds
+
 	int i = 0;
-	int tot = 0;
 	char *tmp = NULL;
 	size_t len = 0;
 	ssize_t read;
-	if (fptr>=0){
-		while((read = getline(&tmp,&len,fptr)) != -1)
-		{
-			strcpy(line[i],tmp);
-		        i++;
-		}
-		tot = dbsize;
-		for(i = 0; i < tot; ++i)
-		{
-	        sprintf(CRC32DB[i]," %s\n", line[i]);
-		}
-		fclose(fptr);
-		} else {
-			scr_printf("readcrc() error");
-		}
+
+	FILE *fp = fopen(hbdl_path, "r"); //fname dev, hbdl_path rls
+	if (fp >= 0) {
+		while((read = getline(&tmp, &len, fp)) != -1)
+			strcpy(CRC32DB[i++], tmp);
+
+		fclose(fp);
+	} else
+		printf("readcrc() error");
+
+	char hbsize[7];
+	char hbver[64];
+	char hbrcrc[16];
+	int j = NUM_APPS;
+
+	i = 1; // first line in DB is HDBL version, skip it
+	while(i <= j) {
+		int fnsize = (strlen(downloadableApps[i - 1].elfName));
+		int len = strlen(CRC32DB[i]);
+
+		substring(CRC32DB[i], hbsize, (fnsize + 14), 6);
+		downloadableApps[i - 1].size = (char *)malloc((6 + 1) * sizeof(char));
+		snprintf(downloadableApps[i - 1].size, 6 + 1, hbsize);
+
+		substring(CRC32DB[i], hbver, (fnsize + 21), len);
+		downloadableApps[i - 1].version = (char *)malloc((63 + 1) * sizeof(char));
+		snprintf(downloadableApps[i - 1].version, 63 + 1, hbver);
+
+		i++;
+	}
+
+	j = 0;
+	while(i < DBSIZE) {
+		substring(CRC32DB[i++], hbrcrc,(strlen(downloadableApps[j].elfName) + 2), 9);
+		downloadableApps[j].rcrc = (char *)malloc((15 + 1) * sizeof(char));
+		snprintf(downloadableApps[j].rcrc, 15 + 1, hbrcrc);
+
+		j++;
+	}
 }
 
+static void setDefaults(void)
+{
+	snprintf(action, sizeof(action), "CHECK");
+	snprintf(device, sizeof(device), "mc0:/");
+	snprintf(path, sizeof(path), "APPS/");
+	snprintf(fn, sizeof(fn), downloadableApps[0].elfName);
+
+	snprintf(mirror[0], sizeof(mirror[0]), "http://hbdl.vts-tech.org/");
+	snprintf(mirror[1], sizeof(mirror[1]), "http://www.hwc.nat.cu/ps2-vault/ps2hbdl/");
+	sprintf(localcrc, "00000001");
+
+	http_mirror = 0;
+}
 
 int main(int argc, char *argv[])
 {
-	extern char fn[16], ofn[16], path[256], ELF_NO_EXT[], PATH_APP[], PATH_ELF[];
-	// Initialize
-	SifInitRpc(0);
-	ResetIOP();
-	initialize();
-	scr_clear();
-	menu_header();
-	scr_printf("Modules Loaded. Obtaining an IP Address ... \n");
+	// initialize
+	init();
+
+	guiInit();
+
+	guiDrawLogo();
+	drawFont(70, 171, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
+	guiRender();
+
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
-	menu_header();
-	strcpy(url,"http://hbdl.vts-tech.org/");
-	scr_printf("IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
-	char *hbdl_path = set_hbdl_path();
-	sleep(1);
-	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN",hbdl_path);
-	strcpy(action,actions[0]);
-	strcpy(device,devices[0]);
-	strcpy(fn,"AURA.ELF");
-	strcpy(ofn,"AURA.ELF");
-	strcpy(ELF_NO_EXT,"AURA");
-	strcpy(path,"APPS/");	
-	sprintf(localcrc,"00000001");
-	sleep(1);
+	guiClear();
+
+	guiDrawLogo();
+	drawFont(70, 171, 0.32f, TealFont, "IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
+	guiRender();
+
+	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN", set_hbdl_path());
+
+	setDefaults();
+
+	menuInitMenu();
 	readcrc(); //populates CRC32DB[]
-	menu_Text();
+	guiClear();
+
 	while (1)
 	{
-		//check to see if the pad is still connected
-		checkPadConnected();
-		//read pad 0
-		buttonStatts(0, 0);
-		if(new_pad & PAD_UP) {
-			if (strcmp(device,"mc0:/") == 0) {
-				strcpy(device,"mc1:/");
-			} else if (strcmp(device,"mc1:/") == 0) {
-				strcpy(device,"mass:/");
-			} else {
-				strcpy(device,"mc0:/");
-			}
-		menu_Text();
-		} else if(new_pad & PAD_DOWN)	{
-			//scr_printf("D1BUG: %s %s %s %s\n", action, device, path, fn);
-			if (strcmp(action,"CHECK") == 0) {
-				strcpy(action,actions[1]);
-			} else if (strcmp(action,"DOWNLOAD") == 0) {
-				strcpy(action,actions[2]);
-			} else if (strcmp(action,"LAUNCH") == 0) {
-				strcpy(action,actions[0]);
-			}
-		//scr_printf("D2BUG: %s %s %s %s\n", action, device, path, fn);
-		//sleep(2);
-		menu_Text();
-		} else if(new_pad & PAD_LEFT)	{
-			//scr_printf("DEBUG: [a] %s [d] %s [p] %s [t] %s\n", action, device, path, fn);
-			//sleep(2);
-			substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-			sprintf(PATH_ELF,"%s/",ELF_NO_EXT);
-			sprintf(PATH_APP,"APP_%s/",ELF_NO_EXT);
-			if (strcmp(path,"APPS/") == 0) {
-				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				//sleep(1);
-				sprintf(path,"APP_%s/",ELF_NO_EXT);
-				strcpy(PATH_APP,path);
-			} else if (strcmp(path,PATH_APP) == 0) {
-				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				//sleep(1);
-				sprintf(path,"%s/",ELF_NO_EXT);
-				strcpy(PATH_ELF,path);
-			} else if ((strcmp(path,PATH_ELF) == 0) && (strcmp(fn,"BOOT.ELF") != 0)) {
-				//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
-				strcpy(path,"BOOT/");
-			} else if (strcmp(path,"BOOT/") == 0) {
-				strcpy(path,"APPS/");				
-			} else {
-				strcpy(path,"APPS/");				
-			}
-		//printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-		//sleep(2);
-		menu_Text();
-		}	else if(new_pad & PAD_RIGHT) {
-			if (strcmp(ofn,"AURA.ELF") == 0) {
-				strcpy(fn,targets[1]);
-			} else if (strcmp(ofn,"DOSBOX.ELF") == 0) {
-				strcpy(fn,targets[2]);
-			} else if (strcmp(ofn,"EJECT.ELF") == 0) {
-				strcpy(fn,targets[3]);
-			} else if (strcmp(ofn,"ESR.ELF") == 0) {
-				strcpy(fn,targets[4]);
-			} else if (strcmp(ofn,"FRUITY.ELF") == 0) {
-				strcpy(fn,targets[5]);
-			} else if (strcmp(ofn,"GSM.ELF") == 0) {
-				strcpy(fn,targets[6]);
-			} else if (strcmp(ofn,"HDL.ELF") == 0) {
-				strcpy(fn,targets[7]);
-			} else if (strcmp(ofn,"HERMES.ELF") == 0) {
-				strcpy(fn,targets[8]);
-			} else if (strcmp(ofn,"INFOGB.ELF") == 0) {
-				strcpy(fn,targets[9]);
-			} else if (strcmp(ofn,"LBFN.ELF") == 0) {
-				strcpy(fn,targets[10]);
-			} else if (strcmp(ofn,"NEOCD.ELF") == 0) {
-				strcpy(fn,targets[11]);
-			} else if (strcmp(ofn,"OPL.ELF") == 0) {
-				strcpy(fn,targets[12]);
-			} else if (strcmp(ofn,"PGEN.ELF") == 0) {
-				strcpy(fn,targets[13]);
-			} else if (strcmp(ofn,"PS2DOOM.ELF") == 0) {
-				strcpy(fn,targets[14]);
-			} else if (strcmp(ofn,"PS2ESDL.ELF") == 0) {
-				strcpy(fn,targets[15]);
-			} else if (strcmp(ofn,"PS2SX.ELF") == 0) {
-				strcpy(fn,targets[16]);
-			} else if (strcmp(ofn,"PSMS.ELF") == 0) {
-				strcpy(fn,targets[17]);
-			} else if (strcmp(ofn,"PVCS.ELF") == 0) {
-				strcpy(fn,targets[18]);
-			} else if (strcmp(ofn,"RA_2048.ELF") == 0) {
-				strcpy(fn,targets[19]);
-			} else if (strcmp(ofn,"RA_FCEU.ELF") == 0) {
-				strcpy(fn,targets[20]);
-			} else if (strcmp(ofn,"RA_MGBA.ELF") == 0) {
-				strcpy(fn,targets[21]);
-			} else if (strcmp(ofn,"RA_PICO.ELF") == 0) {
-				strcpy(fn,targets[22]);
-			} else if (strcmp(ofn,"RA_QNES.ELF") == 0) {
-				strcpy(fn,targets[23]);
-			} else if (strcmp(ofn,"SMS.ELF") == 0) {
-				strcpy(fn,targets[24]);
-			} else if (strcmp(ofn,"SNES9X.ELF") == 0) {
-				strcpy(fn,targets[25]);
-			} else if (strcmp(ofn,"SNESSTN.ELF") == 0) {
-				strcpy(fn,targets[26]);
-			} else if (strcmp(ofn,"TESTMODE.ELF") == 0) {
-				strcpy(fn,targets[27]);
-			} else if (strcmp(ofn,"WLE.ELF") == 0) {
-				strcpy(fn,targets[28]);
-			} else if (strcmp(ofn,"XUMP.ELF") == 0) {
-				strcpy(fn,targets[29]);
-			} else if (strcmp(ofn,"ZONELDR.ELF") == 0) {
-				strcpy(fn,targets[0]);
-			}
-		strcpy(ofn,fn);
-		//scr_printf("DEBUG: %s %s %s %s\n", action, device, path, fn);
-		//sleep(2);
-		sprintf(localcrc,"00000001");
-		menu_Text();
-		}	else if (new_pad & PAD_L1)	{
-			if (strcmp(fn,ofn) == 0) {
-				strcpy(fn,"BOOT.ELF");
-			} else {
-				strcpy(fn,ofn);
-			}
-			menu_Text();
-		}	else if (new_pad & PAD_START)	{
-		 	return 0;
-		}	else if (new_pad & PAD_SELECT) {
-				if (http_mirror == 0) {
-					http_mirror = 1;
-					//strcpy(url,mirror1);
-				} else if (http_mirror == 1) {
-				 	http_mirror = 0;
-				 	//strcpy(url,mirror0);
-				}
-			menu_Text();
-		} else if ((new_pad & PAD_CROSS) || (new_pad & PAD_CIRCLE) || (new_pad & PAD_TRIANGLE) || (new_pad & PAD_SQUARE) || (new_pad & PAD_R1) || (new_pad & PAD_R2) || (new_pad & PAD_L2)) {
-		 	if (strcmp(action,"CHECK") == 0) {
-		 		DoTask(1);
-		 		menu_Text();
-		} else if (strcmp(action,"DOWNLOAD") == 0) {
-				DoTask(2);
-				menu_Text();
-		} else if (strcmp(action,"LAUNCH") == 0) {
-				DoTask(3);
-				menu_Text();
-		}
+		guiDrawMenu();
+		guiRender();
+		menuHandleInput();
 	}
-}
 }
