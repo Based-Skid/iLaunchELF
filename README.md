@@ -1,10 +1,10 @@
 [![CI](https://github.com/Veritas83/VTSPS2-HBDL/workflows/CI/badge.svg)](https://github.com/Veritas83/VTSPS2-HBDL/actions?query=workflow%3ACI)
 
-<img src="https://i.gyazo.com/aebd1da8cfced14df53fb02520668080.png">
-<img src="https://i.gyazo.com/a84c48fa84df9e41d6d8e5a46c2d54a1.png">
-<img src="https://i.gyazo.com/12ec4eceef16fc46ce1417a6d3bb028b.png">
+<img src="https://i.gyazo.com/d392d808f1a7c7f2139cc5ad4a565c8d.png">
+<img src="https://i.gyazo.com/47df3f9436ca568eb113a63a62134227.png">
+<img src="https://i.gyazo.com/19a2f513e0589ff6c762b3af47019092.png">
 
-VTSPS2-HBDL v0.31
+VTSPS2-HBDL v0.34
 HomeBrew DownLoader
 
 Forked from iLaunchELF by VTSTech
@@ -22,6 +22,7 @@ Do not use on SCPH-9XXXX with 2.30 BIOS. Extensively tested on SCPH-70001. Worki
 
 Credits:<br>
 Original iLaunchELF Created by krHACKen & Based_Skid<br>
+GUI written by KrahJohlito<br>
 crc32.c written by Lammert Bies, (c) 1999-2016 Lammert Bies. File is licensed under the MIT License<br>
 Packed with PS2-Packer v1.1.0 by Nicolas "Pixel" Noble<br>
 Thanks to krHACKen, Based_Skid, HWC & TnA on Discord for helping me debug issues<br>
