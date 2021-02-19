@@ -6,7 +6,7 @@ EE_BIN_STRIPPED = $(NAME)-stripped.elf
 
 ####
 # C File Objects
-EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o background_png.o background2_png.o logo_png.o
+EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
@@ -97,8 +97,8 @@ logo_png.s: gfx/logo.png
 crc32.o: crc32.c checksum.h
 	ee-gcc -c $< -o $@
 
-misc.o: misc.c
-	ee-gcc $(EE_INCS) -c $< -o $@
+#misc.o: misc.c
+#	ee-gcc $(EE_INCS) -c $< -o $@
 
 VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
 	ee-gcc $(EE_INCS) -c $< -o $@
