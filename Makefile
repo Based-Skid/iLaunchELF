@@ -1,4 +1,4 @@
-VERSION = 0.34
+VERSION = 0.34-GUI
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
@@ -98,7 +98,7 @@ crc32.o: crc32.c checksum.h
 	ee-gcc -c $< -o $@
 
 misc.o: misc.c
-	ee-gcc $(EE_INCS) -c $< -o $@
+	ee-gcc -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I. -I/usr/local/ps2dev/ps2sdk/ports/include -I/usr/local/ps2dev/ps2sdk/sbv/include -I/usr/local/ps2dev/gsKit/include -I/usr/local/ps2dev/gsKit/ee/dma/include -I/usr/local/ps2dev/gsKit/ee/gs/include -I/usr/local/ps2dev/gsKit/ee/toolkit/include -c misc.c -o misc.o
 
 VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
 	ee-gcc $(EE_INCS) -c $< -o $@

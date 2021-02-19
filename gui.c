@@ -202,7 +202,7 @@ void guiDrawMenu(void)
 
 void guiDrawTerminal(void)
 {
-	char *appName = "VTSPS2-HBDL HomeBrew DownLoader v0.34 2021-02-19 Build #c8fc5e6\n";
+	char *appName = "VTSPS2-HBDL HomeBrew DownLoader v0.34 2021-02-19 Build #TBD\n";
 	char *appAuthor = "Written by VTSTech github.com/Veritas83/VTSPS2-HBDL\nBased on iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \nGUI written by KrahJohlito\n";
 	/*char *appVer = "";
 	char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";*/
