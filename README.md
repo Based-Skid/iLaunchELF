@@ -1,5 +1,3 @@
-[![CI](https://github.com/Veritas83/VTSPS2-HBDL/workflows/CI/badge.svg)](https://github.com/Veritas83/VTSPS2-HBDL/actions?query=workflow%3ACI)
-
 <img src="https://i.gyazo.com/d392d808f1a7c7f2139cc5ad4a565c8d.png">
 <img src="https://i.gyazo.com/47df3f9436ca568eb113a63a62134227.png">
 <img src="https://i.gyazo.com/19a2f513e0589ff6c762b3af47019092.png">
