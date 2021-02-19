@@ -1,7 +1,7 @@
-VERSION = 0.32-GUI
+VERSION = 0.34-GUI
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
-EE_BIN_PACKED = $(NAME).ELF
+EE_BIN_PACKED = $(NAME)-packed.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
 
 ####

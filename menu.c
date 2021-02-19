@@ -198,8 +198,16 @@ void menuHandleInput(void)
 			substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
 			sprintf(path,"%s/",ELF_NO_EXT);
 			strcpy(PATH_ELF,path);
+		} else if ((strcmp(path,PATH_ELF) == 0) && (strcmp(fn,"BOOT.ELF") != 0)) {
+			//substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+			//sprintf(path,"%s/",ELF_NO_EXT);
+			strcpy(path,"BOOT/");
+		} else if (strcmp(path,"BOOT/") == 0) {
+			strcpy(path,"APPS/");				
 		} else if (strcmp(path,PATH_ELF) == 0) {
 			substring(fn,ELF_NO_EXT,1,(strlen(fn)-4));
+			strcpy(path,"APPS/");
+		} else {
 			strcpy(path,"APPS/");
 		}
 	}

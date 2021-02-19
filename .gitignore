@@ -1,5 +1,4 @@
 
 *.bak
-*.ELF
-*.sfv
-*.7z
+*.h#
+*.elf

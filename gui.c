@@ -54,7 +54,6 @@ targets_t downloadableApps[NUM_APPS] = {
 
 // CLEAN UP vv
 extern char action[32], device[32], path[256], fn[16];
-
 extern char mirror[2][128];
 // CLEAN UP ^^
 
@@ -184,10 +183,10 @@ void guiDrawMenu(void)
 	drawBackground(&gsTexture[BACKGROUND]);
 
 	sprintf(str, "IP Address: %s\n", getIpAddress());
-	drawFont(35, 23, 0.34f, TealFont, str);
+	drawFont(35, 23, 0.38f, TealFont, str);
 
 	sprintf(str, "Mirror: %s\n", mirror[http_mirror]);
-	drawFont(37, 32, 0.34f, TealFont, str);
+	drawFont(37, 32, 0.38f, TealFont, str);
 
 	sprintf(str,"Mode: %s", action);
 	drawFont(35, 52, 0.32f, TealFont, str);
@@ -203,15 +202,15 @@ void guiDrawMenu(void)
 
 void guiDrawTerminal(void)
 {
-	char *appName = "VTSPS2-HBDL HomeBrew DownLoader v0.32-GUI 2020-11-13 (Commit: TBD)\n";
-	char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \n \n";
+	char *appName = "VTSPS2-HBDL HomeBrew DownLoader v0.34 2021-02-19 Build #TBD\n";
+	char *appAuthor = "Written by VTSTech github.com/Veritas83/VTSPS2-HBDL\nBased on iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \nGUI written by KrahJohlito\n";
 	/*char *appVer = "";
 	char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";*/
 
 	drawBackground(&gsTexture[BACKGROUND2]);
 
-	drawFont(35, 20, 0.32f, YellowFont, appName);
-	drawFont(35, 35, 0.32f, YellowFont, appAuthor);
+	drawFont(35, 20, 0.34f, YellowFont, appName);
+	drawFont(35, 35, 0.34f, YellowFont, appAuthor);
 }
 
 void guiClear(void)
