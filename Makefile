@@ -94,8 +94,8 @@ background2_png.s: gfx/background2.png
 logo_png.s: gfx/logo.png
 	bin2s $< $@ logo_png
 
-crc32.o: crc32.c checksum.h
-	ee-gcc -c $< -o $@
+#crc32.o: crc32.c checksum.h
+#	ee-gcc -c $< -o $@
 
 #misc.o: misc.c
 #	ee-gcc $(EE_INCS) -c $< -o $@
