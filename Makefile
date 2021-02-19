@@ -14,8 +14,8 @@ EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
 EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 # SBV Shit
-EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
-EE_LDFLAGS = -L$(PS2SDK)/sbv/lib -Wno-pointer-sign -Wno-implicit-function-declaration
+EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include -Wno-pointer-sign -Wno-implicit-function-declaration
+EE_LDFLAGS = -L$(PS2SDK)/sbv/lib
 ####
 EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
 EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
