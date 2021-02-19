@@ -100,8 +100,8 @@ logo_png.s: gfx/logo.png
 #misc.o: misc.c
 #	ee-gcc $(EE_INCS) -c $< -o $@
 
-VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
-	ee-gcc $(EE_INCS) -c $< -o $@
+#VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
+#	ee-gcc $(EE_INCS) -c $< -o $@
 
 run: $(EE_BIN)
 	ps2client execee host:$(EE_BIN)
