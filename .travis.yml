@@ -1,0 +1,9 @@
+language: c
+
+sudo: required
+
+services:
+  - docker
+
+script:
+  - docker run -it --rm -v "$PWD:/src" basedskid/ps2dev-sdk-ci make
