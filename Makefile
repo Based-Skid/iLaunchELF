@@ -6,7 +6,7 @@ EE_BIN_STRIPPED = $(NAME)-stripped.elf
 
 ####
 # C File Objects
-EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
+EE_OBJS = ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
