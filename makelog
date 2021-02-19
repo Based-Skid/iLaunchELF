@@ -1,0 +1,34 @@
+ee-gcc -D_EE -O2 -G0 -Wall -D_EE -O2 -G0 -Wall  -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I. -I/usr/local/ps2dev/ps2sdk/ports/include -I/usr/local/ps2dev/ps2sdk/sbv/include -I/homebrew/gsKit/ee/gs/include -I/homebrew/gsKit/ee/dma/include -I/homebrew/gsKit/ee/toolkit/include -c VTSPS2-HBDL.c -o VTSPS2-HBDL.o
+ee-gcc -D_EE -O2 -G0 -Wall -D_EE -O2 -G0 -Wall  -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I. -I/usr/local/ps2dev/ps2sdk/ports/include -I/usr/local/ps2dev/ps2sdk/sbv/include -I/homebrew/gsKit/ee/gs/include -I/homebrew/gsKit/ee/dma/include -I/homebrew/gsKit/ee/toolkit/include -c ps2ipc.c -o ps2ipc.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/freesio2.irx freesio2.s freesio2
+ee-as -G0 -G0  freesio2.s -o freesio2.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/iomanX.irx iomanX.s iomanX
+ee-as -G0 -G0  iomanX.s -o iomanX.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/freepad.irx freepad.s freepad
+ee-as -G0 -G0  freepad.s -o freepad.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/mcman.irx mcman.s mcman
+ee-as -G0 -G0  mcman.s -o mcman.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/mcserv.irx mcsrv.s mcserv
+ee-as -G0 -G0  mcsrv.s -o mcsrv.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/ps2dev9.irx ps2dev9.s ps2dev9
+ee-as -G0 -G0  ps2dev9.s -o ps2dev9.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/ps2ip-nm.irx ps2ip-nm.s ps2ipnm
+ee-as -G0 -G0  ps2ip-nm.s -o ps2ip-nm.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/ps2ips.irx ps2ips.s ps2ips
+ee-as -G0 -G0  ps2ips.s -o ps2ips.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/netman.irx netman.s netman
+ee-as -G0 -G0  netman.s -o netman.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/smap.irx smap.s smap
+ee-as -G0 -G0  smap.s -o smap.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/ps2http.irx ps2http.s ps2http
+ee-as -G0 -G0  ps2http.s -o ps2http.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/poweroff.irx poweroff.s poweroff
+ee-as -G0 -G0  poweroff.s -o poweroff.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/usbd.irx usbd.s usbd
+ee-as -G0 -G0  usbd.s -o usbd.o
+bin2s /usr/local/ps2dev/ps2sdk/iop/irx/usbhdfsd.irx usbhdfsd.s usbhdfsd
+ee-as -G0 -G0  usbhdfsd.s -o usbhdfsd.o
+ee-gcc -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I. -I/usr/local/ps2dev/ps2sdk/ports/include -I/usr/local/ps2dev/ps2sdk/sbv/include -I/homebrew/gsKit/ee/gs/include -I/homebrew/gsKit/ee/dma/include -I/homebrew/gsKit/ee/toolkit/include -c misc.c -o misc.o
+ee-gcc -c crc32.c -o crc32.o
+ee-gcc -I/usr/local/ps2dev/ps2sdk/ee/include -I/usr/local/ps2dev/ps2sdk/common/include -I. -I/usr/local/ps2dev/ps2sdk/ports/include -I/usr/local/ps2dev/ps2sdk/sbv/include -I/homebrew/gsKit/ee/gs/include -I/homebrew/gsKit/ee/dma/include -I/homebrew/gsKit/ee/toolkit/include -c VTSPS2-CRC32.c -o VTSPS2-CRC32.o
+ee-gcc -o VTSPS2-HBDL.elf VTSPS2-HBDL.o ps2ipc.o freesio2.o iomanX.o freepad.o mcman.o mcsrv.o ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o -L/usr/local/ps2dev/ps2sdk/ee/lib -L/usr/local/ps2dev/ps2sdk/sbv/lib  -L/usr/local/ps2dev/gsKit/lib -L/usr/local/ps2dev/ps2sdk/ee/lib -lc -ldebug -lpatches -Xlinker --start-group  -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -lgskit_toolkit -lgskit -ldmakit -Xlinker --end-group
