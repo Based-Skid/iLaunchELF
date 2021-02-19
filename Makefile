@@ -6,7 +6,7 @@ EE_BIN_STRIPPED = $(NAME)-stripped.elf
 
 ####
 # C File Objects
-EE_OBJS = ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
+EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
@@ -14,10 +14,10 @@ EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 # Other IRX
 EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 # SBV Shit
-EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include -Wno-pointer-sign -Wno-implicit-function-declaration
+EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib
 ####
-EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
+EE_LIBS = -lc -ldebug -lpatches -Wno-pointer-sign -Wno-implicit-function-declaration -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
 EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
 
 EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include -I$(GSKIT)/ee/toolkit/include
