@@ -1,19 +1,12 @@
-VERSION = 0.32
+VERSION = 0.34-GUI
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).elf
 EE_BIN_PACKED = $(NAME)-packed.elf
 EE_BIN_STRIPPED = $(NAME)-stripped.elf
-GSKITSRC = /homebrew/gsKit
-
-include $(GSKITSRC)/ee/Rules.make
-
-LIBGSKIT = $(GSKIT)/lib/libgskit.a
-LIBDMAKIT = $(GSKIT)/lib/libdmakit.a
-LIBGSKIT_TOOLKIT = $(GSKIT)/lib/libgskit_toolkit.a
 
 ####
 # C File Objects
-EE_OBJS = $(NAME).o ps2ipc.o
+EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
@@ -24,27 +17,23 @@ EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
 ####
-EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio
-EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -Xlinker --end-group
+EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
+EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
 
-EE_INCS += -I$(GSKITSRC)/ee/gs/include -I$(GSKITSRC)/ee/dma/include
-EE_INCS += -I$(GSKITSRC)/ee/toolkit/include
+EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include -I$(GSKIT)/ee/toolkit/include
 # linker flags
 EE_LIB_DIRS += -L$(GSKIT)/lib
 EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
 EE_LDFLAGS += $(EE_LIB_DIRS)
 
-
-
 all:
 	@echo "======================================="
 	@echo "=== Building $(NAME) v$(VERSION) ==="
 	@echo "======================================="
-	$(MAKE) $(EE_BIN)
+	$(MAKE) $(EE_BIN_PACKED)
 
 clean:
 	rm -f *.elf *.o *.s
-
 
 #poweroff Module
 
@@ -92,18 +81,39 @@ ps2http.s:
 #thx KrahJohlito
 usbd.s:
 	bin2s $(PS2SDK)/iop/irx/usbd.irx usbd.s usbd
-	
+
 usbhdfsd.s:
 	bin2s $(PS2SDK)/iop/irx/usbhdfsd.irx usbhdfsd.s usbhdfsd
 
+background_png.s: gfx/background.png
+	bin2s $< $@ background_png
+
+background2_png.s: gfx/background2.png
+	bin2s $< $@ background2_png
+
+logo_png.s: gfx/logo.png
+	bin2s $< $@ logo_png
+
 crc32.o: crc32.c checksum.h
 	ee-gcc -c $< -o $@
-	
+
 misc.o: misc.c
 	ee-gcc $(EE_INCS) -c $< -o $@
-	
+
 VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
 	ee-gcc $(EE_INCS) -c $< -o $@
-	
+
+run: $(EE_BIN)
+	ps2client execee host:$(EE_BIN)
+
+reset:
+	ps2client reset
+
+$(EE_BIN_STRIPPED): $(EE_BIN)
+	$(EE_STRIP) -o $@ $<
+
+$(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
+	ps2-packer $< $@ > /dev/null
+
 include $(PS2SDK)/samples/Makefile.pref
-include Makefile.eeglobal
+include $(PS2SDK)/samples/Makefile.eeglobal
