@@ -1,8 +1,8 @@
 VERSION = 0.34
 NAME = VTSPS2-HBDL
-EE_BIN = $(NAME).elf
-EE_BIN_PACKED = $(NAME)-packed.elf
-EE_BIN_STRIPPED = $(NAME)-stripped.elf
+EE_BIN = $(NAME).ELF
+EE_BIN_PACKED = $(NAME)-packed.ELF
+EE_BIN_STRIPPED = $(NAME)-stripped.ELF
 
 ####
 # C File Objects
@@ -33,7 +33,7 @@ all:
 	$(MAKE) $(EE_BIN_PACKED)
 
 clean:
-	rm -f *.elf *.o *.s
+	rm -f *.elf *.ELF *.o *.s
 
 #poweroff Module
 
