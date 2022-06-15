@@ -40,4 +40,4 @@ jobs:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "latest"
         title: "Latest development build"
-        files: VTSPS2-HBDL-packed.ELF
+        files: VTSPS2-HBDL-packed.ELF VTSPS2-HBDL.ELF

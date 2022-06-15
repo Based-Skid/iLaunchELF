@@ -17,7 +17,7 @@ EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
 EE_LDFLAGS = -L$(PS2SDK)/sbv/lib
 ####
-EE_LIBS = -lc -ldebug -lpatches -Wno-pointer-sign -Wno-implicit-function-declaration -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
+EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
 EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
 
 EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include -I$(GSKIT)/ee/toolkit/include
@@ -25,7 +25,7 @@ EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include
 EE_LIB_DIRS += -L$(GSKIT)/lib
 EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
 EE_LDFLAGS += -Wl,--allow-multiple-definition $(EE_LIB_DIRS)
-
+EE_CFLAGS += -Wno-pointer-sign -Wno-implicit-function-declaration -Wno-strict-aliasing -Wno-format-overflow -Wno-format-truncation
 all:
 	@echo "======================================="
 	@echo "=== Building $(NAME) v$(VERSION) ==="
