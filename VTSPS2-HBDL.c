@@ -435,6 +435,7 @@ int main(int argc, char *argv[])
 	guiInit();
 
 	guiDrawLogo();
+	guiRender();
 	drawFont(70, 171, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
 	guiRender();
 
