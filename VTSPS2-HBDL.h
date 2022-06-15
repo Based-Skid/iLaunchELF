@@ -7,7 +7,7 @@ int dhcpmain();
 char *getIpAddress(void);
 
 //VTSPS2-CRC32.c
-char *file_crc32(char device[], char path[], char fn[]);
+extern char *file_crc32(char device[], char path[], char fn[]);
 
 //misc.c
 void substring(char s[], char sub[], int p, int l);

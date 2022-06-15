@@ -24,7 +24,7 @@ EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include
 # linker flags
 EE_LIB_DIRS += -L$(GSKIT)/lib
 EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
-EE_LDFLAGS += $(EE_LIB_DIRS)
+EE_LDFLAGS += -Wl,--allow-multiple-definition $(EE_LIB_DIRS)
 
 all:
 	@echo "======================================="
