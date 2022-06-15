@@ -1,4 +1,4 @@
-VERSION = 0.34
+VERSION = 0.35
 NAME = VTSPS2-HBDL
 EE_BIN = $(NAME).ELF
 EE_BIN_PACKED = $(NAME)-packed.ELF
@@ -113,7 +113,8 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 	$(EE_STRIP) -o $@ $<
 
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
-	ps2-packer $< $@ > /dev/null
+	ps2-packer $(EE_BIN) $(EE_BIN_PACKED)
+	chmod +x $(EE_BIN_PACKED)
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal

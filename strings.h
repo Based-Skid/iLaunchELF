@@ -1,6 +1,6 @@
 //Strings
 extern char *appName = "VTSPS2-HBDL HomeBrew DownLoader";
-extern char *appVer = " v0.33 2020-11-12 (Commit: b41e27d)\n";
+extern char *appVer = " v0.35 2022-06-15 (Commit: ???????)\n";
 extern char *appAuthor = "Forked from iLaunchElf by VTSTech github.com/Veritas83/VTSPS2-HBDL\nOriginal iLaunchElf By: krHACKen, Based_Skid, Copyright \xa9 2018 \n \n";
 extern char *appNotice = "Notice: This App Contains Code from uLaunchELF \n";
 //char *osdmsg = "Exiting to OSDSYS\n";
