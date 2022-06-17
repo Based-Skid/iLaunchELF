@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+
 #include "checksum.h"
 
 void substring(char s[], char sub[], int p, int l)
@@ -14,7 +14,7 @@ void substring(char s[], char sub[], int p, int l)
 
 static char f_crc32[16];
 
-extern char *file_crc32(char device[], char path[], char fn[])
+char *file_crc32(char device[], char path[], char fn[])
 {
   char tmp[32];
   uint32_t t_crc32 = 0xffffffffL;

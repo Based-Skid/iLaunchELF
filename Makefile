@@ -1,12 +1,12 @@
-VERSION = 0.35
+VERSION = 0.34
 NAME = VTSPS2-HBDL
-EE_BIN = $(NAME).ELF
-EE_BIN_PACKED = $(NAME)-packed.ELF
-EE_BIN_STRIPPED = $(NAME)-stripped.ELF
+EE_BIN = $(NAME).elf
+EE_BIN_PACKED = $(NAME)-packed.elf
+EE_BIN_STRIPPED = $(NAME)-stripped.elf
 
 ####
 # C File Objects
-EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o misc.o background_png.o background2_png.o logo_png.o
+EE_OBJS = $(NAME).o ps2ipc.o gui.o menu.o pad.o textures.o background_png.o background2_png.o logo_png.o
 # SW Module Objects
 EE_OBJS += freesio2.o iomanX.o freepad.o mcman.o mcsrv.o
 # Network Module
@@ -15,7 +15,7 @@ EE_OBJS += ps2dev9.o ps2ip-nm.o ps2ips.o netman.o smap.o ps2http.o
 EE_OBJS += poweroff.o usbd.o usbhdfsd.o misc.o crc32.o VTSPS2-CRC32.o
 # SBV Shit
 EE_INCS = -I$(PS2SDK)/ports/include -I$(PS2SDK)/sbv/include
-EE_LDFLAGS = -L$(PS2SDK)/sbv/lib
+EE_LDFLAGS = -L$(PS2SDK)/sbv/lib 
 ####
 EE_LIBS = -lc -ldebug -lpatches -Xlinker --start-group $(EE_LIBS_EXTRA) -lpadx -lmtap -lmc -lkernel -lpoweroff -lnetman -lps2ips -lfileXio -laudsrv -lelf-loader
 EE_LIBS += -lgskit_toolkit -lgskit -ldmakit -L$(PS2SDK)/ports/lib -lpng -ljpeg -lz -Xlinker --end-group
@@ -24,6 +24,8 @@ EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include
 # linker flags
 EE_LIB_DIRS += -L$(GSKIT)/lib
 EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
+IOP_INCS = -I$(PS2SDK)/iop/include
+#EE_LDFLAGS += $(EE_LIB_DIRS)
 EE_LDFLAGS += -Wl,--allow-multiple-definition $(EE_LIB_DIRS)
 EE_CFLAGS += -Wno-pointer-sign -Wno-implicit-function-declaration -Wno-strict-aliasing -Wno-format-overflow -Wno-format-truncation
 all:
@@ -33,7 +35,7 @@ all:
 	$(MAKE) $(EE_BIN_PACKED)
 
 clean:
-	rm -f *.elf *.ELF *.o *.s
+	rm -f *.elf *.o *.s
 
 #poweroff Module
 
@@ -94,14 +96,14 @@ background2_png.s: gfx/background2.png
 logo_png.s: gfx/logo.png
 	bin2s $< $@ logo_png
 
-#crc32.o: crc32.c checksum.h
-#	ee-gcc -c $< -o $@
+crc32.o: crc32.c checksum.h
+	mips64r5900el-ps2-elf-gcc -D_IOP $(IOP_INCS) -c $< -o $@
 
-#misc.o: misc.c
-#	ee-gcc $(EE_INCS) -c $< -o $@
+misc.o: misc.c
+	mips64r5900el-ps2-elf-gcc -D_EE $(EE_INCS) -c $< -o $@
 
-#VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
-#	ee-gcc $(EE_INCS) -c $< -o $@
+VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
+	mips64r5900el-ps2-elf-gcc -D_EE $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 run: $(EE_BIN)
 	ps2client execee host:$(EE_BIN)
