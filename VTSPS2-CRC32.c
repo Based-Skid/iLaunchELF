@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <string.h>
 #include "checksum.h"
 
 void substring(char s[], char sub[], int p, int l)
