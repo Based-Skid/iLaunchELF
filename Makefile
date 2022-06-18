@@ -24,10 +24,8 @@ EE_INCS += -I$(GSKIT)/include -I$(GSKIT)/ee/dma/include -I$(GSKIT)/ee/gs/include
 # linker flags
 EE_LIB_DIRS += -L$(GSKIT)/lib
 EE_LIB_DIRS += -L$(PS2SDK)/ee/lib
-IOP_INCS = -I$(PS2SDK)/iop/include
-#EE_LDFLAGS += $(EE_LIB_DIRS)
-EE_LDFLAGS += -Wl,--allow-multiple-definition $(EE_LIB_DIRS)
-EE_CFLAGS += -Wno-pointer-sign -Wno-implicit-function-declaration -Wno-strict-aliasing -Wno-format-overflow -Wno-format-truncation
+EE_LDFLAGS += $(EE_LIB_DIRS)
+
 all:
 	@echo "======================================="
 	@echo "=== Building $(NAME) v$(VERSION) ==="
@@ -97,13 +95,13 @@ logo_png.s: gfx/logo.png
 	bin2s $< $@ logo_png
 
 crc32.o: crc32.c checksum.h
-	mips64r5900el-ps2-elf-gcc -D_IOP $(IOP_INCS) -c $< -o $@
+	ee-gcc -c $< -o $@
 
 misc.o: misc.c
-	mips64r5900el-ps2-elf-gcc -D_EE $(EE_INCS) -c $< -o $@
+	ee-gcc $(EE_INCS) -c $< -o $@
 
 VTSPS2-CRC32.o: VTSPS2-CRC32.c VTSPS2-HBDL.h
-	mips64r5900el-ps2-elf-gcc -D_EE $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+	ee-gcc $(EE_INCS) -c $< -o $@
 
 run: $(EE_BIN)
 	ps2client execee host:$(EE_BIN)

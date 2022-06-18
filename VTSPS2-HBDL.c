@@ -437,13 +437,18 @@ int main(int argc, char *argv[])
 	guiDrawLogo();
 	drawFont(70, 171, 0.32f, TealFont, "Modules Loaded. Obtaining an IP Address ... \n");
 	guiRender();
+
 	dhcpmain(); // Setup Network Config With DHCP <dhcpmain.c>
 	guiClear();
+
 	guiDrawLogo();
 	drawFont(70, 171, 0.32f, TealFont, "IP Address obtained. Downloading homebrew list from hbdl.vts-tech.org ... \n");
 	guiRender();
-	setDefaults();
+
 	Download("http://hbdl.vts-tech.org/VTSPS2-HBDL.BIN", set_hbdl_path());
+
+	setDefaults();
+
 	menuInitMenu();
 	readcrc(); //populates CRC32DB[]
 	guiClear();
