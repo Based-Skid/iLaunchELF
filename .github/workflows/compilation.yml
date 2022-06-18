@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  repository_dispatch:
+    types: [run_build]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:v1.2.0
+    steps:
+    - name: Install dependencies
+      run: |
+        apk add bash build-base git nano make mpc mpc1 mpfr4 gmp wget zip
+    - uses: actions/checkout@v2
+    - run: |
+        git config --global --add safe.directory /__w/VTSPS2-HBDL/VTSPS2-HBDL
+        git fetch --prune --unshallow
+    - name: Compile HBDL
+      run: |
+        make
+    
+    - name: Get short SHA
+      id: slug
+      run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+
+    - name: Upload artifacts
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: HomeBrewDownloader-${{ steps.slug.outputs.sha8 }}
+        path: VTSPS2-HBDL.elf
+
+    - name: Create release
+      if: github.ref == 'refs/heads/master'
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        title: "Latest development build"
+        files: VTSPS2-HBDL.elf
